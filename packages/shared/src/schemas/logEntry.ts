@@ -13,3 +13,6 @@ export const logEntryInsertSchema = logEntrySchema.omit({ id: true, timestamp: t
   timestamp: z.coerce.date().optional(),
 });
 export type LogEntryInsert = z.infer<typeof logEntryInsertSchema>;
+
+export const logEntryUpdateSchema = logEntrySchema.omit({ id: true }).partial();
+export type LogEntryUpdate = z.infer<typeof logEntryUpdateSchema>;

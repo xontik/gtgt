@@ -19,6 +19,10 @@ const route = useRoute();
         <v-icon>mdi-calendar-today</v-icon>
         Today
       </v-btn>
+      <v-btn value="/log" to="/log">
+        <v-icon>mdi-format-list-bulleted</v-icon>
+        Log
+      </v-btn>
     </v-bottom-navigation>
   </v-app>
 </template>
