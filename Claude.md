@@ -52,10 +52,15 @@ Notes for the agent:
 ## How to proceed
 
 Work in phases and stop for review between each rather than building everything at once:
-1. Scaffold the monorepo structure and tooling (no features yet).
-2. Shared Zod schemas + Drizzle schema + migrations + seed script.
-3. Fastify API: CRUD for exercises/variations, create + list for log entries.
-4. Vue app: quick-log home screen wired to the real API.
-5. Exercise detail + daily summary screens.
+1. ✅ Scaffold the monorepo structure and tooling (no features yet).
+2. ✅ Shared Zod schemas + Drizzle schema + migrations + seed script.
+3. ✅ Fastify API: CRUD for exercises/variations, create + list for log entries.
+4. ✅ Vue app: quick-log home screen wired to the real API.
+5. Exercise detail + daily summary screens — broken into sub-steps, stop for review after each:
+   1. Daily summary — today's totals per exercise.
+   2. Recent entries — recent log entries list/feed.
+   3. Week / month / year view — browsing totals over longer ranges.
+   4. Exercise detail — progression ladder, pick active variation.
+   5. Exercises CRUD / import — the "manage exercises/variations" screen from item 4 above.
 
 Ask clarifying questions before phase 1 if anything above is ambiguous, rather than guessing.
