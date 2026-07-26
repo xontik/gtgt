@@ -15,9 +15,9 @@ const route = useRoute();
         <v-icon>mdi-home</v-icon>
         Home
       </v-btn>
-      <v-btn value="/summary" to="/summary">
-        <v-icon>mdi-calendar-today</v-icon>
-        Today
+      <v-btn value="/stats" to="/stats">
+        <v-icon>mdi-chart-bar</v-icon>
+        Stats
       </v-btn>
       <v-btn value="/log" to="/log">
         <v-icon>mdi-format-list-bulleted</v-icon>
