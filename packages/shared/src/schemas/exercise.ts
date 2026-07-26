@@ -11,3 +11,6 @@ export type Exercise = z.infer<typeof exerciseSchema>;
 
 export const exerciseInsertSchema = exerciseSchema.omit({ id: true });
 export type ExerciseInsert = z.infer<typeof exerciseInsertSchema>;
+
+export const exerciseUpdateSchema = exerciseInsertSchema.partial();
+export type ExerciseUpdate = z.infer<typeof exerciseUpdateSchema>;

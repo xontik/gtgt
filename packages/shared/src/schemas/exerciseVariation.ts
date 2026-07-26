@@ -10,3 +10,6 @@ export type ExerciseVariation = z.infer<typeof exerciseVariationSchema>;
 
 export const exerciseVariationInsertSchema = exerciseVariationSchema.omit({ id: true });
 export type ExerciseVariationInsert = z.infer<typeof exerciseVariationInsertSchema>;
+
+export const exerciseVariationUpdateSchema = exerciseVariationInsertSchema.partial();
+export type ExerciseVariationUpdate = z.infer<typeof exerciseVariationUpdateSchema>;
