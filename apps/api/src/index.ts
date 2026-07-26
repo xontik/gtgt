@@ -19,6 +19,12 @@ app.setErrorHandler((err, req, reply) => {
     reply.code(404).send({ error: err.message });
     return;
   }
+  const statusCode = (err as { statusCode?: number }).statusCode;
+  if (statusCode !== undefined && statusCode < 500) {
+    const message = err instanceof Error ? err.message : 'Request error';
+    reply.code(statusCode).send({ error: message });
+    return;
+  }
   app.log.error(err);
   reply.code(500).send({ error: 'Internal server error' });
 });
