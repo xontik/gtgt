@@ -1,10 +1,14 @@
-import { sqliteTable, integer, text, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text, real, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const exercises = sqliteTable('exercises', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   category: text('category', { enum: ['push', 'pull', 'squat', 'core', 'hold'] }).notNull(),
   metricType: text('metric_type', { enum: ['reps', 'time'] }).notNull(),
+  activeVariationId: integer('active_variation_id').references(
+    (): AnySQLiteColumn => exerciseVariations.id,
+    { onDelete: 'set null' },
+  ),
 });
 
 export const exerciseVariations = sqliteTable('exercise_variations', {

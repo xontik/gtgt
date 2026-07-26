@@ -1,0 +1,1 @@
+ALTER TABLE `exercises` ADD `active_variation_id` integer REFERENCES exercise_variations(id);

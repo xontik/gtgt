@@ -6,10 +6,13 @@ export const exerciseSchema = z.object({
   name: z.string().min(1),
   category: exerciseCategorySchema,
   metricType: metricTypeSchema,
+  activeVariationId: z.number().int().positive().nullable(),
 });
 export type Exercise = z.infer<typeof exerciseSchema>;
 
-export const exerciseInsertSchema = exerciseSchema.omit({ id: true });
+export const exerciseInsertSchema = exerciseSchema
+  .omit({ id: true, activeVariationId: true })
+  .extend({ activeVariationId: z.number().int().positive().nullable().optional() });
 export type ExerciseInsert = z.infer<typeof exerciseInsertSchema>;
 
 export const exerciseUpdateSchema = exerciseInsertSchema.partial();

@@ -4,9 +4,7 @@
   <v-app>
     <v-app-bar title="GtG Tracker" />
     <v-main>
-      <v-container>
-        <p>Scaffold ready.</p>
-      </v-container>
+      <router-view />
     </v-main>
   </v-app>
 </template>
