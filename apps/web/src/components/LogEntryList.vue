@@ -85,9 +85,9 @@ function openEntry(entry: LogEntry) {
   sheetOpen.value = true;
 }
 
-async function saveEntry(value: number) {
+async function saveEntry(value: number, timestamp: Date) {
   if (!selectedEntry.value) return;
-  const updated = await updateLogEntry(selectedEntry.value.id, { value });
+  const updated = await updateLogEntry(selectedEntry.value.id, { value, timestamp });
   emit('update', updated);
   sheetOpen.value = false;
 }

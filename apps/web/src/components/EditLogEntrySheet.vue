@@ -12,17 +12,26 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [boolean];
-  save: [value: number];
+  save: [value: number, timestamp: Date];
   delete: [];
 }>();
 
 const value = ref(0);
+const timestampLocal = ref('');
 const confirmingDelete = ref(false);
+
+function toLocalInputValue(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 
 watch(
   () => props.entry,
   (entry) => {
-    if (entry) value.value = entry.value;
+    if (entry) {
+      value.value = entry.value;
+      timestampLocal.value = toLocalInputValue(new Date(entry.timestamp));
+    }
     confirmingDelete.value = false;
   },
 );
@@ -32,7 +41,7 @@ function close() {
 }
 
 function save() {
-  emit('save', value.value);
+  emit('save', value.value, new Date(timestampLocal.value));
 }
 </script>
 
@@ -48,6 +57,8 @@ function save() {
         :label="metricType === 'time' ? 'Seconds' : 'Reps'"
         min="0"
       />
+
+      <v-text-field v-model="timestampLocal" type="datetime-local" label="Logged at" class="mb-2" />
 
       <v-btn block color="primary" size="large" class="mb-2" @click="save">Save</v-btn>
 
