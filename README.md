@@ -57,6 +57,38 @@ pnpm build       # build all packages
 To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
 `pnpm db:migrate && pnpm db:seed` from `apps/api`.
 
+## Deployment (Docker Compose on a VPS)
+
+The repo ships a `docker-compose.yml` at the root with two services:
+
+- **api** — builds `apps/api/Dockerfile`, runs the Fastify API with `tsx`
+  (no separate compile step), applies Drizzle migrations on every start, and
+  stores the SQLite file on a named volume (`api_data`) so data survives
+  redeploys.
+- **web** — builds `apps/web/Dockerfile` (a Vite production build served by
+  nginx) and reverse-proxies `/api/*` to the `api` service. Exposed on host
+  port `8080` by default (override with `WEB_PORT` env var).
+
+On the VPS:
+
+```bash
+git clone <this repo> gtg-tracker && cd gtg-tracker
+docker compose up -d --build
+```
+
+Then open `http://<vps-host>:8080`. To put it behind a domain with TLS, run
+your own reverse proxy (Caddy, Traefik, nginx) in front of the `web`
+service — this compose file doesn't manage certificates itself.
+
+To update after pulling new commits:
+
+```bash
+docker compose up -d --build
+```
+
+The `api_data` volume is untouched by rebuilds; only `docker compose down -v`
+or manually removing the volume deletes logged data.
+
 ## Features
 
 - **Home / quick log** — a "Favorites" grid of working variations you're
