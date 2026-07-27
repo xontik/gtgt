@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifyCookie from '@fastify/cookie';
 import cron from 'node-cron';
 import { ZodError } from 'zod';
 import { exerciseRoutes } from './routes/exercises.js';
@@ -9,6 +10,8 @@ import { exerciseVariationRoutes } from './routes/exerciseVariations.js';
 import { logEntryRoutes } from './routes/logEntries.js';
 import { backupRoutes } from './routes/backup.js';
 import { notificationRoutes } from './routes/notifications.js';
+import { authRoutes, SESSION_COOKIE } from './routes/auth.js';
+import { isValidSession } from './auth/session.js';
 import { checkIdleAndNotify } from './notifications/checkIdle.js';
 import { isNotFoundError } from './lib/errors.js';
 
@@ -49,8 +52,26 @@ app.setErrorHandler((err, req, reply) => {
   reply.code(500).send({ error: 'Internal server error' });
 });
 
+await app.register(fastifyCookie);
+
 app.get('/health', async () => ({ status: 'ok' }));
 
+// Shared-secret gate for a single-user app behind a public URL. If
+// APP_PASSCODE is unset/empty, skip auth entirely so existing deploys with
+// no env var keep working with zero login friction.
+app.addHook('onRequest', async (req, reply) => {
+  const expected = process.env.APP_PASSCODE;
+  if (!expected) return;
+  if (!req.url.startsWith('/api')) return;
+  if (req.url.startsWith('/api/auth/login') || req.url.startsWith('/api/auth/status')) return;
+
+  const token = req.cookies[SESSION_COOKIE];
+  if (!isValidSession(token)) {
+    reply.code(401).send({ error: 'Authentication required' });
+  }
+});
+
+await app.register(authRoutes, { prefix: '/api' });
 await app.register(exerciseRoutes, { prefix: '/api' });
 await app.register(exerciseVariationRoutes, { prefix: '/api' });
 await app.register(logEntryRoutes, { prefix: '/api' });

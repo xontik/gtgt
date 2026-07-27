@@ -17,6 +17,13 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    if (
+      res.status === 401 &&
+      !path.startsWith('/auth') &&
+      globalThis.location.pathname !== '/login'
+    ) {
+      globalThis.location.href = '/login';
+    }
     throw new ApiError(body.error ?? res.statusText, res.status);
   }
 
