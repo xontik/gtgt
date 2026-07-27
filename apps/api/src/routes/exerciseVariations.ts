@@ -49,6 +49,17 @@ export async function exerciseVariationRoutes(app: FastifyInstance) {
     return updated;
   });
 
+  app.post('/variations/:id/restore', async (req) => {
+    const id = Number((req.params as { id: string }).id);
+    const [restored] = await db
+      .update(exerciseVariations)
+      .set({ deletedAt: null })
+      .where(eq(exerciseVariations.id, id))
+      .returning();
+    if (!restored) throw new NotFoundError('Variation not found');
+    return restored;
+  });
+
   app.delete('/variations/:id', async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const [deleted] = await db

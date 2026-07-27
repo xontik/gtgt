@@ -119,10 +119,24 @@ async function saveVariationDetails(details: {
   editSheetOpen.value = false;
 }
 
+const deleteSnackbar = ref(false);
+const deleteSnackbarText = ref('');
+const lastDeletedVariationId = ref<number>();
+
 async function removeVariation() {
   if (!editingVariationId.value) return;
+  const name = editingVariation.value?.name ?? 'Variation';
   await store.removeVariation(editingVariationId.value);
+  lastDeletedVariationId.value = editingVariationId.value;
+  deleteSnackbarText.value = `Deleted ${name}`;
+  deleteSnackbar.value = true;
   editSheetOpen.value = false;
+}
+
+async function undoRemoveVariation() {
+  if (!lastDeletedVariationId.value) return;
+  await store.undoRemoveVariation(lastDeletedVariationId.value);
+  deleteSnackbar.value = false;
 }
 
 const addDialogOpen = ref(false);
@@ -209,5 +223,12 @@ async function removeExercise() {
       @save="saveExerciseDetails"
       @delete="removeExercise"
     />
+
+    <v-snackbar v-model="deleteSnackbar" timeout="4000">
+      {{ deleteSnackbarText }}
+      <template #actions>
+        <v-btn color="primary" variant="text" @click="undoRemoveVariation">Undo</v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>

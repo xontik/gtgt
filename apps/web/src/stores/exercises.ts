@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia';
 import type { Exercise, ExerciseInsert, ExerciseUpdate, ExerciseVariation } from '@gtg/shared';
 import { listExercises, createExercise, updateExercise, deleteExercise } from '../api/exercises';
-import { listVariations, createVariation, updateVariation, deleteVariation } from '../api/variations';
+import {
+  listVariations,
+  createVariation,
+  updateVariation,
+  deleteVariation,
+  restoreVariation,
+} from '../api/variations';
 
 export const useExercisesStore = defineStore('exercises', {
   state: () => ({
@@ -114,6 +120,12 @@ export const useExercisesStore = defineStore('exercises', {
           if (child.parentVariationId === variationId) child.parentVariationId = variation.parentVariationId;
         }
       }
+    },
+
+    async undoRemoveVariation(variationId: number) {
+      const restored = await restoreVariation(variationId);
+      const index = this.variations.findIndex((v) => v.id === variationId);
+      if (index !== -1) this.variations[index] = restored;
     },
 
     async addExercise(body: ExerciseInsert) {

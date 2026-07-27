@@ -23,3 +23,7 @@ export function updateVariation(id: number, body: ExerciseVariationUpdate) {
 export function deleteVariation(id: number) {
   return apiFetch<void>(`/variations/${id}`, { method: 'DELETE' });
 }
+
+export function restoreVariation(id: number) {
+  return apiFetch<ExerciseVariation>(`/variations/${id}/restore`, { method: 'POST' });
+}
