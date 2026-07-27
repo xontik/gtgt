@@ -104,6 +104,25 @@ const todaySetCount = computed(
   () => entries.value.filter((e) => new Date(e.timestamp).toDateString() === new Date().toDateString()).length,
 );
 
+// Rolling 7-day windows (not calendar weeks) so the comparison is always
+// "this week so far" vs "the 7 days before that" - a quick sense of
+// momentum without needing to dig into Stats.
+const weeklyRecap = computed(() => {
+  const now = Date.now();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const thisWeekStart = now - 7 * DAY_MS;
+  const lastWeekStart = now - 14 * DAY_MS;
+
+  let thisWeek = 0;
+  let lastWeek = 0;
+  for (const entry of entries.value) {
+    const t = new Date(entry.timestamp).getTime();
+    if (t >= thisWeekStart) thisWeek += 1;
+    else if (t >= lastWeekStart) lastWeek += 1;
+  }
+  return { thisWeek, lastWeek };
+});
+
 const loggedDayKeys = computed(() => new Set(entries.value.map((e) => dateKey(new Date(e.timestamp)))));
 
 const currentStreak = computed(() => {
@@ -272,6 +291,20 @@ async function addFavorite(variationId: number) {
         </v-card>
       </v-col>
     </v-row>
+
+    <v-alert
+      v-if="weeklyRecap.lastWeek > 0 || weeklyRecap.thisWeek > 0"
+      :type="weeklyRecap.thisWeek >= weeklyRecap.lastWeek ? 'success' : 'info'"
+      variant="tonal"
+      density="compact"
+      class="mb-2"
+    >
+      {{ weeklyRecap.thisWeek }} set{{ weeklyRecap.thisWeek === 1 ? '' : 's' }} in the last 7 days
+      <template v-if="weeklyRecap.lastWeek > 0">
+        ({{ weeklyRecap.thisWeek >= weeklyRecap.lastWeek ? 'up' : 'down' }} from {{ weeklyRecap.lastWeek }} the
+        7 days before)
+      </template>
+    </v-alert>
 
     <template v-if="neglectedFavorites.length > 0">
       <div class="text-subtitle-2 text-medium-emphasis mt-4 mb-1">Hasn't been hit in a while</div>
