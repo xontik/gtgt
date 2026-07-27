@@ -1,4 +1,4 @@
-import { desc, gte, isNull, and, eq } from 'drizzle-orm';
+import { desc, isNull, and, eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { exercises, exerciseVariations, logEntries } from '../db/schema.js';
 import { isDiscordConfigured, sendDiscordMessage } from '../lib/discord.js';
@@ -11,21 +11,32 @@ export type CheckIdleResult = {
   reason: string;
 };
 
-export async function checkIdleAndNotify(): Promise<CheckIdleResult> {
+// In-memory: fine for this single-process app, and intentionally resets on
+// restart (a fresh idle window is a reasonable "clean slate" after a
+// redeploy). Prevents a frequent cron (e.g. every 5 minutes) from re-sending
+// the same reminder repeatedly once the idle threshold has been crossed.
+let lastNotifiedAt: Date | null = null;
+
+export async function checkIdleAndNotify(options: { force?: boolean } = {}): Promise<CheckIdleResult> {
   if (!isDiscordConfigured()) {
     return { notified: false, reason: 'Discord webhook not configured' };
   }
 
-  const since = new Date(Date.now() - IDLE_HOURS * 60 * 60 * 1000);
-
-  const recentEntries = await db
-    .select({ id: logEntries.id })
+  const [lastActivity] = await db
+    .select({ timestamp: logEntries.timestamp })
     .from(logEntries)
-    .where(gte(logEntries.timestamp, since))
+    .orderBy(desc(logEntries.timestamp))
     .limit(1);
 
-  if (recentEntries.length > 0) {
+  const idleSince = lastActivity?.timestamp ?? null;
+  const idleMs = idleSince ? Date.now() - idleSince.getTime() : Infinity;
+
+  if (!options.force && idleMs < IDLE_HOURS * 60 * 60 * 1000) {
     return { notified: false, reason: 'A set was already logged recently' };
+  }
+
+  if (!options.force && lastNotifiedAt && idleSince && lastNotifiedAt >= idleSince) {
+    return { notified: false, reason: 'Already sent a reminder since the last logged set' };
   }
 
   const favorites = await db
@@ -73,6 +84,7 @@ export async function checkIdleAndNotify(): Promise<CheckIdleResult> {
   ].join('\n');
 
   await sendDiscordMessage(message);
+  lastNotifiedAt = new Date();
 
   return { notified: true, reason: `Suggested ${suggestions.length} variation(s)` };
 }

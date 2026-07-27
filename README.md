@@ -83,24 +83,34 @@ service — this compose file doesn't manage certificates itself.
 
 ### Idle-training reminders (Discord)
 
-The API runs an hourly cron job (configurable) that checks whether any set
-has been logged recently; if not, it posts a reminder to a Discord webhook
-suggesting your 3 most-overdue favorites, each with a link that opens
-straight into that variation's quick-log sheet — no extra tap needed. Set
-these in `.env` (see `.env.example`):
+The API runs a cron job (every 5 minutes, 8am-10pm by default) that checks
+how long it's been since any set was logged; once that crosses
+`NOTIFY_IDLE_HOURS`, it posts a reminder to a Discord webhook suggesting your
+3 most-overdue favorites, each with a link that opens straight into that
+variation's quick-log sheet — no extra tap needed. It only sends once per
+idle stretch (tracked in memory, resets on restart) — the frequent cron just
+controls how soon after crossing the threshold that happens, it doesn't
+cause repeat notifications. Set these in `.env` (see `.env.example`):
 
 - `DISCORD_WEBHOOK_URL` — a Discord channel webhook URL. Leave unset to
   disable notifications entirely (the cron job still runs but no-ops).
 - `PUBLIC_APP_URL` — the URL the app is actually reachable at, used to build
   the deep links in the reminder (defaults to `http://localhost:8080`, which
   is only right for local testing — set this for real deployments).
-- `NOTIFY_CRON_SCHEDULE` — 5-field crontab syntax, default hourly 8am-10pm
-  (`0 8-22 * * *`).
+- `NOTIFY_CRON_SCHEDULE` — 5-field crontab syntax, default every 5 minutes,
+  8am-10pm (`*/5 8-22 * * *`).
+- `NOTIFY_TIMEZONE` — IANA timezone name the schedule above is interpreted
+  in (default `UTC`). Docker containers default to UTC regardless of the
+  host's timezone, so set this (e.g. `Europe/Paris`) or "8am-10pm" won't
+  land when you expect.
 - `NOTIFY_IDLE_HOURS` — hours of no logged sets before a reminder fires
   (default `1`).
 
-You can trigger a check manually (e.g. to test the webhook) with
-`curl -X POST http://<host>:8080/api/notifications/check-idle`.
+You can trigger a check manually — the System page has a button for this —
+or via `curl -X POST http://<host>:8080/api/notifications/check-idle?force=true`.
+`force=true` bypasses both the idle-time threshold and the once-per-idle-stretch
+cooldown, so it always sends (useful for testing); without it, the endpoint
+behaves exactly like the cron job.
 
 To update after pulling new commits:
 

@@ -10,7 +10,12 @@ import { notificationRoutes } from './routes/notifications.js';
 import { checkIdleAndNotify } from './notifications/checkIdle.js';
 import { isNotFoundError } from './lib/errors.js';
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger:
+    process.env.NODE_ENV === 'production'
+      ? true
+      : { transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss', ignore: 'pid,hostname' } } },
+});
 
 await app.register(cors, { origin: true });
 
@@ -41,12 +46,21 @@ await app.register(logEntryRoutes, { prefix: '/api' });
 await app.register(backupRoutes, { prefix: '/api' });
 await app.register(notificationRoutes, { prefix: '/api' });
 
-const notifySchedule = process.env.NOTIFY_CRON_SCHEDULE ?? '0 8-22 * * *';
-cron.schedule(notifySchedule, () => {
-  checkIdleAndNotify()
-    .then((result) => app.log.info(result, 'idle check ran'))
-    .catch((err) => app.log.error(err, 'idle check failed'));
-});
+const notifySchedule = process.env.NOTIFY_CRON_SCHEDULE ?? '*/5 8-22 * * *';
+// Docker containers default to UTC regardless of the host's timezone, so
+// pin this explicitly rather than relying on the process's system tz.
+const notifyTimezone = process.env.NOTIFY_TIMEZONE ?? 'UTC';
+cron.schedule(
+  notifySchedule,
+  () => {
+    app.log.info('idle check cron fired');
+    checkIdleAndNotify()
+      .then((result) => app.log.info(result, 'idle check ran'))
+      .catch((err) => app.log.error(err, 'idle check failed'));
+  },
+  { timezone: notifyTimezone },
+);
+app.log.info({ notifySchedule, notifyTimezone }, 'idle-check cron scheduled');
 
 const port = Number(process.env.PORT ?? 3001);
 

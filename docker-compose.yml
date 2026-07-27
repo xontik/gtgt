@@ -9,7 +9,8 @@ services:
       - PORT=3001
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
       - PUBLIC_APP_URL=${PUBLIC_APP_URL:-http://localhost:8080}
-      - NOTIFY_CRON_SCHEDULE=${NOTIFY_CRON_SCHEDULE:-0 8-22 * * *}
+      - NOTIFY_CRON_SCHEDULE=${NOTIFY_CRON_SCHEDULE:-*/5 8-22 * * *}
+      - NOTIFY_TIMEZONE=${NOTIFY_TIMEZONE:-UTC}
       - NOTIFY_IDLE_HOURS=${NOTIFY_IDLE_HOURS:-1}
     volumes:
       - api_data:/data

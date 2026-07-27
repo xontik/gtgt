@@ -21,7 +21,7 @@ const checkingIdle = ref(false);
 async function sendTestReminder() {
   checkingIdle.value = true;
   try {
-    const result = await checkIdleNow();
+    const result = await checkIdleNow({ force: true });
     notify(result.notified ? `Reminder sent: ${result.reason}` : `Not sent: ${result.reason}`);
   } catch (err) {
     notify(err instanceof Error ? `Check failed: ${err.message}` : 'Check failed.');
@@ -128,9 +128,10 @@ async function onImportFileSelected() {
     <v-card class="mb-4" variant="tonal">
       <v-card-title class="text-subtitle-1">Notifications</v-card-title>
       <v-card-text>
-        Manually run the idle-training check: if nothing's been logged
-        recently, it posts a Discord reminder with your most-overdue
-        favorites (no-op if the Discord webhook isn't configured).
+        Manually send a Discord reminder with your most-overdue favorites
+        right now, bypassing the idle-time check and cooldown (no-op if the
+        Discord webhook isn't configured). The automatic version runs on a
+        schedule and only actually notifies once per idle stretch.
       </v-card-text>
       <v-card-actions>
         <v-btn prepend-icon="mdi-bell-ring-outline" :loading="checkingIdle" @click="sendTestReminder">
