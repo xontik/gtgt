@@ -30,3 +30,9 @@
 - [x] CSV export of log entries alongside the existing JSON backup
 - [x] optional per-variation daily-set target, with "3/5 sets today" progress on the Home favorite card
 - [x] shared-secret passcode gate (`APP_PASSCODE`), still single-user — no-op if unset so existing deploys keep working
+- [x] installable as a PWA (manifest + service worker + iOS meta tags); icons currently reuse favicon.svg, raster PNGs are a follow-up
+- [x] quick-log sheets default to the last logged value ("same as last time") instead of always resetting
+- [x] haptic feedback on logging a set (longer pattern for a personal best or hitting a daily target)
+- [x] favorite card switches to a success state with a checkmark once its daily target is met
+- [x] personal-best and goal-hit callouts in the log confirmation snackbar
+- [x] rolling weekly recap banner on Home (this week's sets vs the prior week)

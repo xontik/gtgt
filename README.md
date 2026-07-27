@@ -2,7 +2,9 @@
 
 A personal web app to log "Grease the Groove" (GtG) style calisthenics training:
 frequent, low-fatigue sets of an exercise spread across the day, logged fast
-from a phone.
+from a phone. It's installable as a PWA (look for "Add to Home Screen" /
+"Install app" in your browser) so it opens like a native app instead of a
+browser tab.
 
 ## Stack
 
@@ -164,17 +166,24 @@ manually removing the volume deletes logged data.
   variation's today's total (set count + reps or time) and how long ago it
   was last logged, sorted by recency (most recently logged first). Tap a
   card to log a set: a rep stepper (+/-) or a start/stop timer, depending on
-  the exercise's metric type. Either sheet has a "Log for yesterday" toggle
-  to backdate a forgotten set by 24h instead of logging it as today. The
-  heart-off icon on a card removes it from favorites (with a confirmation
-  dialog) without touching its log history. "Add working variation" opens a
-  searchable picker over every exercise's variations to favorite one. If a
-  variation has a daily-set target set (see Exercise detail below), its card
-  also shows progress like "3/5 sets today". Below the grid: a today's-sets
-  / day-streak stat pair, a "Hasn't been hit in a while" list of favorited
-  variations not logged in 3+ days (tap to quick-log), and a recent-activity
-  feed of your last few log entries anywhere (tap-to-edit and
-  quick-delete/undo just like the Log page), with a link to the full Log.
+  the exercise's metric type, defaulting to whatever you logged last time
+  (most sets repeat the same rep count/duration, so this saves a re-entry
+  almost every time). Either sheet has a "Log for yesterday" toggle to
+  backdate a forgotten set by 24h instead of logging it as today. Logging
+  gives a short vibration where supported (a longer one for a personal best
+  or hitting a daily target), and the confirmation snackbar calls out "new
+  best!" / "goal hit!" when either happens. The heart-off icon on a card
+  removes it from favorites (with a confirmation dialog) without touching
+  its log history. "Add working variation" opens a searchable picker over
+  every exercise's variations to favorite one. If a variation has a
+  daily-set target set (see Exercise detail below), its card shows progress
+  like "3/5 sets today" and switches to a success-tinted state with a
+  checkmark once the target's met. Below the grid: a today's-sets /
+  day-streak stat pair, a rolling weekly recap ("32 sets in the last 7 days,
+  up from 25"), a "Hasn't been hit in a while" list of favorited variations
+  not logged in 3+ days (tap to quick-log), and a recent-activity feed of
+  your last few log entries anywhere (tap-to-edit and quick-delete/undo
+  just like the Log page), with a link to the full Log.
 - **Stats** — per-exercise totals (set count + reps or time), browsable by
   Day / Week / Month / Year (calendar-aligned, with prev/next navigation) or
   by rolling Last 7 days / Last 30 days (always ends today, no navigation).
