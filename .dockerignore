@@ -3,6 +3,7 @@ node_modules
 dist
 **/dist
 apps/api/data
+apps/api/public
 *.sqlite
 *.sqlite3
 .git

@@ -59,15 +59,13 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
 
 ## Deployment (Docker Compose on a VPS)
 
-The repo ships a `docker-compose.yml` at the root with two services:
-
-- **api** — builds `apps/api/Dockerfile`, runs the Fastify API with `tsx`
-  (no separate compile step), applies Drizzle migrations on every start, and
-  stores the SQLite file on a named volume (`api_data`) so data survives
-  redeploys.
-- **web** — builds `apps/web/Dockerfile` (a Vite production build served by
-  nginx) and reverse-proxies `/api/*` to the `api` service. Exposed on host
-  port `8080` by default (override with `WEB_PORT` env var).
+The repo ships a single `Dockerfile` at the root and a `docker-compose.yml`
+with one service (`app`): the Fastify API serves both `/api/*` and the built
+Vue SPA directly (no nginx, no second container, same-origin so no CORS
+needed). It runs with `tsx` (no separate compile step), applies Drizzle
+migrations on every start, and stores the SQLite file on a named volume
+(`api_data`) so data survives redeploys. Exposed on host port `8080` by
+default (override with `WEB_PORT` env var).
 
 On the VPS:
 
@@ -78,16 +76,16 @@ docker compose up -d --build
 ```
 
 Then open `http://<vps-host>:8080`. To put it behind a domain with TLS, run
-your own reverse proxy (Caddy, Traefik, nginx) in front of the `web`
+your own reverse proxy (Caddy, Traefik, nginx) in front of the `app`
 service — this compose file doesn't manage certificates itself.
 
-### Using the published images instead of building
+### Using the published image instead of building
 
-Every push to `main` and every `vX.Y.Z` tag builds and publishes multi-arch
-(`amd64`/`arm64`) images to GHCR via
+Every push to `main` and every `vX.Y.Z` tag builds and publishes a multi-arch
+(`amd64`/`arm64`) image to GHCR via
 [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml):
-`ghcr.io/xontik/gtgt-api` and `ghcr.io/xontik/gtgt-web`, tagged `latest`,
-`<version>`, `<major>.<minor>`, and the commit SHA.
+`ghcr.io/xontik/gtgt`, tagged `latest`, `<version>`, `<major>.<minor>`, and
+the commit SHA.
 
 To run without cloning the repo, grab just two files —
 [`docker-compose.ghcr.yml`](docker-compose.ghcr.yml) and `.env.example`
@@ -102,9 +100,9 @@ Set `IMAGE_TAG` in `.env` to pin a specific version instead of `latest`
 
 One-time setup after the first successful workflow run: GHCR packages are
 created **private** by default regardless of the repo's visibility — go to
-the package's page (github.com → your profile/org → Packages →
-`gtgt-api`/`gtgt-web`) → Package settings → change visibility to Public, so
-others can pull without `docker login`.
+the package's page (github.com → your profile/org → Packages → `gtgt`) →
+Package settings → change visibility to Public, so others can pull without
+`docker login`.
 
 ### Idle-training reminders (Discord)
 

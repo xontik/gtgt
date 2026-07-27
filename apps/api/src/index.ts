@@ -1,5 +1,7 @@
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
-import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import cron from 'node-cron';
 import { ZodError } from 'zod';
 import { exerciseRoutes } from './routes/exercises.js';
@@ -17,7 +19,16 @@ const app = Fastify({
       : { transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss', ignore: 'pid,hostname' } } },
 });
 
-await app.register(cors, { origin: true });
+// Serves the built Vue SPA alongside the API - one process, one container,
+// same-origin (so no CORS needed). In local dev the frontend runs under
+// Vite instead and this directory won't exist, so skip registering.
+const staticDir = process.env.STATIC_DIR ?? fileURLToPath(new URL('../public', import.meta.url));
+const serveStatic = existsSync(staticDir);
+if (serveStatic) {
+  await app.register(fastifyStatic, { root: staticDir, wildcard: false });
+} else {
+  app.log.warn({ staticDir }, 'static dir not found, not serving the web app from this process');
+}
 
 app.setErrorHandler((err, req, reply) => {
   if (err instanceof ZodError) {
@@ -45,6 +56,18 @@ await app.register(exerciseVariationRoutes, { prefix: '/api' });
 await app.register(logEntryRoutes, { prefix: '/api' });
 await app.register(backupRoutes, { prefix: '/api' });
 await app.register(notificationRoutes, { prefix: '/api' });
+
+// SPA fallback: any unmatched non-API route serves index.html so
+// client-side (vue-router history mode) routes work on a hard refresh.
+if (serveStatic) {
+  app.setNotFoundHandler((req, reply) => {
+    if (req.raw.url?.startsWith('/api')) {
+      reply.code(404).send({ error: 'Not found' });
+      return;
+    }
+    reply.sendFile('index.html');
+  });
+}
 
 const notifySchedule = process.env.NOTIFY_CRON_SCHEDULE ?? '*/5 8-22 * * *';
 // Docker containers default to UTC regardless of the host's timezone, so
