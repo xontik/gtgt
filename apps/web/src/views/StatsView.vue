@@ -9,6 +9,7 @@ import ExerciseStatsRow from '../components/ExerciseStatsRow.vue';
 import SegmentedBarsChart from '../components/SegmentedBarsChart.vue';
 import GroupedBarsChart from '../components/GroupedBarsChart.vue';
 import MergedHeatmap from '../components/MergedHeatmap.vue';
+import LogEntryList from '../components/LogEntryList.vue';
 import type { Exercise, LogEntry } from '@gtg/shared';
 
 const store = useExercisesStore();
@@ -118,6 +119,28 @@ function entriesForExercise(exerciseId: number) {
   });
 }
 
+function periodEntriesForExercise(exerciseId: number) {
+  return entriesForExercise(exerciseId).filter((e) => {
+    const t = new Date(e.timestamp);
+    return t >= periodStart.value && t <= periodEnd.value;
+  });
+}
+
+function onEntryUpdate(updated: LogEntry) {
+  const index = entries.value.findIndex((e) => e.id === updated.id);
+  if (index !== -1) entries.value[index] = updated;
+}
+
+function onEntryRemove(id: number) {
+  entries.value = entries.value.filter((e) => e.id !== id);
+}
+
+function onEntryRestore(entry: LogEntry) {
+  entries.value = [...entries.value, entry].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+}
+
 function colorFor(exercise: Exercise) {
   const index = store.exercises.findIndex((e) => e.id === exercise.id);
   return exerciseColorVar(index);
@@ -222,6 +245,25 @@ const mergedHeatmapSeries = computed(() =>
 
         <template v-else-if="period === 'day'">
           <SegmentedBarsChart :items="mergedDayItems" />
+
+          <v-expansion-panels v-for="exercise in selectedExercises" :key="exercise.id" class="mb-4" variant="accordion">
+            <v-expansion-panel>
+              <v-expansion-panel-title>
+                {{ exercise.name }} — {{ periodEntriesForExercise(exercise.id).length }} set{{
+                  periodEntriesForExercise(exercise.id).length === 1 ? '' : 's'
+                }}
+              </v-expansion-panel-title>
+              <v-expansion-panel-text>
+                <LogEntryList
+                  :entries="periodEntriesForExercise(exercise.id)"
+                  empty-text="No sets in this period."
+                  @update="onEntryUpdate"
+                  @remove="onEntryRemove"
+                  @restore="onEntryRestore"
+                />
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </template>
 
         <template v-else>
@@ -243,6 +285,9 @@ const mergedHeatmapSeries = computed(() =>
             :entries="entriesForExercise(exercise.id)"
             :period-start="periodStart"
             :period-end="periodEnd"
+            @update="onEntryUpdate"
+            @remove="onEntryRemove"
+            @restore="onEntryRestore"
           />
         </template>
       </div>

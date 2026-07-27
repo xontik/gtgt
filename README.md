@@ -75,6 +75,9 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
   data to include from a variation tree checklist: checking an exercise
   selects all its variations, or check individual variations to narrow the
   stats down to just those. Favorited variations are preselected on load.
+  Under each exercise, an expandable "Sets" panel lists the individual log
+  entries for the current period, with the same tap-to-edit and
+  quick-delete/undo behavior as the Log page.
 - **Log** — every log entry, newest first. Tap one to edit its value or
   delete it (with confirmation). Or use the trash icon on a row to delete
   it immediately, no confirmation, safe to close the tab right after — a

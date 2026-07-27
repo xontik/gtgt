@@ -6,6 +6,7 @@ import { dateKey, buildWeekColumns, eachDayOfRange } from '../lib/heatmap';
 import { formatDuration } from '../lib/format';
 import HeatmapCalendar from './HeatmapCalendar.vue';
 import BarsChart from './BarsChart.vue';
+import LogEntryList from './LogEntryList.vue';
 
 const props = defineProps<{
   exercise: Exercise;
@@ -13,6 +14,12 @@ const props = defineProps<{
   entries: LogEntry[]; // all-time entries for this exercise
   periodStart: Date;
   periodEnd: Date;
+}>();
+
+const emit = defineEmits<{
+  update: [entry: LogEntry];
+  remove: [id: number];
+  restore: [entry: LogEntry];
 }>();
 
 const dailyTotals = computed(() => {
@@ -71,5 +78,20 @@ const totalLabel = computed(() =>
       :max-value="allTimeMaxDailyTotal"
       :metric-type="exercise.metricType"
     />
+
+    <v-expansion-panels variant="accordion" class="mt-2">
+      <v-expansion-panel>
+        <v-expansion-panel-title>Sets</v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <LogEntryList
+            :entries="periodEntries"
+            empty-text="No sets in this period."
+            @update="emit('update', $event)"
+            @remove="emit('remove', $event)"
+            @restore="emit('restore', $event)"
+          />
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
   </div>
 </template>

@@ -12,8 +12,8 @@
 
 - [x] a better home view, but keep quick logging easy (today's total + last-logged per card, sorted by recency)
 - [x] Direct delete button in a log entry row (no confirmation modal, just a snackbar undo).
-- [ ] edit or delete a set from the stats view (directly or by linking to log page)
+- [x] edit or delete a set from the stats view (directly or by linking to log page)
 - [ ] Modal to edit on desktop, bottom sheet on mobile
-- [ ] reorder progression with drag and drop
+- [ ] reorder variation with drag and drop
 - [x] variation of the same exercices but that are not "more difficult" just another branch. maybe some ancestor link ?
 - [ ] simple deployement on home server docker compose
