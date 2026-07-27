@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import type { Exercise, ExerciseVariation } from '@gtg/shared';
-import { listExercises, updateExercise } from '../api/exercises';
+import type { Exercise, ExerciseInsert, ExerciseUpdate, ExerciseVariation } from '@gtg/shared';
+import { listExercises, createExercise, updateExercise, deleteExercise } from '../api/exercises';
 import { listVariations, createVariation, updateVariation, deleteVariation } from '../api/variations';
 
 export const useExercisesStore = defineStore('exercises', {
@@ -80,6 +80,23 @@ export const useExercisesStore = defineStore('exercises', {
       for (const exercise of this.exercises) {
         if (exercise.activeVariationId === variationId) exercise.activeVariationId = null;
       }
+    },
+
+    async addExercise(body: ExerciseInsert) {
+      const created = await createExercise(body);
+      this.exercises.push(created);
+    },
+
+    async updateExerciseDetails(exerciseId: number, body: ExerciseUpdate) {
+      const updated = await updateExercise(exerciseId, body);
+      const index = this.exercises.findIndex((e) => e.id === exerciseId);
+      if (index !== -1) this.exercises[index] = updated;
+    },
+
+    async removeExercise(exerciseId: number) {
+      await deleteExercise(exerciseId);
+      this.exercises = this.exercises.filter((e) => e.id !== exerciseId);
+      this.variations = this.variations.filter((v) => v.exerciseId !== exerciseId);
     },
   },
 });

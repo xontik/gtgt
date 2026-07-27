@@ -6,6 +6,7 @@ import { createLogEntry } from '../api/logEntries';
 import ExerciseCard from '../components/ExerciseCard.vue';
 import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
+import AddExerciseDialog from '../components/AddExerciseDialog.vue';
 
 const store = useExercisesStore();
 onMounted(() => store.fetchAll());
@@ -35,6 +36,13 @@ async function logSet(value: number) {
   snackbarText.value = `Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}`;
   snackbar.value = true;
 }
+
+const addDialogOpen = ref(false);
+
+async function addExercise(exercise: Parameters<typeof store.addExercise>[0]) {
+  await store.addExercise(exercise);
+  addDialogOpen.value = false;
+}
 </script>
 
 <template>
@@ -50,6 +58,10 @@ async function logSet(value: number) {
         />
       </v-col>
     </v-row>
+
+    <v-btn block variant="tonal" prepend-icon="mdi-plus" class="mt-2" @click="addDialogOpen = true">
+      Add exercise
+    </v-btn>
 
     <template v-if="selectedExercise">
       <RepStepperSheet
@@ -69,5 +81,7 @@ async function logSet(value: number) {
     </template>
 
     <v-snackbar v-model="snackbar" timeout="2500">{{ snackbarText }}</v-snackbar>
+
+    <AddExerciseDialog v-model="addDialogOpen" @save="addExercise" />
   </v-container>
 </template>

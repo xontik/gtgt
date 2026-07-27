@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import type { LogEntry } from '@gtg/shared';
+import { useRoute, useRouter } from 'vue-router';
+import type { Exercise, LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
 import { listLogEntries } from '../api/logEntries';
 import { formatDuration } from '../lib/format';
@@ -9,8 +9,10 @@ import LogEntryList from '../components/LogEntryList.vue';
 import ProgressionLadder from '../components/ProgressionLadder.vue';
 import EditVariationSheet from '../components/EditVariationSheet.vue';
 import AddVariationDialog from '../components/AddVariationDialog.vue';
+import EditExerciseSheet from '../components/EditExerciseSheet.vue';
 
 const route = useRoute();
+const router = useRouter();
 const exerciseId = Number(route.params.id);
 
 const store = useExercisesStore();
@@ -93,11 +95,31 @@ async function addVariation(name: string) {
   await store.addVariation(exerciseId, name);
   addDialogOpen.value = false;
 }
+
+const editExerciseSheetOpen = ref(false);
+
+async function saveExerciseDetails(
+  name: string,
+  category: Exercise['category'],
+  metricType: Exercise['metricType'],
+) {
+  await store.updateExerciseDetails(exerciseId, { name, category, metricType });
+  editExerciseSheetOpen.value = false;
+}
+
+async function removeExercise() {
+  await store.removeExercise(exerciseId);
+  editExerciseSheetOpen.value = false;
+  router.push('/');
+}
 </script>
 
 <template>
   <v-container v-if="exercise">
-    <h1 class="text-h5 mb-1">{{ exercise.name }}</h1>
+    <div class="d-flex align-center justify-space-between mb-1">
+      <h1 class="text-h5">{{ exercise.name }}</h1>
+      <v-btn icon="mdi-pencil" variant="text" size="small" @click="editExerciseSheetOpen = true" />
+    </div>
     <div class="text-body-2 text-medium-emphasis mb-4">
       Today: {{ todayTotal.setCount }} set{{ todayTotal.setCount === 1 ? '' : 's' }} ·
       {{ exercise.metricType === 'time' ? formatDuration(todayTotal.total) : `${todayTotal.total} reps` }}
@@ -129,5 +151,11 @@ async function addVariation(name: string) {
       @delete="removeVariation"
     />
     <AddVariationDialog v-model="addDialogOpen" @save="addVariation" />
+    <EditExerciseSheet
+      v-model="editExerciseSheetOpen"
+      :exercise="exercise"
+      @save="saveExerciseDetails"
+      @delete="removeExercise"
+    />
   </v-container>
 </template>
