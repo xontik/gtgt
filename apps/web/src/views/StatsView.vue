@@ -102,16 +102,7 @@ async function load() {
     await store.fetchAll();
     entries.value = await listLogEntries();
 
-    const mostRecent = entries.value.reduce<LogEntry | undefined>(
-      (latest, e) => (!latest || new Date(e.timestamp) > new Date(latest.timestamp) ? e : latest),
-      undefined,
-    );
-    if (mostRecent) {
-      const variation = store.variations.find((v) => v.id === mostRecent.variationId);
-      if (variation) {
-        selected.value = store.variationsFor(variation.exerciseId).map((v) => `var-${v.id}`);
-      }
-    }
+    selected.value = store.favoriteVariations.map((v) => `var-${v.id}`);
   } finally {
     loading.value = false;
   }

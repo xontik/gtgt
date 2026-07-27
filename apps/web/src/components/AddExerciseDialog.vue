@@ -33,7 +33,6 @@ function save() {
     name: name.value.trim(),
     category: category.value,
     metricType: metricType.value,
-    activeVariationId: null,
   });
 }
 </script>

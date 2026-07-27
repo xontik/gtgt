@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { db } from './client.js';
 import { exercises, exerciseVariations, logEntries } from './schema.js';
 
@@ -135,15 +135,12 @@ async function seed() {
 
   const pistolSquatStart = pistolSquatVariations.find((v) => v.difficultyRank === 1);
 
-  await Promise.all([
-    db.update(exercises).set({ activeVariationId: declinePushUp.id }).where(eq(exercises.id, pushUp.id)),
-    pistolSquatStart &&
-      db
-        .update(exercises)
-        .set({ activeVariationId: pistolSquatStart.id })
-        .where(eq(exercises.id, pistolSquat.id)),
-    db.update(exercises).set({ activeVariationId: plankHold.id }).where(eq(exercises.id, plank.id)),
-  ]);
+  // Favorite a couple of push-up variations at once, to show working on
+  // multiple branches of the same exercise simultaneously.
+  const favoriteIds = [declinePushUp.id, archerPushUp.id, plankHold.id, pistolSquatStart?.id].filter(
+    (id): id is number => id !== undefined,
+  );
+  await db.update(exerciseVariations).set({ isFavorite: true }).where(inArray(exerciseVariations.id, favoriteIds));
 
   await db.insert(logEntries).values([
     // History on now-superseded variations, to exercise stats across the whole progression.

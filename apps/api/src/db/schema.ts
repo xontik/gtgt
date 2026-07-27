@@ -5,10 +5,6 @@ export const exercises = sqliteTable('exercises', {
   name: text('name').notNull(),
   category: text('category', { enum: ['push', 'pull', 'squat', 'core', 'hold'] }).notNull(),
   metricType: text('metric_type', { enum: ['reps', 'time'] }).notNull(),
-  activeVariationId: integer('active_variation_id').references(
-    (): AnySQLiteColumn => exerciseVariations.id,
-    { onDelete: 'set null' },
-  ),
 });
 
 export const exerciseVariations = sqliteTable('exercise_variations', {
@@ -23,6 +19,7 @@ export const exerciseVariations = sqliteTable('exercise_variations', {
     (): AnySQLiteColumn => exerciseVariations.id,
     { onDelete: 'set null' },
   ),
+  isFavorite: integer('is_favorite', { mode: 'boolean' }).notNull().default(false),
 });
 
 export const logEntries = sqliteTable('log_entries', {

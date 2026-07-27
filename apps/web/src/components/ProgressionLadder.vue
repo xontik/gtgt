@@ -13,14 +13,13 @@ interface TreeItem {
 
 const props = defineProps<{
   variations: ExerciseVariation[];
-  activeVariationId: number | null;
 }>();
 
 const emit = defineEmits<{
-  select: [variationId: number];
   reorder: [variationId: number, direction: 'up' | 'down'];
   edit: [variationId: number];
   branch: [parentVariationId: number];
+  favorite: [variationId: number, isFavorite: boolean];
 }>();
 
 const tree = computed<TreeItem[]>(() => {
@@ -48,10 +47,6 @@ const tree = computed<TreeItem[]>(() => {
   return build(null);
 });
 
-function isActive(variation: ExerciseVariation) {
-  return variation.id === props.activeVariationId;
-}
-
 function asTreeItem(item: unknown) {
   return item as TreeItem;
 }
@@ -60,27 +55,21 @@ function asTreeItem(item: unknown) {
 <template>
   <v-treeview :items="tree" item-value="id" open-all density="compact" slim>
     <template #title="{ item: rawItem }">
-      <div
-        v-for="item in [asTreeItem(rawItem)]"
-        :key="item.id"
-        class="d-flex align-center ga-1"
-        style="cursor: pointer"
-        @click="emit('select', item.variation.id)"
-      >
-        <v-avatar
-          size="10"
-          :color="isActive(item.variation) ? 'primary' : 'grey-lighten-1'"
-          class="flex-shrink-0"
-        />
-        <div>
-          <div :class="isActive(item.variation) ? 'font-weight-bold' : ''">{{ item.variation.name }}</div>
-          <div v-if="isActive(item.variation)" class="text-caption text-primary">Active</div>
-        </div>
+      <div v-for="item in [asTreeItem(rawItem)]" :key="item.id">
+        {{ item.variation.name }}
       </div>
     </template>
 
     <template #append="{ item: rawItem }">
       <div v-for="item in [asTreeItem(rawItem)]" :key="item.id" class="d-flex align-center ga-1">
+        <v-btn
+          :icon="item.variation.isFavorite ? 'mdi-heart' : 'mdi-heart-outline'"
+          :color="item.variation.isFavorite ? 'error' : undefined"
+          size="x-small"
+          variant="text"
+          title="Toggle favorite"
+          @click.stop="emit('favorite', item.variation.id, !item.variation.isFavorite)"
+        />
         <v-btn
           icon="mdi-arrow-up"
           size="x-small"

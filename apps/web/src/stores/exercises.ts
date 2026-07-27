@@ -18,8 +18,7 @@ export const useExercisesStore = defineStore('exercises', {
       return (exerciseId: number) =>
         this.variationsFor(exerciseId).filter((v) => v.deletedAt === null);
     },
-    activeVariationFor: (state) => (exercise: Exercise) =>
-      state.variations.find((v) => v.id === exercise.activeVariationId),
+    favoriteVariations: (state) => state.variations.filter((v) => v.isFavorite && v.deletedAt === null),
   },
   actions: {
     async fetchAll() {
@@ -33,10 +32,10 @@ export const useExercisesStore = defineStore('exercises', {
       }
     },
 
-    async setActiveVariation(exerciseId: number, variationId: number) {
-      const updated = await updateExercise(exerciseId, { activeVariationId: variationId });
-      const index = this.exercises.findIndex((e) => e.id === exerciseId);
-      if (index !== -1) this.exercises[index] = updated;
+    async setFavorite(variationId: number, isFavorite: boolean) {
+      const updated = await updateVariation(variationId, { isFavorite });
+      const index = this.variations.findIndex((v) => v.id === variationId);
+      if (index !== -1) this.variations[index] = updated;
     },
 
     async moveVariation(variationId: number, direction: 'up' | 'down') {
@@ -72,13 +71,9 @@ export const useExercisesStore = defineStore('exercises', {
         name,
         difficultyRank: nextRank,
         parentVariationId,
+        isFavorite: false,
       });
       this.variations.push(created);
-
-      const exercise = this.exercises.find((e) => e.id === exerciseId);
-      if (exercise?.activeVariationId === null) {
-        await this.setActiveVariation(exerciseId, created.id);
-      }
     },
 
     async updateVariationDetails(variationId: number, name: string, parentVariationId: number | null) {
@@ -106,9 +101,6 @@ export const useExercisesStore = defineStore('exercises', {
         for (const child of this.variations) {
           if (child.parentVariationId === variationId) child.parentVariationId = variation.parentVariationId;
         }
-      }
-      for (const exercise of this.exercises) {
-        if (exercise.activeVariationId === variationId) exercise.activeVariationId = null;
       }
     },
 

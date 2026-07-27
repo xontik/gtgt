@@ -59,44 +59,54 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
 
 ## Features
 
-- **Home / quick log** — every exercise shown as a card with its current
-  active variation, today's total (set count + reps or time), and how long
-  ago it was last logged. Cards are sorted by recency, most recently logged
-  first. Tap a card to log a set: a rep stepper (+/-) or a start/stop timer,
-  depending on the exercise's metric type. Add new exercises from the
-  button below the list.
+- **Home / quick log** — a "Favorites" grid of working variations you're
+  currently training. Any variation can be favorited (see Exercise detail
+  below), including several on the same exercise at once, since you can work
+  multiple progressions/branches simultaneously. Each card shows that
+  variation's today's total (set count + reps or time) and how long ago it
+  was last logged, sorted by recency (most recently logged first). Tap a
+  card to log a set: a rep stepper (+/-) or a start/stop timer, depending on
+  the exercise's metric type. The heart-off icon on a card removes it from
+  favorites (with a confirmation dialog) without touching its log history.
+  "Add working variation" opens a searchable picker over every exercise's
+  variations to favorite one.
 - **Stats** — per-exercise totals (set count + reps or time), browsable by
   Day / Week / Month / Year with prev/next navigation. Pick exactly which
   data to include from a variation tree checklist: checking an exercise
-  selects all its variations, or check individual variations to narrow
-  the stats down to just those (e.g. only the currently active one).
+  selects all its variations, or check individual variations to narrow the
+  stats down to just those. Favorited variations are preselected on load.
 - **Log** — every log entry, newest first. Tap one to edit its value or
   delete it (with confirmation). Or use the trash icon on a row to delete
   it immediately, no confirmation, safe to close the tab right after — a
   snackbar with an Undo button appears for a few seconds; Undo re-creates
   the entry (as a new log entry, since the original is already gone).
-- **Exercise detail** — tap the chevron on a Home card to open an exercise's
-  page: a visual progression ladder of its variations, pick which one is
-  currently active, reorder variations with the up/down arrows, rename or
-  delete a variation, add a new one, and see/edit recent entries for that
-  exercise. The pencil icon next to the exercise name lets you rename it,
-  change its category/metric type, or delete it entirely. Deleting a
-  variation is a soft delete — it disappears from the progression ladder but
-  its past log entries are kept for stats/history. Variations can branch:
-  use the branch icon on any variation to add a new variation forking from
-  it (e.g. push-up splitting into a decline/archer route and a
-  handstand-push-up route), rather than a single straight-line progression.
+- **Exercise detail** — tap a favorite card's chevron, or a row on Manage
+  exercises, to open an exercise's page: a visual progression ladder of its
+  variations, reorder them with the up/down arrows, rename or delete a
+  variation, add a new one, and see/edit recent entries for that exercise.
+  Each variation row has a heart icon to favorite/unfavorite it as a working
+  variation. Deleting a variation is a soft delete — it disappears from the
+  progression ladder but its past log entries are kept for stats/history.
+  Variations can branch: use the branch icon on any variation to add a new
+  variation forking from it (e.g. push-up splitting into a decline/archer
+  route and a handstand-push-up route), rather than a single straight-line
+  progression.
+- **Manage exercises** — a plain list of every exercise (name, category,
+  metric type) for basic CRUD: add a new exercise, rename/change one, or
+  delete it entirely. Tap a row to jump to its detail page for variations.
 
 ## How to use it
 
-1. On **Home**, tap an exercise card whenever you do a set — log the reps (or
-   start/stop the timer for time-based exercises) and confirm.
-2. Check **Stats** to see today's (or this week's/month's/year's) totals per
-   exercise.
+1. On **Home**, tap a favorite card whenever you do a set — log the reps (or
+   start/stop the timer for time-based exercises) and confirm. Use "Add
+   working variation" to pick what shows up here.
+2. Check **Stats** to see today's (or this week's/month's/year's) totals,
+   defaulting to your favorited variations.
 3. Use **Log** if you need to fix a mis-logged set or delete one.
-4. Open an exercise's detail page (chevron on its Home card) to progress to a
-   harder variation, tweak the progression ladder, or manage the exercise
-   itself.
+4. Open an exercise's detail page to progress to a harder variation, tweak
+   the progression ladder, or favorite/unfavorite specific variations.
+5. Use **Manage exercises** to add a brand-new exercise or edit/delete an
+   existing one.
 
 ## Non-goals (for now)
 

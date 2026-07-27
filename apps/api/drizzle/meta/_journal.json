@@ -29,6 +29,13 @@
       "when": 1785146714350,
       "tag": "0003_slimy_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1785154111201,
+      "tag": "0004_colossal_jack_power",
+      "breakpoints": true
     }
   ]
 }

@@ -27,6 +27,10 @@ const route = useRoute();
         <v-icon>mdi-format-list-bulleted</v-icon>
         Log
       </v-btn>
+      <v-btn value="/exercises" to="/exercises">
+        <v-icon>mdi-cog-outline</v-icon>
+        Manage
+      </v-btn>
     </v-bottom-navigation>
   </v-app>
 </template>

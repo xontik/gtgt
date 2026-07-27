@@ -7,6 +7,7 @@ export const exerciseVariationSchema = z.object({
   difficultyRank: z.number().int(),
   deletedAt: z.coerce.date().nullable(),
   parentVariationId: z.number().int().positive().nullable(),
+  isFavorite: z.boolean(),
 });
 export type ExerciseVariation = z.infer<typeof exerciseVariationSchema>;
 
@@ -15,9 +16,11 @@ export const exerciseVariationInsertSchema = exerciseVariationSchema
     id: true,
     deletedAt: true,
     parentVariationId: true,
+    isFavorite: true,
   })
   .extend({
     parentVariationId: z.number().int().positive().nullable().optional().default(null),
+    isFavorite: z.boolean().optional().default(false),
   });
 export type ExerciseVariationInsert = z.infer<typeof exerciseVariationInsertSchema>;
 

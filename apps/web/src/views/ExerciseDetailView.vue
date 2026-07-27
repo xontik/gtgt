@@ -51,13 +51,12 @@ const todayTotal = computed(() => {
   };
 });
 
-async function pickVariation(variationId: number) {
-  if (!exercise.value) return;
-  await store.setActiveVariation(exercise.value.id, variationId);
-}
-
 async function reorderVariation(variationId: number, direction: 'up' | 'down') {
   await store.moveVariation(variationId, direction);
+}
+
+async function toggleFavorite(variationId: number, isFavorite: boolean) {
+  await store.setFavorite(variationId, isFavorite);
 }
 
 function onUpdate(updated: LogEntry) {
@@ -174,11 +173,10 @@ async function removeExercise() {
     <ProgressionLadder
       class="mb-6"
       :variations="activeVariations"
-      :active-variation-id="exercise.activeVariationId"
-      @select="pickVariation"
       @reorder="reorderVariation"
       @edit="openEdit"
       @branch="openAddDialog"
+      @favorite="toggleFavorite"
     />
 
     <div class="text-subtitle-2 mb-2">Recent entries</div>
