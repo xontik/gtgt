@@ -20,3 +20,4 @@
 - [ ] home page "progression nudge" (suggest moving up the ladder) once there's a good signal for it
 - [x] backup/restore data from the UI, plus import-just-exercises-and-variations for trying out configs
 - [x] image, notes, and video URL per variation, shown in quick-log/edit bottom sheets, carried through backup/import
+- [x] Discord webhook reminder when nothing's been logged in N hours, suggesting top 3 overdue favorites with a no-click deep link into the quick-log sheet

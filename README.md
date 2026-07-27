@@ -73,12 +73,34 @@ On the VPS:
 
 ```bash
 git clone <this repo> gtg-tracker && cd gtg-tracker
+cp .env.example .env   # fill in DISCORD_WEBHOOK_URL / PUBLIC_APP_URL, see below
 docker compose up -d --build
 ```
 
 Then open `http://<vps-host>:8080`. To put it behind a domain with TLS, run
 your own reverse proxy (Caddy, Traefik, nginx) in front of the `web`
 service — this compose file doesn't manage certificates itself.
+
+### Idle-training reminders (Discord)
+
+The API runs an hourly cron job (configurable) that checks whether any set
+has been logged recently; if not, it posts a reminder to a Discord webhook
+suggesting your 3 most-overdue favorites, each with a link that opens
+straight into that variation's quick-log sheet — no extra tap needed. Set
+these in `.env` (see `.env.example`):
+
+- `DISCORD_WEBHOOK_URL` — a Discord channel webhook URL. Leave unset to
+  disable notifications entirely (the cron job still runs but no-ops).
+- `PUBLIC_APP_URL` — the URL the app is actually reachable at, used to build
+  the deep links in the reminder (defaults to `http://localhost:8080`, which
+  is only right for local testing — set this for real deployments).
+- `NOTIFY_CRON_SCHEDULE` — 5-field crontab syntax, default hourly 8am-10pm
+  (`0 8-22 * * *`).
+- `NOTIFY_IDLE_HOURS` — hours of no logged sets before a reminder fires
+  (default `1`).
+
+You can trigger a check manually (e.g. to test the webhook) with
+`curl -X POST http://<host>:8080/api/notifications/check-idle`.
 
 To update after pulling new commits:
 
@@ -144,6 +166,11 @@ or manually removing the volume deletes logged data.
   without losing history. Exercises/variations that already exist (same
   name, same exercise/parent) are skipped rather than duplicated, so re-importing the
   same or an overlapping file is safe.
+- **Idle-training reminders** — a server-side cron job (see "Deployment"
+  below) posts to a Discord webhook when nothing's been logged in a while,
+  suggesting your 3 most-overdue favorites. Each suggestion links straight
+  into that variation's quick-log sheet on Home — opening the link pops the
+  sheet immediately, no extra tap.
 
 ## How to use it
 

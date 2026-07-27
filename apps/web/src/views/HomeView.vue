@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import type { Exercise, ExerciseVariation, LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
 import { createLogEntry, listLogEntries } from '../api/logEntries';
@@ -13,10 +14,22 @@ import LogEntryList from '../components/LogEntryList.vue';
 
 const store = useExercisesStore();
 const entries = ref<LogEntry[]>([]);
+const route = useRoute();
+const router = useRouter();
 
 onMounted(async () => {
   const [, fetchedEntries] = await Promise.all([store.fetchAll(), listLogEntries()]);
   entries.value = fetchedEntries;
+
+  // Deep link from notifications: ?logVariation=<id> opens the quick-log
+  // sheet immediately, no tap needed.
+  const logVariationId = Number(route.query.logVariation);
+  if (logVariationId) {
+    const variation = store.variations.find((v) => v.id === logVariationId);
+    const exercise = variation && store.exercises.find((e) => e.id === variation.exerciseId);
+    if (variation && exercise) openSheet(exercise, variation);
+    router.replace({ query: {} });
+  }
 });
 
 const entriesByVariation = computed(() => {
