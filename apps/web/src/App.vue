@@ -6,7 +6,11 @@ const route = useRoute();
 
 <template>
   <v-app>
-    <v-app-bar title="GtG Tracker" />
+    <v-app-bar>
+      <v-app-bar-title>
+        <router-link to="/" class="text-decoration-none text-high-emphasis">GtG Tracker</router-link>
+      </v-app-bar-title>
+    </v-app-bar>
     <v-main>
       <router-view />
     </v-main>
