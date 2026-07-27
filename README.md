@@ -64,7 +64,10 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
   start/stop timer, depending on the exercise's metric type. Add new
   exercises from the button below the list.
 - **Stats** — per-exercise totals (set count + reps or time), browsable by
-  Day / Week / Month / Year with prev/next navigation.
+  Day / Week / Month / Year with prev/next navigation. Pick exactly which
+  data to include from a variation tree checklist: checking an exercise
+  selects all its variations, or check individual variations to narrow
+  the stats down to just those (e.g. only the currently active one).
 - **Log** — every log entry, newest first. Tap one to edit its value or
   delete it.
 - **Exercise detail** — tap the chevron on a Home card to open an exercise's

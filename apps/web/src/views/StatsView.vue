@@ -32,7 +32,50 @@ function goNext() {
   referenceDate.value = shiftPeriod(period.value, referenceDate.value, 1);
 }
 
-const selectedExerciseIds = ref<number[]>([]);
+interface PickerNode {
+  id: string;
+  title: string;
+  color: string;
+  children?: PickerNode[];
+}
+
+const treeItems = computed<PickerNode[]>(() =>
+  store.exercises.map((exercise, index) => {
+    const color = exerciseColorVar(index);
+    return {
+      id: `ex-${exercise.id}`,
+      title: exercise.name,
+      color,
+      children: store.variationsFor(exercise.id).map((v) => ({
+        id: `var-${v.id}`,
+        title: v.deletedAt ? `${v.name} (deleted)` : v.name,
+        color,
+      })),
+    };
+  }),
+);
+
+function asPickerNode(item: unknown) {
+  return item as PickerNode;
+}
+
+const selected = ref<string[]>([]);
+
+const selectedVariationIds = computed(
+  () =>
+    new Set(
+      selected.value.filter((id) => id.startsWith('var-')).map((id) => Number(id.slice(4))),
+    ),
+);
+
+const selectedExerciseIds = computed(() => {
+  const ids = new Set<number>();
+  for (const variationId of selectedVariationIds.value) {
+    const variation = store.variations.find((v) => v.id === variationId);
+    if (variation) ids.add(variation.exerciseId);
+  }
+  return [...ids];
+});
 
 // The year heatmap renders hundreds of per-day tooltips, which blocks the
 // main thread synchronously. Briefly show a spinner (across two animation
@@ -65,7 +108,9 @@ async function load() {
     );
     if (mostRecent) {
       const variation = store.variations.find((v) => v.id === mostRecent.variationId);
-      if (variation) selectedExerciseIds.value = [variation.exerciseId];
+      if (variation) {
+        selected.value = store.variationsFor(variation.exerciseId).map((v) => `var-${v.id}`);
+      }
     }
   } finally {
     loading.value = false;
@@ -75,19 +120,16 @@ async function load() {
 onMounted(load);
 
 function entriesForExercise(exerciseId: number) {
-  const variationIds = new Set(store.variationsFor(exerciseId).map((v) => v.id));
-  return entries.value.filter((e) => variationIds.has(e.variationId));
+  return entries.value.filter((e) => {
+    if (!selectedVariationIds.value.has(e.variationId)) return false;
+    const variation = store.variations.find((v) => v.id === e.variationId);
+    return variation?.exerciseId === exerciseId;
+  });
 }
 
 function colorFor(exercise: Exercise) {
   const index = store.exercises.findIndex((e) => e.id === exercise.id);
   return exerciseColorVar(index);
-}
-
-function toggleExercise(id: number) {
-  const i = selectedExerciseIds.value.indexOf(id);
-  if (i === -1) selectedExerciseIds.value.push(id);
-  else selectedExerciseIds.value.splice(i, 1);
 }
 
 const selectedExercises = computed(() =>
@@ -159,20 +201,23 @@ const mergedHeatmapSeries = computed(() =>
 
     <div v-else class="d-flex ga-4">
       <div class="exercise-picker">
-        <div
-          v-for="exercise in store.exercises"
-          :key="exercise.id"
-          class="d-flex align-center ga-2 py-1"
-          style="cursor: pointer"
-          @click="toggleExercise(exercise.id)"
+        <v-treeview
+          v-model:selected="selected"
+          :items="treeItems"
+          item-value="id"
+          select-strategy="classic"
+          selectable
+          density="compact"
+          open-all
+          slim
         >
-          <v-icon
-            :icon="selectedExerciseIds.includes(exercise.id) ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'"
-            size="small"
-            :style="selectedExerciseIds.includes(exercise.id) ? { color: colorFor(exercise) } : {}"
-          />
-          <span class="text-body-2">{{ exercise.name }}</span>
-        </div>
+          <template #title="{ item: rawItem }">
+            <div v-for="item in [asPickerNode(rawItem)]" :key="item.id" class="d-flex align-center ga-2">
+              <v-avatar size="10" :color="item.color" class="flex-shrink-0" />
+              <span class="text-body-2">{{ item.title }}</span>
+            </div>
+          </template>
+        </v-treeview>
       </div>
 
       <div class="flex-grow-1" style="min-width: 0">
@@ -216,7 +261,7 @@ const mergedHeatmapSeries = computed(() =>
 
 <style scoped>
 .exercise-picker {
-  width: 130px;
+  width: 200px;
   flex-shrink: 0;
 }
 </style>

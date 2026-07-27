@@ -5,7 +5,7 @@
 - [x] graphic visualisation per periode, per exercices
 - [x] avoid loosing logged entries when deleting variation, use soft delete and keep a link to the variation that was deleted, maybe a "deleted" state for variations.
 - [x] how to handle variations ? (branching progression via parentVariationId)
-- [ ] on the stats view let me select variation under an exercices to just see the log from this variation, in a tree like checkbox structure, selecting an exercices select all variation or deselect all variation, i think vuetify have a component for that.
+- [x] on the stats view let me select variation under an exercices to just see the log from this variation, in a tree like checkbox structure, selecting an exercices select all variation or deselect all variation, i think vuetify have a component for that.
 
 # Nice to have
 
