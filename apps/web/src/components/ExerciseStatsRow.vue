@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Exercise, LogEntry } from '@gtg/shared';
-import type { Period } from '../lib/period';
+import { rollingPeriods, type Period } from '../lib/period';
 import { dateKey, buildWeekColumns, eachDayOfRange } from '../lib/heatmap';
 import { formatDuration } from '../lib/format';
 import HeatmapCalendar from './HeatmapCalendar.vue';
@@ -66,7 +66,7 @@ const totalLabel = computed(() =>
     </div>
 
     <BarsChart
-      v-if="period === 'week' || period === 'month'"
+      v-if="period === 'week' || period === 'month' || rollingPeriods.has(period)"
       :days="periodDays"
       :max-value="allTimeMaxDailyTotal"
       :metric-type="exercise.metricType"

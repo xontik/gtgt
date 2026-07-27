@@ -1,4 +1,4 @@
-export type Period = 'day' | 'week' | 'month' | 'year';
+export type Period = 'day' | 'week' | 'month' | 'year' | 'last7' | 'last30';
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);
@@ -41,6 +41,16 @@ function endOfYear(date: Date): Date {
   return endOfDay(new Date(date.getFullYear(), 11, 31));
 }
 
+// Rolling periods always end "today" — they ignore referenceDate/navigation,
+// unlike the calendar-aligned periods above.
+function startOfRolling(days: number): Date {
+  const d = startOfDay(new Date());
+  d.setDate(d.getDate() - (days - 1));
+  return d;
+}
+
+export const rollingPeriods = new Set<Period>(['last7', 'last30']);
+
 export function periodRange(period: Period, referenceDate: Date): { start: Date; end: Date } {
   switch (period) {
     case 'day':
@@ -51,6 +61,10 @@ export function periodRange(period: Period, referenceDate: Date): { start: Date;
       return { start: startOfMonth(referenceDate), end: endOfMonth(referenceDate) };
     case 'year':
       return { start: startOfYear(referenceDate), end: endOfYear(referenceDate) };
+    case 'last7':
+      return { start: startOfRolling(7), end: endOfDay(new Date()) };
+    case 'last30':
+      return { start: startOfRolling(30), end: endOfDay(new Date()) };
   }
 }
 
@@ -69,6 +83,9 @@ export function shiftPeriod(period: Period, referenceDate: Date, delta: number):
     case 'year':
       d.setFullYear(d.getFullYear() + delta);
       break;
+    case 'last7':
+    case 'last30':
+      break;
   }
   return d;
 }
@@ -84,5 +101,9 @@ export function formatPeriodLabel(period: Period, referenceDate: Date): string {
       return start.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
     case 'year':
       return `${start.getFullYear()}`;
+    case 'last7':
+      return 'Last 7 days';
+    case 'last30':
+      return 'Last 30 days';
   }
 }

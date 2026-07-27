@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useExercisesStore } from '../stores/exercises';
 import { listLogEntries } from '../api/logEntries';
-import { periodRange, shiftPeriod, formatPeriodLabel, type Period } from '../lib/period';
+import { periodRange, shiftPeriod, formatPeriodLabel, rollingPeriods, type Period } from '../lib/period';
 import { dateKey, buildWeekColumns, eachDayOfRange } from '../lib/heatmap';
 import { exerciseColorVar } from '../lib/colors';
 import ExerciseStatsRow from '../components/ExerciseStatsRow.vue';
@@ -20,6 +20,7 @@ const period = ref<Period>('day');
 const referenceDate = ref(new Date());
 
 const label = computed(() => formatPeriodLabel(period.value, referenceDate.value));
+const isRolling = computed(() => rollingPeriods.has(period.value));
 const periodStart = computed(() => periodRange(period.value, referenceDate.value).start);
 const periodEnd = computed(() => periodRange(period.value, referenceDate.value).end);
 const periodDays = computed(() => eachDayOfRange(periodStart.value, periodEnd.value));
@@ -198,17 +199,21 @@ const mergedHeatmapSeries = computed(() =>
 
 <template>
   <v-container>
-    <v-btn-toggle v-model="period" mandatory density="comfortable" class="mb-4" divided>
+    <v-btn-toggle v-model="period" mandatory density="comfortable" class="mb-2" divided>
       <v-btn value="day">Day</v-btn>
       <v-btn value="week">Week</v-btn>
       <v-btn value="month">Month</v-btn>
       <v-btn value="year">Year</v-btn>
     </v-btn-toggle>
+    <v-btn-toggle v-model="period" mandatory density="comfortable" class="mb-4 ml-2" divided>
+      <v-btn value="last7">7d</v-btn>
+      <v-btn value="last30">30d</v-btn>
+    </v-btn-toggle>
 
     <div class="d-flex align-center justify-space-between mb-4">
-      <v-btn icon="mdi-chevron-left" variant="text" @click="goPrev" />
+      <v-btn icon="mdi-chevron-left" variant="text" :disabled="isRolling" @click="goPrev" />
       <div class="text-subtitle-1">{{ label }}</div>
-      <v-btn icon="mdi-chevron-right" variant="text" @click="goNext" />
+      <v-btn icon="mdi-chevron-right" variant="text" :disabled="isRolling" @click="goNext" />
     </div>
 
     <v-progress-linear v-if="loading" indeterminate class="mb-4" />
@@ -270,7 +275,7 @@ const mergedHeatmapSeries = computed(() =>
           <div v-if="selectedExercises.length > 1" class="mb-6">
             <div class="text-subtitle-1 mb-2">Combined</div>
             <GroupedBarsChart
-              v-if="period === 'week' || period === 'month'"
+              v-if="period === 'week' || period === 'month' || isRolling"
               :series="mergedGroupSeries"
               :days="periodDays"
             />
