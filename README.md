@@ -81,6 +81,31 @@ Then open `http://<vps-host>:8080`. To put it behind a domain with TLS, run
 your own reverse proxy (Caddy, Traefik, nginx) in front of the `web`
 service — this compose file doesn't manage certificates itself.
 
+### Using the published images instead of building
+
+Every push to `main` and every `vX.Y.Z` tag builds and publishes multi-arch
+(`amd64`/`arm64`) images to GHCR via
+[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml):
+`ghcr.io/xontik/gtgt-api` and `ghcr.io/xontik/gtgt-web`, tagged `latest`,
+`<version>`, `<major>.<minor>`, and the commit SHA.
+
+To run without cloning the repo, grab just two files —
+[`docker-compose.ghcr.yml`](docker-compose.ghcr.yml) and `.env.example`
+(rename to `.env`, fill in) — then:
+
+```bash
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+Set `IMAGE_TAG` in `.env` to pin a specific version instead of `latest`
+(e.g. `IMAGE_TAG=1.2.0`).
+
+One-time setup after the first successful workflow run: GHCR packages are
+created **private** by default regardless of the repo's visibility — go to
+the package's page (github.com → your profile/org → Packages →
+`gtgt-api`/`gtgt-web`) → Package settings → change visibility to Public, so
+others can pull without `docker login`.
+
 ### Idle-training reminders (Discord)
 
 The API runs a cron job (every 5 minutes, 8am-10pm by default) that checks
