@@ -49,6 +49,47 @@ async function downloadBackup() {
   }
 }
 
+const exportingCsv = ref(false);
+
+function csvEscape(value: string) {
+  if (/[",\n]/.test(value)) return `"${value.replaceAll('"', '""')}"`;
+  return value;
+}
+
+async function downloadCsv() {
+  exportingCsv.value = true;
+  try {
+    const backup = await fetchBackup();
+    const exerciseById = new Map(backup.exercises.map((e) => [e.id, e]));
+    const variationById = new Map(backup.exerciseVariations.map((v) => [v.id, v]));
+
+    const rows = [['timestamp', 'exercise', 'variation', 'value', 'notes']];
+    for (const entry of backup.logEntries) {
+      const variation = variationById.get(entry.variationId);
+      const exercise = variation && exerciseById.get(variation.exerciseId);
+      rows.push([
+        new Date(entry.timestamp).toISOString(),
+        exercise?.name ?? 'Unknown exercise',
+        variation?.name ?? 'Unknown variation',
+        String(entry.value),
+        entry.notes ?? '',
+      ]);
+    }
+
+    const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `gtg-log-${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } finally {
+    exportingCsv.value = false;
+  }
+}
+
 async function readBackupFile(file: File): Promise<Backup> {
   const text = await file.text();
   return backupSchema.parse(JSON.parse(text));
@@ -149,6 +190,9 @@ async function onImportFileSelected() {
       <v-card-actions>
         <v-btn prepend-icon="mdi-download" :loading="downloading" @click="downloadBackup">
           Download backup
+        </v-btn>
+        <v-btn prepend-icon="mdi-file-delimited-outline" :loading="exportingCsv" @click="downloadCsv">
+          Export CSV
         </v-btn>
       </v-card-actions>
     </v-card>
