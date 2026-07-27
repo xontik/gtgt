@@ -4,6 +4,8 @@ import type { Exercise } from '@gtg/shared';
 defineProps<{
   exercise: Exercise;
   variationName: string | undefined;
+  todayLabel: string;
+  lastLoggedLabel: string;
 }>();
 
 const emit = defineEmits<{ log: [] }>();
@@ -23,5 +25,8 @@ const emit = defineEmits<{ log: [] }>();
         />
       </template>
     </v-card-item>
+    <v-card-text class="pt-0 text-caption text-medium-emphasis">
+      {{ todayLabel }} · {{ lastLoggedLabel }}
+    </v-card-text>
   </v-card>
 </template>

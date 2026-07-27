@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import type { Exercise } from '@gtg/shared';
+import type { Exercise, LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
-import { createLogEntry } from '../api/logEntries';
+import { createLogEntry, listLogEntries } from '../api/logEntries';
+import { formatDuration, formatRelativeTime } from '../lib/format';
 import ExerciseCard from '../components/ExerciseCard.vue';
 import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
@@ -11,7 +12,69 @@ import AddExerciseDialog from '../components/AddExerciseDialog.vue';
 
 const store = useExercisesStore();
 const router = useRouter();
-onMounted(() => store.fetchAll());
+const entries = ref<LogEntry[]>([]);
+
+onMounted(async () => {
+  const [, fetchedEntries] = await Promise.all([store.fetchAll(), listLogEntries()]);
+  entries.value = fetchedEntries;
+});
+
+const entriesByExercise = computed(() => {
+  const map = new Map<number, LogEntry[]>();
+  for (const entry of entries.value) {
+    const variation = store.variations.find((v) => v.id === entry.variationId);
+    if (!variation) continue;
+    const list = map.get(variation.exerciseId);
+    if (list) list.push(entry);
+    else map.set(variation.exerciseId, [entry]);
+  }
+  return map;
+});
+
+const todayTotalsByExercise = computed(() => {
+  const map = new Map<number, { setCount: number; total: number }>();
+  const isToday = (d: Date) => d.toDateString() === new Date().toDateString();
+  for (const [exerciseId, list] of entriesByExercise.value) {
+    const todays = list.filter((e) => isToday(new Date(e.timestamp)));
+    map.set(exerciseId, {
+      setCount: todays.length,
+      total: todays.reduce((sum, e) => sum + e.value, 0),
+    });
+  }
+  return map;
+});
+
+const lastLoggedByExercise = computed(() => {
+  const map = new Map<number, Date>();
+  for (const [exerciseId, list] of entriesByExercise.value) {
+    const latest = list.reduce<Date | undefined>((acc, e) => {
+      const t = new Date(e.timestamp);
+      return !acc || t > acc ? t : acc;
+    }, undefined);
+    if (latest) map.set(exerciseId, latest);
+  }
+  return map;
+});
+
+const sortedExercises = computed(() =>
+  [...store.exercises].sort((a, b) => {
+    const aTime = lastLoggedByExercise.value.get(a.id)?.getTime() ?? -Infinity;
+    const bTime = lastLoggedByExercise.value.get(b.id)?.getTime() ?? -Infinity;
+    return bTime - aTime;
+  }),
+);
+
+function todayLabelFor(exercise: Exercise) {
+  const stats = todayTotalsByExercise.value.get(exercise.id);
+  if (!stats || stats.setCount === 0) return 'No sets today';
+  const amount = exercise.metricType === 'time' ? formatDuration(stats.total) : `${stats.total} reps`;
+  return `${stats.setCount} set${stats.setCount === 1 ? '' : 's'} · ${amount}`;
+}
+
+function lastLoggedLabelFor(exercise: Exercise) {
+  const last = lastLoggedByExercise.value.get(exercise.id);
+  return last ? formatRelativeTime(last) : 'Not logged yet';
+}
 
 const sheetOpen = ref(false);
 const selectedExercise = ref<Exercise>();
@@ -36,7 +99,8 @@ async function logSet(value: number) {
   const variationId = exercise?.activeVariationId;
   if (!variationId) return;
 
-  await createLogEntry({ variationId, value });
+  const created = await createLogEntry({ variationId, value });
+  entries.value.push(created);
   sheetOpen.value = false;
   const unit = exercise.metricType === 'time' ? 's' : 'reps';
   snackbarText.value = `Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}`;
@@ -56,10 +120,12 @@ async function addExercise(exercise: Parameters<typeof store.addExercise>[0]) {
     <v-progress-linear v-if="store.loading" indeterminate class="mb-4" />
 
     <v-row>
-      <v-col v-for="exercise in store.exercises" :key="exercise.id" cols="12" sm="6" md="4">
+      <v-col v-for="exercise in sortedExercises" :key="exercise.id" cols="12" sm="6" md="4">
         <ExerciseCard
           :exercise="exercise"
           :variation-name="store.activeVariationFor(exercise)?.name"
+          :today-label="todayLabelFor(exercise)"
+          :last-logged-label="lastLoggedLabelFor(exercise)"
           @log="openSheet(exercise)"
         />
       </v-col>

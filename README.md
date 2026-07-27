@@ -60,9 +60,11 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
 ## Features
 
 - **Home / quick log** — every exercise shown as a card with its current
-  active variation. Tap a card to log a set: a rep stepper (+/-) or a
-  start/stop timer, depending on the exercise's metric type. Add new
-  exercises from the button below the list.
+  active variation, today's total (set count + reps or time), and how long
+  ago it was last logged. Cards are sorted by recency, most recently logged
+  first. Tap a card to log a set: a rep stepper (+/-) or a start/stop timer,
+  depending on the exercise's metric type. Add new exercises from the
+  button below the list.
 - **Stats** — per-exercise totals (set count + reps or time), browsable by
   Day / Week / Month / Year with prev/next navigation. Pick exactly which
   data to include from a variation tree checklist: checking an exercise
