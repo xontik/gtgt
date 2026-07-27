@@ -33,6 +33,7 @@ onMounted(load);
 
 const exercise = computed(() => store.exercises.find((e) => e.id === exerciseId));
 const variations = computed(() => store.variationsFor(exerciseId));
+const activeVariations = computed(() => store.activeVariationsFor(exerciseId));
 const variationIds = computed(() => new Set(variations.value.map((v) => v.id)));
 
 const exerciseEntries = computed(() =>
@@ -133,7 +134,7 @@ async function removeExercise() {
     </div>
     <ProgressionLadder
       class="mb-6"
-      :variations="variations"
+      :variations="activeVariations"
       :active-variation-id="exercise.activeVariationId"
       @select="pickVariation"
       @reorder="reorderVariation"

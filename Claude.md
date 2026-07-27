@@ -26,7 +26,7 @@ See [README.md](README.md) for setup instructions, the current feature list, and
 Notes for the agent:
 - `Exercise.activeVariationId` is the explicit "current working variation" — set by the user on the exercise detail page, not derived from log history.
 - `metricType` on Exercise determines whether the logging UI shows a rep counter/stepper or a timer/stopwatch for that exercise's variations.
-- Deleting a variation cascades to delete its log entries (FK `ON DELETE CASCADE`); deleting a variation that was an exercise's active one sets `activeVariationId` back to null.
+- Deleting a variation is a soft delete (`deletedAt` timestamp set, row and its log entries kept); deleting a variation that was an exercise's active one sets `activeVariationId` back to null. Soft-deleted variations stay out of the progression ladder and pickers but their history still counts toward stats.
 
 ## Non-goals (do not build these unless asked)
 

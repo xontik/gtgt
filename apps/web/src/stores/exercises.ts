@@ -14,6 +14,10 @@ export const useExercisesStore = defineStore('exercises', {
       state.variations
         .filter((v) => v.exerciseId === exerciseId)
         .sort((a, b) => a.difficultyRank - b.difficultyRank),
+    activeVariationsFor(): (exerciseId: number) => ExerciseVariation[] {
+      return (exerciseId: number) =>
+        this.variationsFor(exerciseId).filter((v) => v.deletedAt === null);
+    },
     activeVariationFor: (state) => (exercise: Exercise) =>
       state.variations.find((v) => v.id === exercise.activeVariationId),
   },
@@ -39,7 +43,7 @@ export const useExercisesStore = defineStore('exercises', {
       const variation = this.variations.find((v) => v.id === variationId);
       if (!variation) return;
 
-      const siblings = this.variationsFor(variation.exerciseId);
+      const siblings = this.activeVariationsFor(variation.exerciseId);
       const index = siblings.findIndex((v) => v.id === variationId);
       const neighborIndex = direction === 'up' ? index - 1 : index + 1;
       const neighbor = siblings[neighborIndex];
@@ -57,7 +61,7 @@ export const useExercisesStore = defineStore('exercises', {
     },
 
     async addVariation(exerciseId: number, name: string) {
-      const siblings = this.variationsFor(exerciseId);
+      const siblings = this.activeVariationsFor(exerciseId);
       const nextRank = (siblings.at(-1)?.difficultyRank ?? 0) + 1;
       const created = await createVariation({ exerciseId, name, difficultyRank: nextRank });
       this.variations.push(created);
@@ -76,7 +80,8 @@ export const useExercisesStore = defineStore('exercises', {
 
     async removeVariation(variationId: number) {
       await deleteVariation(variationId);
-      this.variations = this.variations.filter((v) => v.id !== variationId);
+      const variation = this.variations.find((v) => v.id === variationId);
+      if (variation) variation.deletedAt = new Date();
       for (const exercise of this.exercises) {
         if (exercise.activeVariationId === variationId) exercise.activeVariationId = null;
       }

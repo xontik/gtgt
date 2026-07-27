@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import type { Exercise } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
 import { createLogEntry } from '../api/logEntries';
@@ -9,6 +10,7 @@ import TimerSheet from '../components/TimerSheet.vue';
 import AddExerciseDialog from '../components/AddExerciseDialog.vue';
 
 const store = useExercisesStore();
+const router = useRouter();
 onMounted(() => store.fetchAll());
 
 const sheetOpen = ref(false);
@@ -21,6 +23,10 @@ const selectedVariationName = computed(
 );
 
 function openSheet(exercise: Exercise) {
+  if (!exercise.activeVariationId) {
+    router.push(`/exercises/${exercise.id}`);
+    return;
+  }
   selectedExercise.value = exercise;
   sheetOpen.value = true;
 }

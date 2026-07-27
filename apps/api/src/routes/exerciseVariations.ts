@@ -5,7 +5,7 @@ import {
   exerciseVariationUpdateSchema,
 } from '@gtg/shared';
 import { db } from '../db/client.js';
-import { exerciseVariations } from '../db/schema.js';
+import { exercises, exerciseVariations } from '../db/schema.js';
 import { NotFoundError } from '../lib/errors.js';
 
 export async function exerciseVariationRoutes(app: FastifyInstance) {
@@ -52,10 +52,15 @@ export async function exerciseVariationRoutes(app: FastifyInstance) {
   app.delete('/variations/:id', async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const [deleted] = await db
-      .delete(exerciseVariations)
+      .update(exerciseVariations)
+      .set({ deletedAt: new Date() })
       .where(eq(exerciseVariations.id, id))
       .returning();
     if (!deleted) throw new NotFoundError('Variation not found');
+    await db
+      .update(exercises)
+      .set({ activeVariationId: null })
+      .where(eq(exercises.activeVariationId, id));
     reply.code(204);
   });
 }

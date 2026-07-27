@@ -15,6 +15,13 @@
       "when": 1785103404857,
       "tag": "0001_eager_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785145383317,
+      "tag": "0002_panoramic_triton",
+      "breakpoints": true
     }
   ]
 }

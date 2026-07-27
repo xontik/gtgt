@@ -72,7 +72,9 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
   currently active, reorder variations with the up/down arrows, rename or
   delete a variation, add a new one, and see/edit recent entries for that
   exercise. The pencil icon next to the exercise name lets you rename it,
-  change its category/metric type, or delete it entirely.
+  change its category/metric type, or delete it entirely. Deleting a
+  variation is a soft delete — it disappears from the progression ladder but
+  its past log entries are kept for stats/history.
 
 ## How to use it
 

@@ -3,8 +3,8 @@
 - [x] add home link on the title of the app
 - [x] let log arbitrary time for exercices with time, do not use timer
 - [x] graphic visualisation per periode, per exercices
+- [x] avoid loosing logged entries when deleting variation, use soft delete and keep a link to the variation that was deleted, maybe a "deleted" state for variations.
 - [ ] how to handle variations ?
-- [ ] avoid loosing logged entries when deleting variation, use soft delete and keep a link to the variation that was deleted, maybe a "deleted" state for variations.
 
 # Nice to have
 
