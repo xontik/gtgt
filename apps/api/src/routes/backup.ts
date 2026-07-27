@@ -59,54 +59,94 @@ export async function backupRoutes(app: FastifyInstance) {
   // Imports only the exercise/variation structure from a backup file, as new
   // rows (new ids), skipping soft-deleted variations and log entries -
   // useful for trying out a different exercise setup without carrying over
-  // history.
+  // history. Exercises and variations that already exist (matched by
+  // trimmed, case-insensitive name - same exercise for exercises, same
+  // exercise + parent for variations) are reused instead of duplicated, so
+  // re-importing the same or an overlapping backup is a no-op for those.
   app.post('/backup/import-structure', async (req) => {
     const backup = backupSchema.parse(req.body);
 
+    const normalize = (name: string) => name.trim().toLowerCase();
+    const variationKey = (exerciseId: number, parentVariationId: number | null, name: string) =>
+      `${exerciseId}::${parentVariationId ?? 'root'}::${normalize(name)}`;
+
     const exerciseIdMap = new Map<number, number>();
     const variationIdMap = new Map<number, number>();
+    let skippedExercises = 0;
+    let skippedVariations = 0;
 
     await db.transaction(async (tx) => {
+      const existingExercises = await tx.select().from(exercises);
+      const exerciseByName = new Map(existingExercises.map((e) => [normalize(e.name), e]));
+
       for (const exercise of backup.exercises) {
+        const key = normalize(exercise.name);
+        const existing = exerciseByName.get(key);
+        if (existing) {
+          exerciseIdMap.set(exercise.id, existing.id);
+          skippedExercises += 1;
+          continue;
+        }
         const [created] = await tx
           .insert(exercises)
           .values({ name: exercise.name, category: exercise.category, metricType: exercise.metricType })
           .returning();
-        if (created) exerciseIdMap.set(exercise.id, created.id);
+        if (!created) continue;
+        exerciseIdMap.set(exercise.id, created.id);
+        exerciseByName.set(key, created);
       }
 
-      const liveVariations = backup.exerciseVariations.filter((v) => v.deletedAt === null);
+      const existingVariations = await tx.select().from(exerciseVariations);
+      const variationByKey = new Map(
+        existingVariations
+          .filter((v) => v.deletedAt === null)
+          .map((v) => [variationKey(v.exerciseId, v.parentVariationId, v.name), v]),
+      );
+
+      // Sorted ascending by id so a variation's parent (always a lower id,
+      // since the app never lets a variation parent a pre-existing one) has
+      // already been mapped by the time we resolve its child.
+      const liveVariations = [...backup.exerciseVariations]
+        .filter((v) => v.deletedAt === null)
+        .sort((a, b) => a.id - b.id);
+
       for (const variation of liveVariations) {
         const newExerciseId = exerciseIdMap.get(variation.exerciseId);
         if (!newExerciseId) continue;
+        const resolvedParentId =
+          variation.parentVariationId === null
+            ? null
+            : (variationIdMap.get(variation.parentVariationId) ?? null);
+
+        const key = variationKey(newExerciseId, resolvedParentId, variation.name);
+        const existing = variationByKey.get(key);
+        if (existing) {
+          variationIdMap.set(variation.id, existing.id);
+          skippedVariations += 1;
+          continue;
+        }
+
         const [created] = await tx
           .insert(exerciseVariations)
           .values({
             exerciseId: newExerciseId,
             name: variation.name,
             difficultyRank: variation.difficultyRank,
-            parentVariationId: null,
+            parentVariationId: resolvedParentId,
             isFavorite: false,
           })
           .returning();
-        if (created) variationIdMap.set(variation.id, created.id);
-      }
-
-      for (const variation of liveVariations) {
-        if (variation.parentVariationId === null) continue;
-        const newId = variationIdMap.get(variation.id);
-        const newParentId = variationIdMap.get(variation.parentVariationId);
-        if (!newId || !newParentId) continue;
-        await tx
-          .update(exerciseVariations)
-          .set({ parentVariationId: newParentId })
-          .where(eq(exerciseVariations.id, newId));
+        if (!created) continue;
+        variationIdMap.set(variation.id, created.id);
+        variationByKey.set(key, created);
       }
     });
 
     return {
-      importedExercises: exerciseIdMap.size,
-      importedVariations: variationIdMap.size,
+      importedExercises: exerciseIdMap.size - skippedExercises,
+      importedVariations: variationIdMap.size - skippedVariations,
+      skippedExercises,
+      skippedVariations,
     };
   });
 }

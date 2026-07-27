@@ -137,9 +137,11 @@ or manually removing the volume deletes logged data.
   database (exercises, variations, log entries) as one JSON file. Restore
   replaces everything in the app with the contents of a chosen backup file
   (destructive, confirmation required). "Import exercises & variations only"
-  adds a backup file's exercises/variations as new entries without their log
-  entries or favorite state — handy for trying a different setup without
-  losing history.
+  adds a backup file's exercises/variations without their log entries or
+  favorite state — handy for trying a different setup without losing
+  history. Exercises/variations that already exist (same name, same
+  exercise/parent) are skipped rather than duplicated, so re-importing the
+  same or an overlapping file is safe.
 
 ## How to use it
 

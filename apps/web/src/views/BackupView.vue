@@ -90,7 +90,13 @@ async function onImportFileSelected() {
     const backup = await readBackupFile(file);
     const result = await importStructure(backup);
     await store.fetchAll();
-    notify(`Imported ${result.importedExercises} exercises, ${result.importedVariations} variations.`);
+    const skippedNote =
+      result.skippedExercises + result.skippedVariations > 0
+        ? ` (skipped ${result.skippedExercises} exercises, ${result.skippedVariations} variations already present)`
+        : '';
+    notify(
+      `Imported ${result.importedExercises} exercises, ${result.importedVariations} variations.${skippedNote}`,
+    );
   } catch (err) {
     notify(err instanceof Error ? `Import failed: ${err.message}` : 'Import failed.');
   } finally {
@@ -139,9 +145,10 @@ async function onImportFileSelected() {
     <v-card class="mb-4" variant="tonal">
       <v-card-title class="text-subtitle-1">Import exercises & variations only</v-card-title>
       <v-card-text>
-        Add the exercises and variations from a backup file as new entries,
-        without their log entries or favorites. Useful for trying out a
-        different setup.
+        Add the exercises and variations from a backup file, without their
+        log entries or favorites. Useful for trying out a different setup.
+        Exercises and variations that already exist (same name, same
+        exercise/parent) are skipped rather than duplicated.
       </v-card-text>
       <v-card-text>
         <v-file-input
