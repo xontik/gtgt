@@ -8,6 +8,7 @@ defineProps<{
   todayLabel: string;
   lastLoggedLabel: string;
   goalLabel?: string;
+  goalMet?: boolean;
 }>();
 
 const emit = defineEmits<{ log: []; unfavorite: [] }>();
@@ -21,7 +22,7 @@ function confirmRemove() {
 </script>
 
 <template>
-  <v-card @click="emit('log')">
+  <v-card :variant="goalMet ? 'tonal' : 'elevated'" :color="goalMet ? 'success' : undefined" @click="emit('log')">
     <v-card-item>
       <v-card-title>{{ exercise.name }}</v-card-title>
       <v-card-subtitle>{{ variation.name }}</v-card-subtitle>
@@ -36,7 +37,10 @@ function confirmRemove() {
     </v-card-item>
     <v-card-text class="pt-0 text-caption text-medium-emphasis">
       {{ todayLabel }} · {{ lastLoggedLabel }}
-      <div v-if="goalLabel" class="mt-1 text-primary">{{ goalLabel }}</div>
+      <div v-if="goalLabel" class="mt-1 d-flex align-center ga-1" :class="goalMet ? 'text-success' : 'text-primary'">
+        <v-icon v-if="goalMet" icon="mdi-check-circle" size="14" />
+        {{ goalLabel }}
+      </div>
     </v-card-text>
   </v-card>
 

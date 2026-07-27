@@ -6,6 +6,7 @@ import { useExercisesStore } from '../stores/exercises';
 import { createLogEntry, listLogEntries } from '../api/logEntries';
 import { formatDuration, formatRelativeTime } from '../lib/format';
 import { dateKey } from '../lib/heatmap';
+import { vibrateSuccess, vibrateMilestone } from '../lib/haptics';
 import FavoriteVariationCard from '../components/FavoriteVariationCard.vue';
 import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
@@ -167,6 +168,12 @@ function goalLabelFor(variation: ExerciseVariation) {
   return `${setCount}/${variation.targetSetsPerDay} sets today`;
 }
 
+function goalMetFor(variation: ExerciseVariation) {
+  if (!variation.targetSetsPerDay) return false;
+  const setCount = todayTotalsByVariation.value.get(variation.id)?.setCount ?? 0;
+  return setCount >= variation.targetSetsPerDay;
+}
+
 const sheetOpen = ref(false);
 const selectedExercise = ref<Exercise>();
 const selectedVariation = ref<ExerciseVariation>();
@@ -184,13 +191,31 @@ async function logSet(value: number, forYesterday = false) {
   const variation = selectedVariation.value;
   if (!exercise || !variation) return;
 
+  const priorBest = Math.max(
+    0,
+    ...(entriesByVariation.value.get(variation.id) ?? []).map((e) => e.value),
+  );
+  const wasGoalMet = goalMetFor(variation);
+
   const timestamp = forYesterday ? new Date(Date.now() - 24 * 60 * 60 * 1000) : undefined;
   const created = await createLogEntry({ variationId: variation.id, value, timestamp });
   entries.value.push(created);
   sheetOpen.value = false;
   const unit = exercise.metricType === 'time' ? 's' : 'reps';
   const when = forYesterday ? ' (yesterday)' : '';
-  snackbarText.value = `Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}${when}`;
+  const isPersonalBest = priorBest > 0 && value > priorBest;
+  const justHitGoal = !wasGoalMet && goalMetFor(variation);
+
+  if (isPersonalBest || justHitGoal) {
+    vibrateMilestone();
+  } else {
+    vibrateSuccess();
+  }
+
+  let note = '';
+  if (isPersonalBest) note = ' — new best!';
+  else if (justHitGoal) note = ' — goal hit!';
+  snackbarText.value = `Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}${when}${note}`;
   snackbar.value = true;
 }
 
@@ -222,6 +247,7 @@ async function addFavorite(variationId: number) {
           :today-label="todayLabelFor(favorite.exercise, favorite.variation)"
           :last-logged-label="lastLoggedLabelFor(favorite.variation)"
           :goal-label="goalLabelFor(favorite.variation)"
+          :goal-met="goalMetFor(favorite.variation)"
           @log="openSheet(favorite.exercise, favorite.variation)"
           @unfavorite="unfavorite(favorite.variation.id)"
         />
