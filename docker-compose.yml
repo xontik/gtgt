@@ -1,8 +1,12 @@
+# Runs the published image — no repo clone needed. Download this file +
+# .env.example (renamed to .env), fill in the .env, then:
+#
+#   docker compose up -d
+#
+# To build from source instead, use docker-compose.dev.yml in the repo.
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/xontik/gtgt:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       - DATABASE_URL=file:/data/gtg.sqlite

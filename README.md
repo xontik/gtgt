@@ -59,27 +59,13 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
 
 ## Deployment (Docker Compose on a VPS)
 
-The repo ships a single `Dockerfile` at the root and a `docker-compose.yml`
-with one service (`app`): the Fastify API serves both `/api/*` and the built
-Vue SPA directly (no nginx, no second container, same-origin so no CORS
-needed). It runs with `tsx` (no separate compile step), applies Drizzle
-migrations on every start, and stores the SQLite file on a named volume
-(`api_data`) so data survives redeploys. Exposed on host port `8080` by
-default (override with `WEB_PORT` env var).
-
-On the VPS:
-
-```bash
-git clone <this repo> gtg-tracker && cd gtg-tracker
-cp .env.example .env   # fill in DISCORD_WEBHOOK_URL / PUBLIC_APP_URL, see below
-docker compose up -d --build
-```
-
-Then open `http://<vps-host>:8080`. To put it behind a domain with TLS, run
-your own reverse proxy (Caddy, Traefik, nginx) in front of the `app`
-service — this compose file doesn't manage certificates itself.
-
-### Using the published image instead of building
+A single `Dockerfile` at the root builds one image with one service
+(`app`): the Fastify API serves both `/api/*` and the built Vue SPA
+directly (no nginx, no second container, same-origin so no CORS needed). It
+runs with `tsx` (no separate compile step), applies Drizzle migrations on
+every start, and stores the SQLite file on a named volume (`api_data`) so
+data survives redeploys. Exposed on host port `8080` by default (override
+with `WEB_PORT` env var).
 
 Every push to `main` and every `vX.Y.Z` tag builds and publishes a multi-arch
 (`amd64`/`arm64`) image to GHCR via
@@ -87,12 +73,14 @@ Every push to `main` and every `vX.Y.Z` tag builds and publishes a multi-arch
 `ghcr.io/xontik/gtgt`, tagged `latest`, `<version>`, `<major>.<minor>`, and
 the commit SHA.
 
-To run without cloning the repo, grab just two files —
-[`docker-compose.ghcr.yml`](docker-compose.ghcr.yml) and `.env.example`
-(rename to `.env`, fill in) — then:
+### Quick start: run the published image
+
+No repo clone needed — grab just two files,
+[`docker-compose.yml`](docker-compose.yml) and `.env.example` (rename to
+`.env`, fill in), then:
 
 ```bash
-docker compose -f docker-compose.ghcr.yml up -d
+docker compose up -d
 ```
 
 Set `IMAGE_TAG` in `.env` to pin a specific version instead of `latest`
@@ -103,6 +91,22 @@ created **private** by default regardless of the repo's visibility — go to
 the package's page (github.com → your profile/org → Packages → `gtgt`) →
 Package settings → change visibility to Public, so others can pull without
 `docker login`.
+
+### Building from source instead
+
+Use [`docker-compose.dev.yml`](docker-compose.dev.yml) — for testing
+Dockerfile/app changes before pushing, or if you'd rather not rely on the
+published image:
+
+```bash
+git clone <this repo> gtg-tracker && cd gtg-tracker
+cp .env.example .env   # fill in DISCORD_WEBHOOK_URL / PUBLIC_APP_URL, see below
+docker compose -f docker-compose.dev.yml up -d --build
+```
+
+Then open `http://<vps-host>:8080`. To put it behind a domain with TLS, run
+your own reverse proxy (Caddy, Traefik, nginx) in front of the `app`
+service — this compose file doesn't manage certificates itself.
 
 ### Idle-training reminders (Discord)
 
@@ -135,14 +139,11 @@ or via `curl -X POST http://<host>:8080/api/notifications/check-idle?force=true`
 cooldown, so it always sends (useful for testing); without it, the endpoint
 behaves exactly like the cron job.
 
-To update after pulling new commits:
-
-```bash
-docker compose up -d --build
-```
-
-The `api_data` volume is untouched by rebuilds; only `docker compose down -v`
-or manually removing the volume deletes logged data.
+To update: `docker compose pull && docker compose up -d` for the published
+image, or `docker compose -f docker-compose.dev.yml up -d --build` after
+pulling new commits if building from source. Either way, the `api_data`
+volume is untouched by rebuilds/updates; only `docker compose down -v` or
+manually removing the volume deletes logged data.
 
 ## Features
 
