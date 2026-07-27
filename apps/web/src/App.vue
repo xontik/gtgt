@@ -10,6 +10,7 @@ const route = useRoute();
       <v-app-bar-title>
         <router-link to="/" class="text-decoration-none text-high-emphasis">GtG Tracker</router-link>
       </v-app-bar-title>
+      <v-btn icon="mdi-database-outline" to="/backup" />
     </v-app-bar>
     <v-main>
       <router-view />

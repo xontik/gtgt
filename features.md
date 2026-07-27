@@ -18,3 +18,4 @@
 - [x] variation of the same exercices but that are not "more difficult" just another branch. maybe some ancestor link ?
 - [x] simple deployement on home server docker compose
 - [ ] home page "progression nudge" (suggest moving up the ladder) once there's a good signal for it
+- [x] backup/restore data from the UI, plus import-just-exercises-and-variations for trying out configs

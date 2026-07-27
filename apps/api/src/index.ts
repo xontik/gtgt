@@ -4,6 +4,7 @@ import { ZodError } from 'zod';
 import { exerciseRoutes } from './routes/exercises.js';
 import { exerciseVariationRoutes } from './routes/exerciseVariations.js';
 import { logEntryRoutes } from './routes/logEntries.js';
+import { backupRoutes } from './routes/backup.js';
 import { isNotFoundError } from './lib/errors.js';
 
 const app = Fastify({ logger: true });
@@ -34,6 +35,7 @@ app.get('/health', async () => ({ status: 'ok' }));
 await app.register(exerciseRoutes, { prefix: '/api' });
 await app.register(exerciseVariationRoutes, { prefix: '/api' });
 await app.register(logEntryRoutes, { prefix: '/api' });
+await app.register(backupRoutes, { prefix: '/api' });
 
 const port = Number(process.env.PORT ?? 3001);
 
