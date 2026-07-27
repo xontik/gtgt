@@ -13,12 +13,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [boolean];
-  confirm: [seconds: number];
+  confirm: [seconds: number, forYesterday: boolean];
 }>();
 
 const minutes = ref(0);
 const seconds = ref(0);
 const running = ref(false);
+const forYesterday = ref(false);
 let startedAtMs = 0;
 let baseMs = 0;
 let intervalId: ReturnType<typeof setInterval> | undefined;
@@ -30,6 +31,7 @@ watch(
       stop();
       minutes.value = 0;
       seconds.value = 0;
+      forYesterday.value = false;
     } else {
       stop();
     }
@@ -61,7 +63,7 @@ function confirm() {
   stop();
   const total = minutes.value * 60 + seconds.value;
   if (total <= 0) return;
-  emit('confirm', total);
+  emit('confirm', total, forYesterday.value);
 }
 
 onUnmounted(stop);
@@ -108,6 +110,16 @@ onUnmounted(stop);
       <v-btn v-else block color="error" size="large" variant="tonal" prepend-icon="mdi-stop" @click="stop">
         Stop
       </v-btn>
+
+      <v-chip
+        class="mt-3 mb-1"
+        :color="forYesterday ? 'primary' : undefined"
+        :variant="forYesterday ? 'flat' : 'tonal'"
+        prepend-icon="mdi-clock-outline"
+        @click="forYesterday = !forYesterday"
+      >
+        {{ forYesterday ? 'Logging for yesterday' : 'Log for yesterday' }}
+      </v-chip>
 
       <v-btn
         class="mt-2"

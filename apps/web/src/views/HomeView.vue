@@ -158,16 +158,18 @@ function openSheet(exercise: Exercise, variation: ExerciseVariation) {
   sheetOpen.value = true;
 }
 
-async function logSet(value: number) {
+async function logSet(value: number, forYesterday = false) {
   const exercise = selectedExercise.value;
   const variation = selectedVariation.value;
   if (!exercise || !variation) return;
 
-  const created = await createLogEntry({ variationId: variation.id, value });
+  const timestamp = forYesterday ? new Date(Date.now() - 24 * 60 * 60 * 1000) : undefined;
+  const created = await createLogEntry({ variationId: variation.id, value, timestamp });
   entries.value.push(created);
   sheetOpen.value = false;
   const unit = exercise.metricType === 'time' ? 's' : 'reps';
-  snackbarText.value = `Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}`;
+  const when = forYesterday ? ' (yesterday)' : '';
+  snackbarText.value = `Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}${when}`;
   snackbar.value = true;
 }
 

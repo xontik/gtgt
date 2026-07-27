@@ -13,20 +13,24 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [boolean];
-  confirm: [reps: number];
+  confirm: [reps: number, forYesterday: boolean];
 }>();
 
 const reps = ref(5);
+const forYesterday = ref(false);
 
 watch(
   () => props.modelValue,
   (open) => {
-    if (open) reps.value = 5;
+    if (open) {
+      reps.value = 5;
+      forYesterday.value = false;
+    }
   },
 );
 
 function confirm() {
-  emit('confirm', reps.value);
+  emit('confirm', reps.value, forYesterday.value);
 }
 </script>
 
@@ -46,6 +50,16 @@ function confirm() {
         <div class="text-h3" style="min-width: 4rem; text-align: center">{{ reps }}</div>
         <v-btn icon="mdi-plus" size="large" @click="reps++" />
       </div>
+
+      <v-chip
+        class="mb-3"
+        :color="forYesterday ? 'primary' : undefined"
+        :variant="forYesterday ? 'flat' : 'tonal'"
+        prepend-icon="mdi-clock-outline"
+        @click="forYesterday = !forYesterday"
+      >
+        {{ forYesterday ? 'Logging for yesterday' : 'Log for yesterday' }}
+      </v-chip>
 
       <v-btn block color="primary" size="large" :disabled="reps <= 0" @click="confirm">
         Log {{ reps }} reps
