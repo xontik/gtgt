@@ -146,6 +146,12 @@ function lastLoggedLabelFor(variation: ExerciseVariation) {
   return last ? formatRelativeTime(last) : 'Not logged yet';
 }
 
+function goalLabelFor(variation: ExerciseVariation) {
+  if (!variation.targetSetsPerDay) return undefined;
+  const setCount = todayTotalsByVariation.value.get(variation.id)?.setCount ?? 0;
+  return `${setCount}/${variation.targetSetsPerDay} sets today`;
+}
+
 const sheetOpen = ref(false);
 const selectedExercise = ref<Exercise>();
 const selectedVariation = ref<ExerciseVariation>();
@@ -200,6 +206,7 @@ async function addFavorite(variationId: number) {
           :variation="favorite.variation"
           :today-label="todayLabelFor(favorite.exercise, favorite.variation)"
           :last-logged-label="lastLoggedLabelFor(favorite.variation)"
+          :goal-label="goalLabelFor(favorite.variation)"
           @log="openSheet(favorite.exercise, favorite.variation)"
           @unfavorite="unfavorite(favorite.variation.id)"
         />

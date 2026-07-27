@@ -18,6 +18,8 @@ export const exerciseVariationSchema = z.object({
   imageUrl: optionalUrlSchema,
   notes: optionalTextSchema,
   videoUrl: optionalUrlSchema,
+  targetValue: z.number().positive().nullable(),
+  targetSetsPerDay: z.number().int().positive().nullable(),
 });
 export type ExerciseVariation = z.infer<typeof exerciseVariationSchema>;
 
@@ -30,6 +32,8 @@ export const exerciseVariationInsertSchema = exerciseVariationSchema
     imageUrl: true,
     notes: true,
     videoUrl: true,
+    targetValue: true,
+    targetSetsPerDay: true,
   })
   .extend({
     parentVariationId: z.number().int().positive().nullable().optional().default(null),
@@ -37,6 +41,8 @@ export const exerciseVariationInsertSchema = exerciseVariationSchema
     imageUrl: optionalUrlSchema.optional().default(null),
     notes: optionalTextSchema.optional().default(null),
     videoUrl: optionalUrlSchema.optional().default(null),
+    targetValue: z.number().positive().nullable().optional().default(null),
+    targetSetsPerDay: z.number().int().positive().nullable().optional().default(null),
   });
 export type ExerciseVariationInsert = z.infer<typeof exerciseVariationInsertSchema>;
 

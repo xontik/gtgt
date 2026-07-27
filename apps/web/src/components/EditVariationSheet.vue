@@ -17,6 +17,7 @@ const emit = defineEmits<{
       imageUrl: string | null;
       notes: string | null;
       videoUrl: string | null;
+      targetSetsPerDay: number | null;
     },
   ];
   delete: [];
@@ -27,6 +28,7 @@ const parentVariationId = ref<number | null>(null);
 const imageUrl = ref('');
 const notes = ref('');
 const videoUrl = ref('');
+const targetSetsPerDay = ref<number | null>(null);
 const confirmingDelete = ref(false);
 
 watch(
@@ -38,6 +40,7 @@ watch(
       imageUrl.value = variation.imageUrl ?? '';
       notes.value = variation.notes ?? '';
       videoUrl.value = variation.videoUrl ?? '';
+      targetSetsPerDay.value = variation.targetSetsPerDay;
     }
     confirmingDelete.value = false;
   },
@@ -55,6 +58,7 @@ function save() {
     imageUrl: imageUrl.value.trim() || null,
     notes: notes.value.trim() || null,
     videoUrl: videoUrl.value.trim() || null,
+    targetSetsPerDay: targetSetsPerDay.value || null,
   });
 }
 </script>
@@ -100,6 +104,16 @@ function save() {
       />
 
       <v-textarea v-model="notes" label="Notes / tips" rows="3" auto-grow class="mb-2" />
+
+      <v-text-field
+        v-model.number="targetSetsPerDay"
+        type="number"
+        label="Target sets per day (optional)"
+        placeholder="e.g. 5"
+        prepend-inner-icon="mdi-target"
+        min="0"
+        class="mb-2"
+      />
 
       <v-btn block color="primary" size="large" class="mb-2" :disabled="!name.trim()" @click="save">
         Save

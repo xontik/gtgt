@@ -23,6 +23,8 @@ export const exerciseVariations = sqliteTable('exercise_variations', {
   imageUrl: text('image_url'),
   notes: text('notes'),
   videoUrl: text('video_url'),
+  targetValue: real('target_value'),
+  targetSetsPerDay: integer('target_sets_per_day'),
 });
 
 export const logEntries = sqliteTable('log_entries', {

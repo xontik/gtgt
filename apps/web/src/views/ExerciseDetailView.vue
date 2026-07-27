@@ -113,6 +113,7 @@ async function saveVariationDetails(details: {
   imageUrl: string | null;
   notes: string | null;
   videoUrl: string | null;
+  targetSetsPerDay: number | null;
 }) {
   if (!editingVariationId.value) return;
   await store.updateVariationDetails(editingVariationId.value, details);

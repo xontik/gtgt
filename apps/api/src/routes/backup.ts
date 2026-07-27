@@ -139,6 +139,8 @@ export async function backupRoutes(app: FastifyInstance) {
             imageUrl: variation.imageUrl,
             notes: variation.notes,
             videoUrl: variation.videoUrl,
+            targetValue: variation.targetValue,
+            targetSetsPerDay: variation.targetSetsPerDay,
           })
           .returning();
         if (!created) continue;

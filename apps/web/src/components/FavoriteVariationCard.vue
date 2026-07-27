@@ -7,6 +7,7 @@ defineProps<{
   variation: ExerciseVariation;
   todayLabel: string;
   lastLoggedLabel: string;
+  goalLabel?: string;
 }>();
 
 const emit = defineEmits<{ log: []; unfavorite: [] }>();
@@ -35,6 +36,7 @@ function confirmRemove() {
     </v-card-item>
     <v-card-text class="pt-0 text-caption text-medium-emphasis">
       {{ todayLabel }} · {{ lastLoggedLabel }}
+      <div v-if="goalLabel" class="mt-1 text-primary">{{ goalLabel }}</div>
     </v-card-text>
   </v-card>
 

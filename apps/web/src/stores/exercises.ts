@@ -81,6 +81,8 @@ export const useExercisesStore = defineStore('exercises', {
         imageUrl: null,
         notes: null,
         videoUrl: null,
+        targetValue: null,
+        targetSetsPerDay: null,
       });
       this.variations.push(created);
     },
@@ -93,6 +95,7 @@ export const useExercisesStore = defineStore('exercises', {
         imageUrl: string | null;
         notes: string | null;
         videoUrl: string | null;
+        targetSetsPerDay: number | null;
       },
     ) {
       const variation = this.variations.find((v) => v.id === variationId);

@@ -14,11 +14,18 @@ const backupLogEntrySchema = logEntrySchema.extend({
     .transform((v) => v ?? undefined),
 });
 
+// Backups created before targetValue/targetSetsPerDay existed won't have
+// those keys at all - tolerate that instead of failing to restore old files.
+const backupExerciseVariationSchema = exerciseVariationSchema.extend({
+  targetValue: z.number().positive().nullish().transform((v) => v ?? null),
+  targetSetsPerDay: z.number().int().positive().nullish().transform((v) => v ?? null),
+});
+
 export const backupSchema = z.object({
   version: z.literal(1),
   exportedAt: z.coerce.date(),
   exercises: z.array(exerciseSchema),
-  exerciseVariations: z.array(exerciseVariationSchema),
+  exerciseVariations: z.array(backupExerciseVariationSchema),
   logEntries: z.array(backupLogEntrySchema),
 });
 export type Backup = z.infer<typeof backupSchema>;
