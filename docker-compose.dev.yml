@@ -12,6 +12,7 @@ services:
     environment:
       - DATABASE_URL=file:/data/gtg.sqlite
       - PORT=3001
+      - APP_PASSCODE=${APP_PASSCODE:-}
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
       - PUBLIC_APP_URL=${PUBLIC_APP_URL:-http://localhost:8080}
       - NOTIFY_CRON_SCHEDULE=${NOTIFY_CRON_SCHEDULE:-*/5 8-22 * * *}

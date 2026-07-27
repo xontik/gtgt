@@ -22,3 +22,11 @@
 - [x] image, notes, and video URL per variation, shown in quick-log/edit bottom sheets, carried through backup/import
 - [x] Discord webhook reminder when nothing's been logged in N hours, suggesting top 3 overdue favorites with a no-click deep link into the quick-log sheet
 - [x] publish as a public Docker image (GHCR + GitHub Actions) so others can self-host; collapsed api+web into a single container (Fastify serves the built SPA directly, no nginx)
+- [x] edit a set's timestamp, not just its value (date+time field on the log entry edit sheet)
+- [x] quick "log for yesterday" toggle on the quick-log sheets, backdates the entry by 24h
+- [x] undo for variation delete (restore endpoint + snackbar, matching the log-entry pattern)
+- [x] rolling stats periods (last 7 days, last 30 days) alongside calendar-aligned day/week/month/year
+- [x] search/filter on the Log view (the "Add working variation" picker already had it via autocomplete)
+- [x] CSV export of log entries alongside the existing JSON backup
+- [x] optional per-variation daily-set target, with "3/5 sets today" progress on the Home favorite card
+- [x] shared-secret passcode gate (`APP_PASSCODE`), still single-user — no-op if unset so existing deploys keep working

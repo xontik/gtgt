@@ -139,6 +139,16 @@ or via `curl -X POST http://<host>:8080/api/notifications/check-idle?force=true`
 cooldown, so it always sends (useful for testing); without it, the endpoint
 behaves exactly like the cron job.
 
+### Passcode-gating the app (optional)
+
+By default there's no login — fine for a home network. If the app is
+reachable from the public internet, set `APP_PASSCODE` in `.env` to a
+shared secret; the app then shows a login screen and gates every API route
+behind an HTTP-only session cookie (30-day expiry, in-memory session store —
+this is still single-user, just a lock on the door, not real multi-user
+auth). Leave `APP_PASSCODE` unset/empty and the app behaves exactly as
+before, no login prompt at all.
+
 To update: `docker compose pull && docker compose up -d` for the published
 image, or `docker compose -f docker-compose.dev.yml up -d --build` after
 pulling new commits if building from source. Either way, the `api_data`
@@ -154,40 +164,49 @@ manually removing the volume deletes logged data.
   variation's today's total (set count + reps or time) and how long ago it
   was last logged, sorted by recency (most recently logged first). Tap a
   card to log a set: a rep stepper (+/-) or a start/stop timer, depending on
-  the exercise's metric type. The heart-off icon on a card removes it from
-  favorites (with a confirmation dialog) without touching its log history.
-  "Add working variation" opens a searchable picker over every exercise's
-  variations to favorite one. Below the grid: a today's-sets / day-streak
-  stat pair, a "Hasn't been hit in a while" list of favorited variations not
-  logged in 3+ days (tap to quick-log), and a recent-activity feed of your
-  last few log entries anywhere (tap-to-edit and quick-delete/undo just like
-  the Log page), with a link to the full Log.
+  the exercise's metric type. Either sheet has a "Log for yesterday" toggle
+  to backdate a forgotten set by 24h instead of logging it as today. The
+  heart-off icon on a card removes it from favorites (with a confirmation
+  dialog) without touching its log history. "Add working variation" opens a
+  searchable picker over every exercise's variations to favorite one. If a
+  variation has a daily-set target set (see Exercise detail below), its card
+  also shows progress like "3/5 sets today". Below the grid: a today's-sets
+  / day-streak stat pair, a "Hasn't been hit in a while" list of favorited
+  variations not logged in 3+ days (tap to quick-log), and a recent-activity
+  feed of your last few log entries anywhere (tap-to-edit and
+  quick-delete/undo just like the Log page), with a link to the full Log.
 - **Stats** — per-exercise totals (set count + reps or time), browsable by
-  Day / Week / Month / Year with prev/next navigation. Pick exactly which
-  data to include from a variation tree checklist: checking an exercise
-  selects all its variations, or check individual variations to narrow the
-  stats down to just those. Favorited variations are preselected on load.
-  Under each exercise, an expandable "Sets" panel lists the individual log
-  entries for the current period, with the same tap-to-edit and
-  quick-delete/undo behavior as the Log page.
-- **Log** — every log entry, newest first. Tap one to edit its value or
-  delete it (with confirmation). Or use the trash icon on a row to delete
-  it immediately, no confirmation, safe to close the tab right after — a
-  snackbar with an Undo button appears for a few seconds; Undo re-creates
-  the entry (as a new log entry, since the original is already gone).
+  Day / Week / Month / Year (calendar-aligned, with prev/next navigation) or
+  by rolling Last 7 days / Last 30 days (always ends today, no navigation).
+  Pick exactly which data to include from a variation tree checklist:
+  checking an exercise selects all its variations, or check individual
+  variations to narrow the stats down to just those. Favorited variations
+  are preselected on load. Under each exercise, an expandable "Sets" panel
+  lists the individual log entries for the current period, with the same
+  tap-to-edit and quick-delete/undo behavior as the Log page.
+- **Log** — every log entry, newest first, with a search field to filter by
+  exercise/variation name. Tap one to edit its value or timestamp (so you
+  can backdate a forgotten entry), or delete it (with confirmation). Or use
+  the trash icon on a row to delete it immediately, no confirmation, safe to
+  close the tab right after — a snackbar with an Undo button appears for a
+  few seconds; Undo re-creates the entry (as a new log entry, since the
+  original is already gone).
 - **Exercise detail** — tap a favorite card's chevron, or a row on Manage
   exercises, to open an exercise's page: a visual progression ladder of its
   variations, reorder them with the up/down arrows, rename or delete a
   variation, add a new one, and see/edit recent entries for that exercise.
   Each variation row has a heart icon to favorite/unfavorite it as a working
   variation. Deleting a variation is a soft delete — it disappears from the
-  progression ladder but its past log entries are kept for stats/history.
+  progression ladder but its past log entries are kept for stats/history; a
+  snackbar with Undo appears right after, in case that was a mistake.
   Variations can branch: use the branch icon on any variation to add a new
   variation forking from it (e.g. push-up splitting into a decline/archer
   route and a handstand-push-up route), rather than a single straight-line
   progression. Editing a variation also lets you set an image URL, notes/tips,
-  and a video URL (e.g. a YouTube link) — these show up in the quick-log
-  bottom sheet on Home so you have form cues right when you're logging a set.
+  a video URL (e.g. a YouTube link), and an optional daily-set target — these
+  show up in the quick-log bottom sheet (image/notes/video) and on the Home
+  favorite card (target progress) so you have form cues and goals right when
+  you're logging a set.
 - **Manage exercises** — a plain list of every exercise (name, category,
   metric type) for basic CRUD: add a new exercise, rename/change one, or
   delete it entirely. Tap a row to jump to its detail page for variations.
@@ -197,7 +216,8 @@ manually removing the volume deletes logged data.
     below) — useful for testing the Discord webhook without waiting for the
     schedule. No-ops if the webhook isn't configured.
   - *Backup*: download everything (exercises, variations, log entries) as one
-    JSON file.
+    JSON file, or export just the log entries as a CSV (with resolved
+    exercise/variation names) for spreadsheets or other tools.
   - *Restore*: replaces everything in the app with the contents of a chosen
     backup file (destructive, confirmation required).
   - *Import exercises & variations only*: adds a backup file's
@@ -211,6 +231,9 @@ manually removing the volume deletes logged data.
   suggesting your 3 most-overdue favorites. Each suggestion links straight
   into that variation's quick-log sheet on Home — opening the link pops the
   sheet immediately, no extra tap.
+- **Optional passcode gate** — set `APP_PASSCODE` (see "Deployment" below) to
+  put a login screen in front of the whole app if it's reachable from the
+  public internet. Off by default.
 
 ## How to use it
 
@@ -227,6 +250,8 @@ manually removing the volume deletes logged data.
 
 ## Non-goals (for now)
 
-- No auth / multi-user support — this is a single-user app.
+- No multi-user support — this is a single-user app. There's an optional
+  shared-passcode gate (see "Deployment") but it's a lock on the door, not
+  real per-user auth.
 - No offline-first / sync layer.
 - No workout planning, templates, or scheduling.
