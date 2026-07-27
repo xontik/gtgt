@@ -157,15 +157,21 @@ or manually removing the volume deletes logged data.
 - **Manage exercises** — a plain list of every exercise (name, category,
   metric type) for basic CRUD: add a new exercise, rename/change one, or
   delete it entirely. Tap a row to jump to its detail page for variations.
-- **Backup & restore** (database icon in the app bar) — download the entire
-  database (exercises, variations, log entries) as one JSON file. Restore
-  replaces everything in the app with the contents of a chosen backup file
-  (destructive, confirmation required). "Import exercises & variations only"
-  adds a backup file's exercises/variations without their log entries
-  (favorite state does carry over) — handy for trying a different setup
-  without losing history. Exercises/variations that already exist (same
-  name, same exercise/parent) are skipped rather than duplicated, so re-importing the
-  same or an overlapping file is safe.
+- **System** (server icon in the app bar) — backup/restore and notifications:
+  - *Notifications*: a "Trigger reminder check" button manually runs the same
+    idle-training check the cron job runs (see "Idle-training reminders"
+    below) — useful for testing the Discord webhook without waiting for the
+    schedule. No-ops if the webhook isn't configured.
+  - *Backup*: download everything (exercises, variations, log entries) as one
+    JSON file.
+  - *Restore*: replaces everything in the app with the contents of a chosen
+    backup file (destructive, confirmation required).
+  - *Import exercises & variations only*: adds a backup file's
+    exercises/variations without their log entries (favorite state does
+    carry over) — handy for trying a different setup without losing history.
+    Exercises/variations that already exist (same name, same
+    exercise/parent) are skipped rather than duplicated, so re-importing the
+    same or an overlapping file is safe.
 - **Idle-training reminders** — a server-side cron job (see "Deployment"
   below) posts to a Discord webhook when nothing's been logged in a while,
   suggesting your 3 most-overdue favorites. Each suggestion links straight

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import type { Backup } from '@gtg/shared';
 import { backupSchema } from '@gtg/shared';
 import { fetchBackup, restoreBackup, importStructure } from '../api/backup';
+import { checkIdleNow } from '../api/notifications';
 import { useExercisesStore } from '../stores/exercises';
 
 const store = useExercisesStore();
@@ -13,6 +14,20 @@ const snackbarText = ref('');
 function notify(text: string) {
   snackbarText.value = text;
   snackbar.value = true;
+}
+
+const checkingIdle = ref(false);
+
+async function sendTestReminder() {
+  checkingIdle.value = true;
+  try {
+    const result = await checkIdleNow();
+    notify(result.notified ? `Reminder sent: ${result.reason}` : `Not sent: ${result.reason}`);
+  } catch (err) {
+    notify(err instanceof Error ? `Check failed: ${err.message}` : 'Check failed.');
+  } finally {
+    checkingIdle.value = false;
+  }
 }
 
 const downloading = ref(false);
@@ -108,7 +123,21 @@ async function onImportFileSelected() {
 
 <template>
   <v-container>
-    <h1 class="text-h5 mb-4">Backup & restore</h1>
+    <h1 class="text-h5 mb-4">System</h1>
+
+    <v-card class="mb-4" variant="tonal">
+      <v-card-title class="text-subtitle-1">Notifications</v-card-title>
+      <v-card-text>
+        Manually run the idle-training check: if nothing's been logged
+        recently, it posts a Discord reminder with your most-overdue
+        favorites (no-op if the Discord webhook isn't configured).
+      </v-card-text>
+      <v-card-actions>
+        <v-btn prepend-icon="mdi-bell-ring-outline" :loading="checkingIdle" @click="sendTestReminder">
+          Trigger reminder check
+        </v-btn>
+      </v-card-actions>
+    </v-card>
 
     <v-card class="mb-4" variant="tonal">
       <v-card-title class="text-subtitle-1">Backup</v-card-title>
