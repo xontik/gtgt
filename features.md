@@ -9,8 +9,8 @@
 
 # Nice to have
 
-- [ ] thing about a better home view, but keep quick logging easy
-- [ ] Direct delete button in a log entry row (no confirmation modal, just a snackbar undo).
+- [ ] a better home view, but keep quick logging easy
+- [x] Direct delete button in a log entry row (no confirmation modal, just a snackbar undo).
 - [ ] edit or delete a set from the stats view (directly or by linking to log page)
 - [ ] Modal to edit on desktop, bottom sheet on mobile
 - [ ] reorder progression with drag and drop

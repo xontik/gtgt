@@ -69,6 +69,12 @@ function onRemove(id: number) {
   entries.value = entries.value.filter((e) => e.id !== id);
 }
 
+function onRestore(entry: LogEntry) {
+  entries.value = [...entries.value, entry].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+}
+
 const editSheetOpen = ref(false);
 const editingVariation = computed(() => variations.value.find((v) => v.id === editingVariationId.value));
 const editingVariationId = ref<number>();
@@ -177,7 +183,13 @@ async function removeExercise() {
 
     <div class="text-subtitle-2 mb-2">Recent entries</div>
     <v-progress-linear v-if="loading" indeterminate class="mb-4" />
-    <LogEntryList v-else :entries="recentEntries" @update="onUpdate" @remove="onRemove" />
+    <LogEntryList
+      v-else
+      :entries="recentEntries"
+      @update="onUpdate"
+      @remove="onRemove"
+      @restore="onRestore"
+    />
 
     <EditVariationSheet
       v-model="editSheetOpen"

@@ -69,7 +69,10 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
   selects all its variations, or check individual variations to narrow
   the stats down to just those (e.g. only the currently active one).
 - **Log** — every log entry, newest first. Tap one to edit its value or
-  delete it.
+  delete it (with confirmation). Or use the trash icon on a row to delete
+  it immediately, no confirmation, safe to close the tab right after — a
+  snackbar with an Undo button appears for a few seconds; Undo re-creates
+  the entry (as a new log entry, since the original is already gone).
 - **Exercise detail** — tap the chevron on a Home card to open an exercise's
   page: a visual progression ladder of its variations, pick which one is
   currently active, reorder variations with the up/down arrows, rename or

@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import type { LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
-import { updateLogEntry, deleteLogEntry } from '../api/logEntries';
+import { createLogEntry, updateLogEntry, deleteLogEntry } from '../api/logEntries';
 import { formatDuration, formatTimestamp } from '../lib/format';
 import EditLogEntrySheet from './EditLogEntrySheet.vue';
 
@@ -14,6 +14,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   update: [entry: LogEntry];
   remove: [id: number];
+  restore: [entry: LogEntry];
 }>();
 
 const store = useExercisesStore();
@@ -31,6 +32,39 @@ function valueLabel(entry: LogEntry) {
   const exercise = exerciseFor(entry);
   if (exercise?.metricType === 'time') return formatDuration(entry.value);
   return `${entry.value} reps`;
+}
+
+const pendingDeleteIds = ref(new Set<number>());
+const undoSnackbar = ref(false);
+const undoSnackbarText = ref('');
+const lastDeletedEntry = ref<LogEntry>();
+
+const visibleEntries = computed(() =>
+  props.entries.filter((entry) => !pendingDeleteIds.value.has(entry.id)),
+);
+
+async function quickDelete(entry: LogEntry) {
+  pendingDeleteIds.value.add(entry.id);
+  lastDeletedEntry.value = entry;
+  undoSnackbarText.value = `Deleted ${valueLabel(entry)} set for ${exerciseFor(entry)?.name ?? 'exercise'}`;
+  undoSnackbar.value = true;
+
+  await deleteLogEntry(entry.id);
+  emit('remove', entry.id);
+}
+
+async function undoQuickDelete() {
+  const entry = lastDeletedEntry.value;
+  if (!entry) return;
+  undoSnackbar.value = false;
+
+  const restored = await createLogEntry({
+    variationId: entry.variationId,
+    timestamp: entry.timestamp,
+    value: entry.value,
+    notes: entry.notes ?? undefined,
+  });
+  emit('restore', restored);
 }
 
 const sheetOpen = ref(false);
@@ -67,25 +101,38 @@ async function removeEntry() {
 </script>
 
 <template>
-  <v-alert v-if="props.entries.length === 0" type="info" variant="tonal">
+  <v-alert v-if="visibleEntries.length === 0" type="info" variant="tonal">
     {{ props.emptyText ?? 'No log entries yet.' }}
   </v-alert>
 
   <v-list v-else lines="two">
     <v-list-item
-      v-for="entry in props.entries"
+      v-for="entry in visibleEntries"
       :key="entry.id"
       :title="exerciseFor(entry)?.name ?? 'Unknown exercise'"
       @click="openEntry(entry)"
     >
       <template #subtitle> {{ variationFor(entry)?.name }} · {{ valueLabel(entry) }} </template>
       <template #append>
-        <span class="text-caption text-medium-emphasis">{{
+        <span class="text-caption text-medium-emphasis mr-1">{{
           formatTimestamp(new Date(entry.timestamp))
         }}</span>
+        <v-btn
+          icon="mdi-delete-outline"
+          size="small"
+          variant="text"
+          @click.stop="quickDelete(entry)"
+        />
       </template>
     </v-list-item>
   </v-list>
+
+  <v-snackbar v-model="undoSnackbar" timeout="4000">
+    {{ undoSnackbarText }}
+    <template #actions>
+      <v-btn color="primary" variant="text" @click="undoQuickDelete">Undo</v-btn>
+    </template>
+  </v-snackbar>
 
   <EditLogEntrySheet
     v-model="sheetOpen"

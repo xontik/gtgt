@@ -29,6 +29,12 @@ function onUpdate(updated: LogEntry) {
 function onRemove(id: number) {
   entries.value = entries.value.filter((e) => e.id !== id);
 }
+
+function onRestore(entry: LogEntry) {
+  entries.value = [...entries.value, entry].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+}
 </script>
 
 <template>
@@ -37,6 +43,6 @@ function onRemove(id: number) {
 
     <v-progress-linear v-if="loading" indeterminate class="mb-4" />
 
-    <LogEntryList v-else :entries="entries" @update="onUpdate" @remove="onRemove" />
+    <LogEntryList v-else :entries="entries" @update="onUpdate" @remove="onRemove" @restore="onRestore" />
   </v-container>
 </template>
