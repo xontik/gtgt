@@ -1,7 +1,7 @@
 # Need to do
 
 - [x] add home link on the title of the app
-- [ ] let log arbitrary time for exercices with time, do not use timer
+- [x] let log arbitrary time for exercices with time, do not use timer
 - [ ] graphic visualisation per periode, per exercices
 - [ ] how to handle variations ? 
 - [ ] handle timed exercices

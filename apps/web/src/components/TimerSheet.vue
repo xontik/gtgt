@@ -12,30 +12,39 @@ const emit = defineEmits<{
   confirm: [seconds: number];
 }>();
 
-const elapsedMs = ref(0);
+const minutes = ref(0);
+const seconds = ref(0);
 const running = ref(false);
-let startedAt = 0;
+let startedAtMs = 0;
+let baseMs = 0;
 let intervalId: ReturnType<typeof setInterval> | undefined;
 
 watch(
   () => props.modelValue,
   (open) => {
-    if (open) reset();
-    else stop();
+    if (open) {
+      stop();
+      minutes.value = 0;
+      seconds.value = 0;
+    } else {
+      stop();
+    }
   },
 );
 
-function reset() {
-  stop();
-  elapsedMs.value = 0;
+function setFromMs(ms: number) {
+  const totalSeconds = Math.round(ms / 1000);
+  minutes.value = Math.floor(totalSeconds / 60);
+  seconds.value = totalSeconds % 60;
 }
 
 function start() {
   running.value = true;
-  startedAt = Date.now() - elapsedMs.value;
+  baseMs = (minutes.value * 60 + seconds.value) * 1000;
+  startedAtMs = Date.now();
   intervalId = setInterval(() => {
-    elapsedMs.value = Date.now() - startedAt;
-  }, 100);
+    setFromMs(Date.now() - startedAtMs + baseMs);
+  }, 200);
 }
 
 function stop() {
@@ -46,14 +55,9 @@ function stop() {
 
 function confirm() {
   stop();
-  emit('confirm', Math.round(elapsedMs.value / 1000));
-}
-
-function formatted() {
-  const totalSeconds = Math.floor(elapsedMs.value / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const total = minutes.value * 60 + seconds.value;
+  if (total <= 0) return;
+  emit('confirm', total);
 }
 
 onUnmounted(stop);
@@ -68,7 +72,21 @@ onUnmounted(stop);
       <div class="text-h6">{{ exerciseName }}</div>
       <div class="text-body-2 text-medium-emphasis mb-4">{{ variationName }}</div>
 
-      <div class="text-h3 text-center my-6">{{ formatted() }}</div>
+      <div v-if="running" class="text-h3 text-center my-6">
+        {{ minutes }}:{{ seconds.toString().padStart(2, '0') }}
+      </div>
+      <div v-else class="d-flex align-center justify-center ga-2 my-4">
+        <v-text-field v-model.number="minutes" type="number" label="Minutes" min="0" style="max-width: 120px" />
+        <div class="text-h5">:</div>
+        <v-text-field
+          v-model.number="seconds"
+          type="number"
+          label="Seconds"
+          min="0"
+          max="59"
+          style="max-width: 120px"
+        />
+      </div>
 
       <v-btn
         v-if="!running"
@@ -90,10 +108,10 @@ onUnmounted(stop);
         block
         color="primary"
         size="large"
-        :disabled="elapsedMs <= 0"
+        :disabled="minutes * 60 + seconds <= 0"
         @click="confirm"
       >
-        Log {{ formatted() }}
+        Log {{ minutes }}:{{ seconds.toString().padStart(2, '0') }}
       </v-btn>
     </v-sheet>
   </v-bottom-sheet>
