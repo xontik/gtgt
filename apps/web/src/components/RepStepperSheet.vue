@@ -9,6 +9,7 @@ const props = defineProps<{
   imageUrl?: string | null;
   notes?: string | null;
   videoUrl?: string | null;
+  initialValue?: number;
 }>();
 
 const emit = defineEmits<{
@@ -23,7 +24,7 @@ watch(
   () => props.modelValue,
   (open) => {
     if (open) {
-      reps.value = 5;
+      reps.value = props.initialValue ?? 5;
       forYesterday.value = false;
     }
   },

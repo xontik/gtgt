@@ -67,6 +67,21 @@ const lastLoggedByVariation = computed(() => {
   return map;
 });
 
+// The value of the most recently logged entry for a variation, so the
+// quick-log sheet can default to "same as last time" instead of always
+// resetting to 5 reps / 0:00 - most sets are the same as the previous one.
+const lastValueByVariation = computed(() => {
+  const map = new Map<number, number>();
+  for (const [variationId, list] of entriesByVariation.value) {
+    const latest = list.reduce<{ t: Date; value: number } | undefined>((acc, e) => {
+      const t = new Date(e.timestamp);
+      return !acc || t > acc.t ? { t, value: e.value } : acc;
+    }, undefined);
+    if (latest) map.set(variationId, latest.value);
+  }
+  return map;
+});
+
 const favoritesWithExercise = computed(() =>
   store.favoriteVariations
     .map((variation) => ({
@@ -269,6 +284,7 @@ async function addFavorite(variationId: number) {
         :image-url="selectedVariation.imageUrl"
         :notes="selectedVariation.notes"
         :video-url="selectedVariation.videoUrl"
+        :initial-value="lastValueByVariation.get(selectedVariation.id)"
         @confirm="logSet"
       />
       <TimerSheet
@@ -279,6 +295,7 @@ async function addFavorite(variationId: number) {
         :image-url="selectedVariation.imageUrl"
         :notes="selectedVariation.notes"
         :video-url="selectedVariation.videoUrl"
+        :initial-value="lastValueByVariation.get(selectedVariation.id)"
         @confirm="logSet"
       />
     </template>

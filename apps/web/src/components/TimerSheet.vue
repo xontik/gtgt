@@ -9,6 +9,7 @@ const props = defineProps<{
   imageUrl?: string | null;
   notes?: string | null;
   videoUrl?: string | null;
+  initialValue?: number;
 }>();
 
 const emit = defineEmits<{
@@ -29,8 +30,9 @@ watch(
   (open) => {
     if (open) {
       stop();
-      minutes.value = 0;
-      seconds.value = 0;
+      const initial = props.initialValue ?? 0;
+      minutes.value = Math.floor(initial / 60);
+      seconds.value = initial % 60;
       forYesterday.value = false;
     } else {
       stop();
