@@ -69,7 +69,11 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
   the exercise's metric type. The heart-off icon on a card removes it from
   favorites (with a confirmation dialog) without touching its log history.
   "Add working variation" opens a searchable picker over every exercise's
-  variations to favorite one.
+  variations to favorite one. Below the grid: a today's-sets / day-streak
+  stat pair, a "Hasn't been hit in a while" list of favorited variations not
+  logged in 3+ days (tap to quick-log), and a recent-activity feed of your
+  last few log entries anywhere (tap-to-edit and quick-delete/undo just like
+  the Log page), with a link to the full Log.
 - **Stats** — per-exercise totals (set count + reps or time), browsable by
   Day / Week / Month / Year with prev/next navigation. Pick exactly which
   data to include from a variation tree checklist: checking an exercise
