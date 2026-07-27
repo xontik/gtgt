@@ -10,12 +10,23 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [boolean];
-  save: [name: string, parentVariationId: number | null];
+  save: [
+    details: {
+      name: string;
+      parentVariationId: number | null;
+      imageUrl: string | null;
+      notes: string | null;
+      videoUrl: string | null;
+    },
+  ];
   delete: [];
 }>();
 
 const name = ref('');
 const parentVariationId = ref<number | null>(null);
+const imageUrl = ref('');
+const notes = ref('');
+const videoUrl = ref('');
 const confirmingDelete = ref(false);
 
 watch(
@@ -24,6 +35,9 @@ watch(
     if (variation) {
       name.value = variation.name;
       parentVariationId.value = variation.parentVariationId;
+      imageUrl.value = variation.imageUrl ?? '';
+      notes.value = variation.notes ?? '';
+      videoUrl.value = variation.videoUrl ?? '';
     }
     confirmingDelete.value = false;
   },
@@ -35,7 +49,13 @@ function close() {
 
 function save() {
   if (!name.value.trim()) return;
-  emit('save', name.value.trim(), parentVariationId.value);
+  emit('save', {
+    name: name.value.trim(),
+    parentVariationId: parentVariationId.value,
+    imageUrl: imageUrl.value.trim() || null,
+    notes: notes.value.trim() || null,
+    videoUrl: videoUrl.value.trim() || null,
+  });
 }
 </script>
 
@@ -43,6 +63,14 @@ function save() {
   <v-bottom-sheet :model-value="modelValue" @update:model-value="(v) => emit('update:modelValue', v)">
     <v-sheet class="pa-4" rounded="t-lg">
       <div class="text-h6 mb-4">Edit variation</div>
+
+      <v-img
+        v-if="imageUrl.trim()"
+        :src="imageUrl.trim()"
+        max-height="240"
+        class="mb-4 rounded bg-surface-variant"
+        contain
+      />
 
       <v-text-field v-model="name" label="Name" autofocus />
 
@@ -54,6 +82,24 @@ function save() {
         item-value="id"
         class="mb-2"
       />
+
+      <v-text-field
+        v-model="imageUrl"
+        label="Image URL"
+        placeholder="https://…"
+        prepend-inner-icon="mdi-image-outline"
+        class="mb-2"
+      />
+
+      <v-text-field
+        v-model="videoUrl"
+        label="Video URL (YouTube, etc.)"
+        placeholder="https://…"
+        prepend-inner-icon="mdi-youtube"
+        class="mb-2"
+      />
+
+      <v-textarea v-model="notes" label="Notes / tips" rows="3" auto-grow class="mb-2" />
 
       <v-btn block color="primary" size="large" class="mb-2" :disabled="!name.trim()" @click="save">
         Save

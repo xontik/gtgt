@@ -129,7 +129,9 @@ or manually removing the volume deletes logged data.
   Variations can branch: use the branch icon on any variation to add a new
   variation forking from it (e.g. push-up splitting into a decline/archer
   route and a handstand-push-up route), rather than a single straight-line
-  progression.
+  progression. Editing a variation also lets you set an image URL, notes/tips,
+  and a video URL (e.g. a YouTube link) — these show up in the quick-log
+  bottom sheet on Home so you have form cues right when you're logging a set.
 - **Manage exercises** — a plain list of every exercise (name, category,
   metric type) for basic CRUD: add a new exercise, rename/change one, or
   delete it entirely. Tap a row to jump to its detail page for variations.
@@ -137,10 +139,10 @@ or manually removing the volume deletes logged data.
   database (exercises, variations, log entries) as one JSON file. Restore
   replaces everything in the app with the contents of a chosen backup file
   (destructive, confirmation required). "Import exercises & variations only"
-  adds a backup file's exercises/variations without their log entries or
-  favorite state — handy for trying a different setup without losing
-  history. Exercises/variations that already exist (same name, same
-  exercise/parent) are skipped rather than duplicated, so re-importing the
+  adds a backup file's exercises/variations without their log entries
+  (favorite state does carry over) — handy for trying a different setup
+  without losing history. Exercises/variations that already exist (same
+  name, same exercise/parent) are skipped rather than duplicated, so re-importing the
   same or an overlapping file is safe.
 
 ## How to use it

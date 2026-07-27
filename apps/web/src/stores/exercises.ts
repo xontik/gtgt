@@ -72,23 +72,35 @@ export const useExercisesStore = defineStore('exercises', {
         difficultyRank: nextRank,
         parentVariationId,
         isFavorite: false,
+        imageUrl: null,
+        notes: null,
+        videoUrl: null,
       });
       this.variations.push(created);
     },
 
-    async updateVariationDetails(variationId: number, name: string, parentVariationId: number | null) {
+    async updateVariationDetails(
+      variationId: number,
+      details: {
+        name: string;
+        parentVariationId: number | null;
+        imageUrl: string | null;
+        notes: string | null;
+        videoUrl: string | null;
+      },
+    ) {
       const variation = this.variations.find((v) => v.id === variationId);
       if (!variation) return;
 
-      const reparenting = parentVariationId !== variation.parentVariationId;
+      const reparenting = details.parentVariationId !== variation.parentVariationId;
       const newSiblings = this.activeVariationsFor(variation.exerciseId).filter(
-        (v) => v.parentVariationId === parentVariationId && v.id !== variationId,
+        (v) => v.parentVariationId === details.parentVariationId && v.id !== variationId,
       );
       const difficultyRank = reparenting
         ? (newSiblings.at(-1)?.difficultyRank ?? 0) + 1
         : variation.difficultyRank;
 
-      const updated = await updateVariation(variationId, { name, parentVariationId, difficultyRank });
+      const updated = await updateVariation(variationId, { ...details, difficultyRank });
       const index = this.variations.findIndex((v) => v.id === variationId);
       if (index !== -1) this.variations[index] = updated;
     },

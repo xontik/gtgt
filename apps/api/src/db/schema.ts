@@ -20,6 +20,9 @@ export const exerciseVariations = sqliteTable('exercise_variations', {
     { onDelete: 'set null' },
   ),
   isFavorite: integer('is_favorite', { mode: 'boolean' }).notNull().default(false),
+  imageUrl: text('image_url'),
+  notes: text('notes'),
+  videoUrl: text('video_url'),
 });
 
 export const logEntries = sqliteTable('log_entries', {

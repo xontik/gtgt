@@ -107,9 +107,15 @@ function openEdit(variationId: number) {
   editSheetOpen.value = true;
 }
 
-async function saveVariationName(name: string, parentVariationId: number | null) {
+async function saveVariationDetails(details: {
+  name: string;
+  parentVariationId: number | null;
+  imageUrl: string | null;
+  notes: string | null;
+  videoUrl: string | null;
+}) {
   if (!editingVariationId.value) return;
-  await store.updateVariationDetails(editingVariationId.value, name, parentVariationId);
+  await store.updateVariationDetails(editingVariationId.value, details);
   editSheetOpen.value = false;
 }
 
@@ -193,7 +199,7 @@ async function removeExercise() {
       v-model="editSheetOpen"
       :variation="editingVariation"
       :parent-options="editingParentOptions"
-      @save="saveVariationName"
+      @save="saveVariationDetails"
       @delete="removeVariation"
     />
     <AddVariationDialog v-model="addDialogOpen" :parent-name="branchFromName" @save="addVariation" />

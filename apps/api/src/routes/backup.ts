@@ -59,10 +59,12 @@ export async function backupRoutes(app: FastifyInstance) {
   // Imports only the exercise/variation structure from a backup file, as new
   // rows (new ids), skipping soft-deleted variations and log entries -
   // useful for trying out a different exercise setup without carrying over
-  // history. Exercises and variations that already exist (matched by
-  // trimmed, case-insensitive name - same exercise for exercises, same
-  // exercise + parent for variations) are reused instead of duplicated, so
-  // re-importing the same or an overlapping backup is a no-op for those.
+  // history. isFavorite carries over so newly imported variations can show
+  // up on Home right away. Exercises and variations that already exist
+  // (matched by trimmed, case-insensitive name - same exercise for
+  // exercises, same exercise + parent for variations) are reused instead of
+  // duplicated, so re-importing the same or an overlapping backup is a
+  // no-op for those.
   app.post('/backup/import-structure', async (req) => {
     const backup = backupSchema.parse(req.body);
 
@@ -133,7 +135,10 @@ export async function backupRoutes(app: FastifyInstance) {
             name: variation.name,
             difficultyRank: variation.difficultyRank,
             parentVariationId: resolvedParentId,
-            isFavorite: false,
+            isFavorite: variation.isFavorite,
+            imageUrl: variation.imageUrl,
+            notes: variation.notes,
+            videoUrl: variation.videoUrl,
           })
           .returning();
         if (!created) continue;

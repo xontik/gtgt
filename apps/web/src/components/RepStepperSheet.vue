@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import VariationInfoPanel from './VariationInfoPanel.vue';
 
 const props = defineProps<{
   modelValue: boolean;
   exerciseName: string;
   variationName: string;
+  imageUrl?: string | null;
+  notes?: string | null;
+  videoUrl?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -34,6 +38,8 @@ function confirm() {
     <v-sheet class="pa-4" rounded="t-lg">
       <div class="text-h6">{{ exerciseName }}</div>
       <div class="text-body-2 text-medium-emphasis mb-4">{{ variationName }}</div>
+
+      <VariationInfoPanel :image-url="imageUrl" :notes="notes" :video-url="videoUrl" />
 
       <div class="d-flex align-center justify-center ga-4 my-6">
         <v-btn icon="mdi-minus" size="large" :disabled="reps <= 0" @click="reps--" />

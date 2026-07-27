@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue';
+import VariationInfoPanel from './VariationInfoPanel.vue';
 
 const props = defineProps<{
   modelValue: boolean;
   exerciseName: string;
   variationName: string;
+  imageUrl?: string | null;
+  notes?: string | null;
+  videoUrl?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -71,6 +75,8 @@ onUnmounted(stop);
     <v-sheet class="pa-4" rounded="t-lg">
       <div class="text-h6">{{ exerciseName }}</div>
       <div class="text-body-2 text-medium-emphasis mb-4">{{ variationName }}</div>
+
+      <VariationInfoPanel :image-url="imageUrl" :notes="notes" :video-url="videoUrl" />
 
       <div v-if="running" class="text-h3 text-center my-6">
         {{ minutes }}:{{ seconds.toString().padStart(2, '0') }}

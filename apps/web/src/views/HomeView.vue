@@ -244,6 +244,9 @@ async function addFavorite(variationId: number) {
         v-model="sheetOpen"
         :exercise-name="selectedExercise.name"
         :variation-name="selectedVariation.name"
+        :image-url="selectedVariation.imageUrl"
+        :notes="selectedVariation.notes"
+        :video-url="selectedVariation.videoUrl"
         @confirm="logSet"
       />
       <TimerSheet
@@ -251,6 +254,9 @@ async function addFavorite(variationId: number) {
         v-model="sheetOpen"
         :exercise-name="selectedExercise.name"
         :variation-name="selectedVariation.name"
+        :image-url="selectedVariation.imageUrl"
+        :notes="selectedVariation.notes"
+        :video-url="selectedVariation.videoUrl"
         @confirm="logSet"
       />
     </template>
