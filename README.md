@@ -74,7 +74,10 @@ To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
   exercise. The pencil icon next to the exercise name lets you rename it,
   change its category/metric type, or delete it entirely. Deleting a
   variation is a soft delete — it disappears from the progression ladder but
-  its past log entries are kept for stats/history.
+  its past log entries are kept for stats/history. Variations can branch:
+  use the branch icon on any variation to add a new variation forking from
+  it (e.g. push-up splitting into a decline/archer route and a
+  handstand-push-up route), rather than a single straight-line progression.
 
 ## How to use it
 

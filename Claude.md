@@ -20,13 +20,13 @@ See [README.md](README.md) for setup instructions, the current feature list, and
 ## Data model
 
 - **Exercise** — `id`, `name`, `category` (e.g. push / pull / squat / core / hold), `metricType`: `'reps' | 'time'`, `activeVariationId` (nullable, the exercise's current working variation)
-- **ExerciseVariation** — `id`, `exerciseId`, `name` (e.g. "knee push up", "push up", "archer push up"), `difficultyRank` (integer, defines progression order low → high)
+- **ExerciseVariation** — `id`, `exerciseId`, `name` (e.g. "knee push up", "push up", "archer push up"), `difficultyRank` (integer, defines progression order low → high among siblings sharing the same `parentVariationId`), `parentVariationId` (nullable, self-referencing — lets progressions branch, e.g. push-up forking into a decline/archer route and a handstand-push-up route instead of one straight line)
 - **LogEntry** — `id`, `variationId`, `timestamp`, `value` (reps count or seconds), `notes?` (optional text)
 
 Notes for the agent:
 - `Exercise.activeVariationId` is the explicit "current working variation" — set by the user on the exercise detail page, not derived from log history.
 - `metricType` on Exercise determines whether the logging UI shows a rep counter/stepper or a timer/stopwatch for that exercise's variations.
-- Deleting a variation is a soft delete (`deletedAt` timestamp set, row and its log entries kept); deleting a variation that was an exercise's active one sets `activeVariationId` back to null. Soft-deleted variations stay out of the progression ladder and pickers but their history still counts toward stats.
+- Deleting a variation is a soft delete (`deletedAt` timestamp set, row and its log entries kept); deleting a variation that was an exercise's active one sets `activeVariationId` back to null. Soft-deleted variations stay out of the progression ladder and pickers but their history still counts toward stats. Any children of a deleted variation are re-parented to its `parentVariationId` (or made roots if it had none), so the branch stays connected.
 
 ## Non-goals (do not build these unless asked)
 

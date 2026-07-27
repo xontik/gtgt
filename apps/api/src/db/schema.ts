@@ -19,6 +19,10 @@ export const exerciseVariations = sqliteTable('exercise_variations', {
   name: text('name').notNull(),
   difficultyRank: integer('difficulty_rank').notNull(),
   deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  parentVariationId: integer('parent_variation_id').references(
+    (): AnySQLiteColumn => exerciseVariations.id,
+    { onDelete: 'set null' },
+  ),
 });
 
 export const logEntries = sqliteTable('log_entries', {

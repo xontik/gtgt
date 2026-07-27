@@ -1,0 +1,1 @@
+ALTER TABLE `exercise_variations` ADD `parent_variation_id` integer REFERENCES exercise_variations(id);

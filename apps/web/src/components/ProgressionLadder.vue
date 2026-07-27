@@ -1,5 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { ExerciseVariation } from '@gtg/shared';
+
+interface TreeItem {
+  id: number;
+  title: string;
+  variation: ExerciseVariation;
+  isFirst: boolean;
+  isLast: boolean;
+  children?: TreeItem[];
+}
 
 const props = defineProps<{
   variations: ExerciseVariation[];
@@ -10,44 +20,95 @@ const emit = defineEmits<{
   select: [variationId: number];
   reorder: [variationId: number, direction: 'up' | 'down'];
   edit: [variationId: number];
+  branch: [parentVariationId: number];
 }>();
+
+const tree = computed<TreeItem[]>(() => {
+  const byParent = new Map<number | null, ExerciseVariation[]>();
+  for (const variation of props.variations) {
+    const key = variation.parentVariationId;
+    const siblings = byParent.get(key);
+    if (siblings) siblings.push(variation);
+    else byParent.set(key, [variation]);
+  }
+  for (const siblings of byParent.values()) siblings.sort((a, b) => a.difficultyRank - b.difficultyRank);
+
+  function build(parentId: number | null): TreeItem[] {
+    const siblings = byParent.get(parentId) ?? [];
+    return siblings.map((variation, index) => ({
+      id: variation.id,
+      title: variation.name,
+      variation,
+      isFirst: index === 0,
+      isLast: index === siblings.length - 1,
+      children: build(variation.id),
+    }));
+  }
+
+  return build(null);
+});
 
 function isActive(variation: ExerciseVariation) {
   return variation.id === props.activeVariationId;
 }
+
+function asTreeItem(item: unknown) {
+  return item as TreeItem;
+}
 </script>
 
 <template>
-  <v-timeline align="start" side="end" density="compact" line-thickness="2">
-    <v-timeline-item
-      v-for="(variation, index) in props.variations"
-      :key="variation.id"
-      :dot-color="isActive(variation) ? 'primary' : 'grey-lighten-1'"
-      :icon="isActive(variation) ? 'mdi-check' : undefined"
-      size="small"
-      fill-dot
-    >
-      <div class="d-flex align-center ga-2">
-        <div class="flex-grow-1" style="cursor: pointer" @click="emit('select', variation.id)">
-          <div :class="isActive(variation) ? 'font-weight-bold' : ''">{{ variation.name }}</div>
-          <div v-if="isActive(variation)" class="text-caption text-primary">Active</div>
+  <v-treeview :items="tree" item-value="id" open-all density="compact" slim>
+    <template #title="{ item: rawItem }">
+      <div
+        v-for="item in [asTreeItem(rawItem)]"
+        :key="item.id"
+        class="d-flex align-center ga-1"
+        style="cursor: pointer"
+        @click="emit('select', item.variation.id)"
+      >
+        <v-avatar
+          size="10"
+          :color="isActive(item.variation) ? 'primary' : 'grey-lighten-1'"
+          class="flex-shrink-0"
+        />
+        <div>
+          <div :class="isActive(item.variation) ? 'font-weight-bold' : ''">{{ item.variation.name }}</div>
+          <div v-if="isActive(item.variation)" class="text-caption text-primary">Active</div>
         </div>
+      </div>
+    </template>
+
+    <template #append="{ item: rawItem }">
+      <div v-for="item in [asTreeItem(rawItem)]" :key="item.id" class="d-flex align-center ga-1">
         <v-btn
           icon="mdi-arrow-up"
           size="x-small"
           variant="text"
-          :disabled="index === 0"
-          @click="emit('reorder', variation.id, 'up')"
+          :disabled="item.isFirst"
+          @click.stop="emit('reorder', item.variation.id, 'up')"
         />
         <v-btn
           icon="mdi-arrow-down"
           size="x-small"
           variant="text"
-          :disabled="index === props.variations.length - 1"
-          @click="emit('reorder', variation.id, 'down')"
+          :disabled="item.isLast"
+          @click.stop="emit('reorder', item.variation.id, 'down')"
         />
-        <v-btn icon="mdi-pencil" size="x-small" variant="text" @click="emit('edit', variation.id)" />
+        <v-btn
+          icon="mdi-source-branch-plus"
+          size="x-small"
+          variant="text"
+          title="Add branch from here"
+          @click.stop="emit('branch', item.variation.id)"
+        />
+        <v-btn
+          icon="mdi-pencil"
+          size="x-small"
+          variant="text"
+          @click.stop="emit('edit', item.variation.id)"
+        />
       </div>
-    </v-timeline-item>
-  </v-timeline>
+    </template>
+  </v-treeview>
 </template>

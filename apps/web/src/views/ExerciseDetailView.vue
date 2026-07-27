@@ -73,14 +73,38 @@ const editSheetOpen = ref(false);
 const editingVariation = computed(() => variations.value.find((v) => v.id === editingVariationId.value));
 const editingVariationId = ref<number>();
 
+function descendantIds(variationId: number): Set<number> {
+  const ids = new Set<number>();
+  const stack = [variationId];
+  while (stack.length) {
+    const current = stack.pop()!;
+    for (const v of activeVariations.value) {
+      if (v.parentVariationId === current && !ids.has(v.id)) {
+        ids.add(v.id);
+        stack.push(v.id);
+      }
+    }
+  }
+  return ids;
+}
+
+const editingParentOptions = computed(() => {
+  if (!editingVariationId.value) return [];
+  const excluded = descendantIds(editingVariationId.value);
+  excluded.add(editingVariationId.value);
+  return activeVariations.value
+    .filter((v) => !excluded.has(v.id))
+    .map((v) => ({ id: v.id, name: v.name }));
+});
+
 function openEdit(variationId: number) {
   editingVariationId.value = variationId;
   editSheetOpen.value = true;
 }
 
-async function saveVariationName(name: string) {
+async function saveVariationName(name: string, parentVariationId: number | null) {
   if (!editingVariationId.value) return;
-  await store.renameVariation(editingVariationId.value, name);
+  await store.updateVariationDetails(editingVariationId.value, name, parentVariationId);
   editSheetOpen.value = false;
 }
 
@@ -91,9 +115,18 @@ async function removeVariation() {
 }
 
 const addDialogOpen = ref(false);
+const branchFromId = ref<number>();
+const branchFromName = computed(
+  () => variations.value.find((v) => v.id === branchFromId.value)?.name,
+);
+
+function openAddDialog(parentVariationId?: number) {
+  branchFromId.value = parentVariationId;
+  addDialogOpen.value = true;
+}
 
 async function addVariation(name: string) {
-  await store.addVariation(exerciseId, name);
+  await store.addVariation(exerciseId, name, branchFromId.value ?? null);
   addDialogOpen.value = false;
 }
 
@@ -128,7 +161,7 @@ async function removeExercise() {
 
     <div class="d-flex align-center justify-space-between mb-2">
       <div class="text-subtitle-2">Progression</div>
-      <v-btn size="small" variant="text" prepend-icon="mdi-plus" @click="addDialogOpen = true">
+      <v-btn size="small" variant="text" prepend-icon="mdi-plus" @click="openAddDialog()">
         Add variation
       </v-btn>
     </div>
@@ -139,6 +172,7 @@ async function removeExercise() {
       @select="pickVariation"
       @reorder="reorderVariation"
       @edit="openEdit"
+      @branch="openAddDialog"
     />
 
     <div class="text-subtitle-2 mb-2">Recent entries</div>
@@ -148,10 +182,11 @@ async function removeExercise() {
     <EditVariationSheet
       v-model="editSheetOpen"
       :variation="editingVariation"
+      :parent-options="editingParentOptions"
       @save="saveVariationName"
       @delete="removeVariation"
     />
-    <AddVariationDialog v-model="addDialogOpen" @save="addVariation" />
+    <AddVariationDialog v-model="addDialogOpen" :parent-name="branchFromName" @save="addVariation" />
     <EditExerciseSheet
       v-model="editExerciseSheetOpen"
       :exercise="exercise"

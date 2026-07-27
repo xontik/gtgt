@@ -1,6 +1,13 @@
 import { eq } from 'drizzle-orm';
 import { db } from './client.js';
-import { exercises, exerciseVariations } from './schema.js';
+import { exercises, exerciseVariations, logEntries } from './schema.js';
+
+function daysAgo(days: number, hour = 9) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(hour, 0, 0, 0);
+  return d;
+}
 
 async function seed() {
   const [pushUp] = await db
@@ -11,44 +18,155 @@ async function seed() {
     .insert(exercises)
     .values({ name: 'Pistol squat', category: 'squat', metricType: 'reps' })
     .returning();
+  const [plank] = await db
+    .insert(exercises)
+    .values({ name: 'Plank', category: 'core', metricType: 'time' })
+    .returning();
 
-  if (!pushUp || !pistolSquat) {
+  if (!pushUp || !pistolSquat || !plank) {
     throw new Error('Failed to seed exercises.');
   }
 
-  const [pushUpVariations, pistolSquatVariations] = await Promise.all([
-    db
-      .insert(exerciseVariations)
-      .values([
-        { exerciseId: pushUp.id, name: 'Knee push-up', difficultyRank: 1 },
-        { exerciseId: pushUp.id, name: 'Push-up', difficultyRank: 2 },
-        { exerciseId: pushUp.id, name: 'Decline push-up', difficultyRank: 3 },
-        { exerciseId: pushUp.id, name: 'Archer push-up', difficultyRank: 4 },
-        { exerciseId: pushUp.id, name: 'One-arm assisted push-up', difficultyRank: 5 },
-      ])
-      .returning(),
-    db
-      .insert(exerciseVariations)
-      .values([
-        { exerciseId: pistolSquat.id, name: 'Assisted pistol squat', difficultyRank: 1 },
-        { exerciseId: pistolSquat.id, name: 'Box pistol squat', difficultyRank: 2 },
-        { exerciseId: pistolSquat.id, name: 'Pistol squat', difficultyRank: 3 },
-        { exerciseId: pistolSquat.id, name: 'Weighted pistol squat', difficultyRank: 4 },
-      ])
-      .returning(),
-  ]);
+  // Push-up progression forks after the standard push-up into two branches:
+  // a decline/archer route towards a one-arm push-up, and a pike/handstand route.
+  const [kneePushUp] = await db
+    .insert(exerciseVariations)
+    .values({ exerciseId: pushUp.id, name: 'Knee push-up', difficultyRank: 1 })
+    .returning();
+  if (!kneePushUp) throw new Error('Failed to seed knee push-up.');
 
-  const pushUpStart = pushUpVariations.find((v) => v.difficultyRank === 1);
+  const [standardPushUp] = await db
+    .insert(exerciseVariations)
+    .values({
+      exerciseId: pushUp.id,
+      name: 'Push-up',
+      difficultyRank: 2,
+      parentVariationId: kneePushUp.id,
+    })
+    .returning();
+  if (!standardPushUp) throw new Error('Failed to seed push-up.');
+
+  const [declinePushUp, pikePushUp] = await Promise.all([
+    db
+      .insert(exerciseVariations)
+      .values({
+        exerciseId: pushUp.id,
+        name: 'Decline push-up',
+        difficultyRank: 1,
+        parentVariationId: standardPushUp.id,
+      })
+      .returning()
+      .then(([v]) => v),
+    db
+      .insert(exerciseVariations)
+      .values({
+        exerciseId: pushUp.id,
+        name: 'Pike push-up',
+        difficultyRank: 2,
+        parentVariationId: standardPushUp.id,
+      })
+      .returning()
+      .then(([v]) => v),
+  ]);
+  if (!declinePushUp || !pikePushUp) throw new Error('Failed to seed push-up branches.');
+
+  const [archerPushUp, oneArmAssistedPushUp, wallHandstandPushUp, freestandingHandstandPushUp] =
+    await Promise.all([
+      db
+        .insert(exerciseVariations)
+        .values({
+          exerciseId: pushUp.id,
+          name: 'Archer push-up',
+          difficultyRank: 1,
+          parentVariationId: declinePushUp.id,
+        })
+        .returning()
+        .then(([v]) => v),
+      db
+        .insert(exerciseVariations)
+        .values({
+          exerciseId: pushUp.id,
+          name: 'One-arm assisted push-up',
+          difficultyRank: 2,
+          parentVariationId: declinePushUp.id,
+        })
+        .returning()
+        .then(([v]) => v),
+      db
+        .insert(exerciseVariations)
+        .values({
+          exerciseId: pushUp.id,
+          name: 'Wall handstand push-up',
+          difficultyRank: 1,
+          parentVariationId: pikePushUp.id,
+        })
+        .returning()
+        .then(([v]) => v),
+      db
+        .insert(exerciseVariations)
+        .values({
+          exerciseId: pushUp.id,
+          name: 'Freestanding handstand push-up',
+          difficultyRank: 2,
+          parentVariationId: pikePushUp.id,
+        })
+        .returning()
+        .then(([v]) => v),
+    ]);
+  if (!archerPushUp || !oneArmAssistedPushUp || !wallHandstandPushUp || !freestandingHandstandPushUp) {
+    throw new Error('Failed to seed push-up leaf variations.');
+  }
+
+  const pistolSquatVariations = await db
+    .insert(exerciseVariations)
+    .values([
+      { exerciseId: pistolSquat.id, name: 'Assisted pistol squat', difficultyRank: 1 },
+      { exerciseId: pistolSquat.id, name: 'Box pistol squat', difficultyRank: 2 },
+      { exerciseId: pistolSquat.id, name: 'Pistol squat', difficultyRank: 3 },
+      { exerciseId: pistolSquat.id, name: 'Weighted pistol squat', difficultyRank: 4 },
+    ])
+    .returning();
+
+  const [plankHold] = await db
+    .insert(exerciseVariations)
+    .values({ exerciseId: plank.id, name: 'Plank', difficultyRank: 1 })
+    .returning();
+  if (!plankHold) throw new Error('Failed to seed plank.');
+
   const pistolSquatStart = pistolSquatVariations.find((v) => v.difficultyRank === 1);
 
   await Promise.all([
-    pushUpStart &&
-      db.update(exercises).set({ activeVariationId: pushUpStart.id }).where(eq(exercises.id, pushUp.id)),
+    db.update(exercises).set({ activeVariationId: declinePushUp.id }).where(eq(exercises.id, pushUp.id)),
     pistolSquatStart &&
       db
         .update(exercises)
         .set({ activeVariationId: pistolSquatStart.id })
         .where(eq(exercises.id, pistolSquat.id)),
+    db.update(exercises).set({ activeVariationId: plankHold.id }).where(eq(exercises.id, plank.id)),
+  ]);
+
+  await db.insert(logEntries).values([
+    // History on now-superseded variations, to exercise stats across the whole progression.
+    { variationId: kneePushUp.id, timestamp: daysAgo(20, 8), value: 12 },
+    { variationId: kneePushUp.id, timestamp: daysAgo(19, 13), value: 14 },
+    { variationId: standardPushUp.id, timestamp: daysAgo(14, 9), value: 10 },
+    { variationId: standardPushUp.id, timestamp: daysAgo(13, 17), value: 12 },
+    // Recent sets on the active variation (decline push-up), spread through today.
+    { variationId: declinePushUp.id, timestamp: daysAgo(2, 8), value: 8 },
+    { variationId: declinePushUp.id, timestamp: daysAgo(1, 12), value: 9 },
+    { variationId: declinePushUp.id, timestamp: daysAgo(0, 8), value: 8 },
+    { variationId: declinePushUp.id, timestamp: daysAgo(0, 12), value: 9 },
+    { variationId: declinePushUp.id, timestamp: daysAgo(0, 17), value: 7 },
+    // A few sets tried on the other branch, to show branches aren't mutually exclusive in history.
+    { variationId: archerPushUp.id, timestamp: daysAgo(3, 18), value: 3 },
+    ...(pistolSquatStart
+      ? [
+          { variationId: pistolSquatStart.id, timestamp: daysAgo(1, 7), value: 5 },
+          { variationId: pistolSquatStart.id, timestamp: daysAgo(0, 7), value: 6 },
+        ]
+      : []),
+    { variationId: plankHold.id, timestamp: daysAgo(0, 8), value: 45 },
+    { variationId: plankHold.id, timestamp: daysAgo(0, 14), value: 60 },
   ]);
 
   console.log('Seed complete.');

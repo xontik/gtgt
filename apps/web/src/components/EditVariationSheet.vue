@@ -5,21 +5,26 @@ import type { ExerciseVariation } from '@gtg/shared';
 const props = defineProps<{
   modelValue: boolean;
   variation: ExerciseVariation | undefined;
+  parentOptions: { id: number; name: string }[];
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [boolean];
-  save: [name: string];
+  save: [name: string, parentVariationId: number | null];
   delete: [];
 }>();
 
 const name = ref('');
+const parentVariationId = ref<number | null>(null);
 const confirmingDelete = ref(false);
 
 watch(
   () => props.variation,
   (variation) => {
-    if (variation) name.value = variation.name;
+    if (variation) {
+      name.value = variation.name;
+      parentVariationId.value = variation.parentVariationId;
+    }
     confirmingDelete.value = false;
   },
 );
@@ -30,7 +35,7 @@ function close() {
 
 function save() {
   if (!name.value.trim()) return;
-  emit('save', name.value.trim());
+  emit('save', name.value.trim(), parentVariationId.value);
 }
 </script>
 
@@ -40,6 +45,15 @@ function save() {
       <div class="text-h6 mb-4">Edit variation</div>
 
       <v-text-field v-model="name" label="Name" autofocus />
+
+      <v-select
+        v-model="parentVariationId"
+        label="Branches from"
+        :items="[{ id: null, name: 'No parent (root)' }, ...parentOptions]"
+        item-title="name"
+        item-value="id"
+        class="mb-2"
+      />
 
       <v-btn block color="primary" size="large" class="mb-2" :disabled="!name.trim()" @click="save">
         Save
