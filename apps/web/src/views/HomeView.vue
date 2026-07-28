@@ -238,8 +238,38 @@ async function logSet(value: number, forYesterday = false) {
   snackbar.value = true;
 }
 
-async function unfavorite(variationId: number) {
-  await store.setFavorite(variationId, false);
+function quickAddLabelFor(variation: ExerciseVariation) {
+  const last = lastValueByVariation.value.get(variation.id);
+  return last ? `+${last}` : undefined;
+}
+
+async function quickAdd(exercise: Exercise, variation: ExerciseVariation) {
+  const last = lastValueByVariation.value.get(variation.id);
+  if (!last) {
+    openSheet(exercise, variation);
+    return;
+  }
+
+  const priorBest = Math.max(
+    0,
+    ...(entriesByVariation.value.get(variation.id) ?? []).map((e) => e.value),
+  );
+  const wasGoalMet = goalMetFor(variation);
+
+  const created = await createLogEntry({ variationId: variation.id, value: last });
+  entries.value.push(created);
+
+  const isPersonalBest = priorBest > 0 && last > priorBest;
+  const justHitGoal = !wasGoalMet && goalMetFor(variation);
+  if (isPersonalBest || justHitGoal) vibrateMilestone();
+  else vibrateSuccess();
+
+  const unit = exercise.metricType === 'time' ? 's' : ' reps';
+  let note = '';
+  if (isPersonalBest) note = ' — new best!';
+  else if (justHitGoal) note = ' — goal hit!';
+  snackbarText.value = `Logged ${last}${unit} for ${exercise.name}${note}`;
+  snackbar.value = true;
 }
 
 const addDialogOpen = ref(false);
@@ -267,8 +297,9 @@ async function addFavorite(variationId: number) {
           :last-logged-label="lastLoggedLabelFor(favorite.variation)"
           :goal-label="goalLabelFor(favorite.variation)"
           :goal-met="goalMetFor(favorite.variation)"
+          :quick-add-label="quickAddLabelFor(favorite.variation)"
           @log="openSheet(favorite.exercise, favorite.variation)"
-          @unfavorite="unfavorite(favorite.variation.id)"
+          @quick-add="quickAdd(favorite.exercise, favorite.variation)"
         />
       </v-col>
     </v-row>
