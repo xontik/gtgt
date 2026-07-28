@@ -13,7 +13,10 @@ import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
 import AddFavoriteDialog from '../components/AddFavoriteDialog.vue';
 import LogEntryList from '../components/LogEntryList.vue';
-import RoutineRunnerSheet, { type RoutineStep } from '../components/RoutineRunnerSheet.vue';
+import RoutineRunnerSheet, {
+  type RoutineStep,
+  type RoutineStepResult,
+} from '../components/RoutineRunnerSheet.vue';
 
 const store = useExercisesStore();
 const routinesStore = useRoutinesStore();
@@ -324,6 +327,7 @@ function routineLastDoneLabel(routineId: number) {
 }
 
 const runnerOpen = ref(false);
+const runnerRoutineId = ref<number>();
 const runnerRoutineName = ref('');
 const runnerSteps = ref<RoutineStep[]>([]);
 
@@ -338,15 +342,19 @@ function startRoutine(routineId: number) {
     if (!variation || !exercise) continue;
     const initialValue = item.targetValue ?? lastValueByVariation.value.get(variation.id) ?? (exercise.metricType === 'time' ? 30 : 5);
     steps.push({
+      routineItemId: item.id,
       variationId: variation.id,
       exerciseName: exercise.name,
       variationName: variation.name,
       metricType: exercise.metricType,
       initialValue,
+      plannedSets: item.setsCount,
+      plannedValue: item.targetValue,
     });
   }
   if (steps.length === 0) return;
 
+  runnerRoutineId.value = routineId;
   runnerRoutineName.value = routine.name;
   runnerSteps.value = steps;
   runnerOpen.value = true;
@@ -357,10 +365,74 @@ async function logRoutineStep(variationId: number, value: number) {
   entries.value.push(created);
 }
 
-function finishRoutine() {
+interface RoutineDiffItem {
+  routineItemId: number;
+  variationId: number;
+  exerciseName: string;
+  variationName: string;
+  actualSets: number;
+  actualValue: number | null;
+  plannedSets: number;
+  plannedValue: number | null;
+}
+
+const routineDiffDialogOpen = ref(false);
+const routineDiffItems = ref<RoutineDiffItem[]>([]);
+const routineDiffAllResults = ref<RoutineStepResult[]>([]);
+const savingNewRoutineName = ref(false);
+const newRoutineNameInput = ref('');
+
+function finishRoutine(results: RoutineStepResult[]) {
   vibrateSuccess();
   snackbarText.value = `Finished ${runnerRoutineName.value}`;
   snackbar.value = true;
+
+  const diffs: RoutineDiffItem[] = [];
+  for (const result of results) {
+    const setsDiffer = result.performedSets !== result.plannedSets;
+    const valueDiffers = result.plannedValue !== null && result.lastValue !== result.plannedValue;
+    if (!setsDiffer && !valueDiffers) continue;
+
+    const variation = store.variations.find((v) => v.id === result.variationId);
+    const exercise = variation && store.exercises.find((e) => e.id === variation.exerciseId);
+    diffs.push({
+      routineItemId: result.routineItemId,
+      variationId: result.variationId,
+      exerciseName: exercise?.name ?? 'Unknown exercise',
+      variationName: variation?.name ?? 'Unknown variation',
+      actualSets: result.performedSets,
+      actualValue: result.lastValue,
+      plannedSets: result.plannedSets,
+      plannedValue: result.plannedValue,
+    });
+  }
+
+  if (diffs.length > 0) {
+    routineDiffItems.value = diffs;
+    routineDiffAllResults.value = results;
+    savingNewRoutineName.value = false;
+    newRoutineNameInput.value = runnerRoutineName.value ? `${runnerRoutineName.value} (updated)` : '';
+    routineDiffDialogOpen.value = true;
+  }
+}
+
+async function updateRoutineFromRun() {
+  for (const diff of routineDiffItems.value) {
+    await routinesStore.updateItemTemplate(diff.routineItemId, {
+      targetValue: diff.actualValue ?? diff.plannedValue,
+      setsCount: diff.actualSets,
+    });
+  }
+  routineDiffDialogOpen.value = false;
+}
+
+async function saveRunAsNewRoutine() {
+  if (!newRoutineNameInput.value.trim()) return;
+  const created = await routinesStore.addRoutine(newRoutineNameInput.value.trim());
+  for (const result of routineDiffAllResults.value) {
+    await routinesStore.addItem(created.id, result.variationId, result.lastValue, result.performedSets);
+  }
+  routineDiffDialogOpen.value = false;
 }
 </script>
 
@@ -508,5 +580,40 @@ function finishRoutine() {
       @log-step="logRoutineStep"
       @finished="finishRoutine"
     />
+
+    <v-dialog v-model="routineDiffDialogOpen" max-width="480">
+      <v-card>
+        <v-card-title>Routine differed from the plan</v-card-title>
+        <v-card-text>
+          <v-list density="compact">
+            <v-list-item
+              v-for="diff in routineDiffItems"
+              :key="diff.routineItemId"
+              :title="diff.exerciseName"
+              :subtitle="`${diff.variationName} · ${diff.plannedSets}×${diff.plannedValue ?? '?'} planned → ${diff.actualSets}×${diff.actualValue ?? '?'} done`"
+            />
+          </v-list>
+
+          <v-text-field
+            v-if="savingNewRoutineName"
+            v-model="newRoutineNameInput"
+            label="New routine name"
+            class="mt-2"
+            autofocus
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-btn variant="text" @click="routineDiffDialogOpen = false">Keep as one-off</v-btn>
+          <v-spacer />
+          <template v-if="!savingNewRoutineName">
+            <v-btn variant="tonal" @click="savingNewRoutineName = true">Save as new</v-btn>
+            <v-btn color="primary" @click="updateRoutineFromRun">Update routine</v-btn>
+          </template>
+          <v-btn v-else color="primary" :disabled="!newRoutineNameInput.trim()" @click="saveRunAsNewRoutine">
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>

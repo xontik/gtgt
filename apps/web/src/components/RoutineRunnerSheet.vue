@@ -3,11 +3,23 @@ import { ref, computed, watch } from 'vue';
 import type { MetricType } from '@gtg/shared';
 
 export interface RoutineStep {
+  routineItemId: number;
   variationId: number;
   exerciseName: string;
   variationName: string;
   metricType: MetricType;
   initialValue: number;
+  plannedSets: number;
+  plannedValue: number | null;
+}
+
+export interface RoutineStepResult {
+  routineItemId: number;
+  variationId: number;
+  performedSets: number;
+  lastValue: number | null;
+  plannedSets: number;
+  plannedValue: number | null;
 }
 
 const props = defineProps<{
@@ -19,20 +31,31 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [boolean];
   logStep: [variationId: number, value: number];
-  finished: [];
+  finished: [results: RoutineStepResult[]];
 }>();
 
 const stepIndex = ref(0);
+const setNumber = ref(1);
 const value = ref(0);
 const minutes = ref(0);
 const seconds = ref(0);
 
+interface StepProgress {
+  performedSets: number;
+  lastValue: number | null;
+}
+
+const progress = ref<StepProgress[]>([]);
+
 const currentStep = computed(() => props.steps[stepIndex.value]);
 const isLastStep = computed(() => stepIndex.value === props.steps.length - 1);
+const plannedSets = computed(() => currentStep.value?.plannedSets ?? 1);
+const isFinalPlannedSet = computed(() => setNumber.value >= plannedSets.value);
 
 function resetInputsForStep() {
   const step = currentStep.value;
   if (!step) return;
+  setNumber.value = 1;
   if (step.metricType === 'time') {
     minutes.value = Math.floor(step.initialValue / 60);
     seconds.value = step.initialValue % 60;
@@ -46,6 +69,7 @@ watch(
   (open) => {
     if (open) {
       stepIndex.value = 0;
+      progress.value = props.steps.map(() => ({ performedSets: 0, lastValue: null }));
       resetInputsForStep();
     }
   },
@@ -55,39 +79,85 @@ function close() {
   emit('update:modelValue', false);
 }
 
-function confirmStep() {
+function currentValue() {
   const step = currentStep.value;
-  if (!step) return;
-  const loggedValue = step.metricType === 'time' ? minutes.value * 60 + seconds.value : value.value;
-  if (loggedValue <= 0) return;
+  if (!step) return 0;
+  return step.metricType === 'time' ? minutes.value * 60 + seconds.value : value.value;
+}
 
-  emit('logStep', step.variationId, loggedValue);
+function recordProgress(loggedValue: number) {
+  const entry = progress.value[stepIndex.value];
+  if (!entry) return;
+  entry.performedSets += 1;
+  entry.lastValue = loggedValue;
+}
 
+function buildResults(): RoutineStepResult[] {
+  return props.steps
+    .map((step, i) => {
+      const entry = progress.value[i];
+      return {
+        routineItemId: step.routineItemId,
+        variationId: step.variationId,
+        performedSets: entry?.performedSets ?? 0,
+        lastValue: entry?.lastValue ?? null,
+        plannedSets: step.plannedSets,
+        plannedValue: step.plannedValue,
+      };
+    })
+    .filter((r) => r.performedSets > 0);
+}
+
+function advanceToNextStepOrFinish() {
   if (isLastStep.value) {
-    emit('finished');
+    emit('finished', buildResults());
     close();
   } else {
     stepIndex.value += 1;
     resetInputsForStep();
   }
+}
+
+// Logs the current set. Stays on this exercise while more planned sets
+// remain, otherwise moves on (or finishes on the last step).
+function logSet() {
+  const loggedValue = currentValue();
+  if (loggedValue <= 0) return;
+
+  emit('logStep', currentStep.value!.variationId, loggedValue);
+  recordProgress(loggedValue);
+
+  if (isFinalPlannedSet.value) {
+    advanceToNextStepOrFinish();
+  } else {
+    setNumber.value += 1;
+  }
+}
+
+// Logs a set but stays on this exercise regardless of the planned count -
+// for doing an extra/bonus set beyond what the routine template says.
+function logAndStay() {
+  const loggedValue = currentValue();
+  if (loggedValue <= 0) return;
+
+  emit('logStep', currentStep.value!.variationId, loggedValue);
+  recordProgress(loggedValue);
+  setNumber.value += 1;
 }
 
 function skipStep() {
-  if (isLastStep.value) {
-    emit('finished');
-    close();
-  } else {
-    stepIndex.value += 1;
-    resetInputsForStep();
-  }
+  advanceToNextStepOrFinish();
 }
+
+const hasLoggedThisStep = computed(() => (progress.value[stepIndex.value]?.performedSets ?? 0) > 0);
 </script>
 
 <template>
   <v-bottom-sheet :model-value="modelValue" @update:model-value="(v) => emit('update:modelValue', v)">
     <v-sheet v-if="currentStep" class="pa-4" rounded="t-lg">
       <div class="text-caption text-medium-emphasis mb-1">
-        {{ routineName }} — step {{ stepIndex + 1 }} of {{ steps.length }}
+        {{ routineName }} — exercise {{ stepIndex + 1 }} of {{ steps.length }} · set {{ setNumber }} of
+        {{ plannedSets }}
       </div>
       <div class="text-h6">{{ currentStep.exerciseName }}</div>
       <div class="text-body-2 text-medium-emphasis mb-4">{{ currentStep.variationName }}</div>
@@ -114,10 +184,17 @@ function skipStep() {
         </div>
       </template>
 
-      <v-btn block color="primary" size="large" class="mb-2" @click="confirmStep">
-        {{ isLastStep ? 'Log & finish' : 'Log & next' }}
+      <v-btn block color="primary" size="large" class="mb-2" @click="logSet">
+        <template v-if="!isFinalPlannedSet">Log set ({{ setNumber }}/{{ plannedSets }})</template>
+        <template v-else-if="isLastStep">Log & finish</template>
+        <template v-else>Log & next exercise</template>
       </v-btn>
-      <v-btn block variant="text" @click="skipStep">{{ isLastStep ? 'Skip & finish' : 'Skip' }}</v-btn>
+
+      <v-btn block variant="tonal" class="mb-2" @click="logAndStay">Log & do another set here</v-btn>
+
+      <v-btn block variant="text" @click="skipStep">
+        {{ hasLoggedThisStep ? 'Next exercise' : 'Skip' }}
+      </v-btn>
     </v-sheet>
   </v-bottom-sheet>
 </template>
