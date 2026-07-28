@@ -43,3 +43,4 @@
 - [x] brute-force lockout on the passcode login (5 attempts / 15 min, then a 15-min lockout, per IP)
 - [x] fixed uneven Home card heights when only some favorites have a daily-set target
 - [x] Routines — new Routine/RoutineItem entities for exercises done together in one sitting (mobility/warm-ups) instead of spread through the day GtG-style; Manage routines page, Home "Routines" section with a guided step-through logging sheet, included in backup/restore
+- [x] number of sets per routine item, with per-exercise set counting in the guided runner (log/advance, bonus "log & stay" set, skip) and a post-run prompt to update the routine template or save as a new routine when what you actually did differs from the plan

@@ -253,17 +253,24 @@ manually removing the volume deletes logged data.
 - **Routines** — for exercises done together in one sitting (e.g. an ankle
   mobility warm-up) rather than spread throughout the day GtG-style. Manage
   routines from its own page (linked off Manage exercises): create a
-  routine, add existing exercise variations to it in order with an optional
-  target reps/seconds per item, reorder with up/down arrows, rename or
-  delete. Routines needing multiple exercises are why this is a separate
-  concept from favoriting — a variation can be in a routine, favorited, both,
-  or neither. On Home, routines appear in their own section below the
-  favorites grid, each showing how long ago it was last done. Tap one to
-  open a guided step-through sheet: one exercise at a time, prefilled with
-  that item's target (or your last logged value), "Log & next" advances
-  through the routine (or "Skip" if you didn't do that one today). Each step
-  logs a normal set, so routine history shows up in Stats/CSV/backup exactly
-  like anything else — no separate tracking system.
+  routine, add existing exercise variations to it in order with a number of
+  sets and an optional target reps/seconds per set, reorder with up/down
+  arrows, rename or delete. Routines needing multiple exercises are why this
+  is a separate concept from favoriting — a variation can be in a routine,
+  favorited, both, or neither. On Home, routines appear in their own section
+  below the favorites grid, each showing how long ago it was last done. Tap
+  one to open a guided step-through sheet showing "exercise N of M · set X
+  of Y", prefilled with that item's target (or your last logged value):
+  "Log set" advances through the planned sets for the current exercise and
+  moves to the next one once they're done; "Log & do another set here" is
+  always available (even past the planned count, or for a single-set item)
+  for a bonus set without touching the routine; "Skip"/"Next exercise" moves
+  on without logging. Each set logged is a normal LogEntry, so routine
+  history shows up in Stats/CSV/backup exactly like anything else — no
+  separate tracking system. If what you actually did differs from the
+  routine's template (different set count or a different logged value than
+  planned) once you finish, a dialog offers to update the routine to match,
+  save the run as a brand new routine, or just keep it as a one-off.
 - **System** (server icon in the app bar) — backup/restore and notifications:
   - *Notifications*: a "Trigger reminder check" button manually runs the same
     idle-training check the cron job runs (see "Idle-training reminders"

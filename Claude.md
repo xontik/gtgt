@@ -23,7 +23,7 @@ See [README.md](README.md) for setup instructions, the current feature list, and
 - **ExerciseVariation** — `id`, `exerciseId`, `name` (e.g. "knee push up", "push up", "archer push up"), `difficultyRank` (integer, defines progression order low → high among all variations of the same exercise — one flat ladder per exercise, no branching), `isFavorite` (boolean — marks it a "working variation" quick-logged from Home; multiple variations, including several on the same exercise, can be favorited at once)
 - **LogEntry** — `id`, `variationId`, `timestamp`, `value` (reps count or seconds), `notes?` (optional text)
 - **Routine** — `id`, `name`. An ordered set of existing exercise variations done together in one sitting (e.g. an ankle mobility warm-up), as opposed to GtG-style favorites logged individually throughout the day.
-- **RoutineItem** — `id`, `routineId`, `variationId`, `order` (integer, position within the routine), `targetValue?` (nullable — reps/seconds to prefill when running the routine)
+- **RoutineItem** — `id`, `routineId`, `variationId`, `order` (integer, position within the routine), `targetValue?` (nullable — reps/seconds to prefill per set when running the routine), `setsCount` (number of sets to prompt for on that exercise, default 1)
 
 Notes for the agent:
 - Routines are a separate concern from favoriting/GtG: a variation can be in a routine, favorited, both, or neither. Running a routine through its guided sheet (Home) produces plain `LogEntry` rows per item, so Stats/CSV/backup pick routine sets up automatically without any special-casing.
