@@ -48,9 +48,7 @@ export const useExercisesStore = defineStore('exercises', {
       const variation = this.variations.find((v) => v.id === variationId);
       if (!variation) return;
 
-      const siblings = this.activeVariationsFor(variation.exerciseId).filter(
-        (v) => v.parentVariationId === variation.parentVariationId,
-      );
+      const siblings = this.activeVariationsFor(variation.exerciseId);
       const index = siblings.findIndex((v) => v.id === variationId);
       const neighborIndex = direction === 'up' ? index - 1 : index + 1;
       const neighbor = siblings[neighborIndex];
@@ -67,16 +65,13 @@ export const useExercisesStore = defineStore('exercises', {
       }
     },
 
-    async addVariation(exerciseId: number, name: string, parentVariationId: number | null = null) {
-      const siblings = this.activeVariationsFor(exerciseId).filter(
-        (v) => v.parentVariationId === parentVariationId,
-      );
+    async addVariation(exerciseId: number, name: string) {
+      const siblings = this.activeVariationsFor(exerciseId);
       const nextRank = (siblings.at(-1)?.difficultyRank ?? 0) + 1;
       const created = await createVariation({
         exerciseId,
         name,
         difficultyRank: nextRank,
-        parentVariationId,
         isFavorite: false,
         imageUrl: null,
         notes: null,
@@ -91,25 +86,13 @@ export const useExercisesStore = defineStore('exercises', {
       variationId: number,
       details: {
         name: string;
-        parentVariationId: number | null;
         imageUrl: string | null;
         notes: string | null;
         videoUrl: string | null;
         targetSetsPerDay: number | null;
       },
     ) {
-      const variation = this.variations.find((v) => v.id === variationId);
-      if (!variation) return;
-
-      const reparenting = details.parentVariationId !== variation.parentVariationId;
-      const newSiblings = this.activeVariationsFor(variation.exerciseId).filter(
-        (v) => v.parentVariationId === details.parentVariationId && v.id !== variationId,
-      );
-      const difficultyRank = reparenting
-        ? (newSiblings.at(-1)?.difficultyRank ?? 0) + 1
-        : variation.difficultyRank;
-
-      const updated = await updateVariation(variationId, { ...details, difficultyRank });
+      const updated = await updateVariation(variationId, details);
       const index = this.variations.findIndex((v) => v.id === variationId);
       if (index !== -1) this.variations[index] = updated;
     },
@@ -117,12 +100,7 @@ export const useExercisesStore = defineStore('exercises', {
     async removeVariation(variationId: number) {
       await deleteVariation(variationId);
       const variation = this.variations.find((v) => v.id === variationId);
-      if (variation) {
-        variation.deletedAt = new Date();
-        for (const child of this.variations) {
-          if (child.parentVariationId === variationId) child.parentVariationId = variation.parentVariationId;
-        }
-      }
+      if (variation) variation.deletedAt = new Date();
     },
 
     async undoRemoveVariation(variationId: number) {

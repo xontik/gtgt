@@ -13,7 +13,6 @@ export const exerciseVariationSchema = z.object({
   name: z.string().min(1),
   difficultyRank: z.number().int(),
   deletedAt: z.coerce.date().nullable(),
-  parentVariationId: z.number().int().positive().nullable(),
   isFavorite: z.boolean(),
   imageUrl: optionalUrlSchema,
   notes: optionalTextSchema,
@@ -27,7 +26,6 @@ export const exerciseVariationInsertSchema = exerciseVariationSchema
   .omit({
     id: true,
     deletedAt: true,
-    parentVariationId: true,
     isFavorite: true,
     imageUrl: true,
     notes: true,
@@ -36,7 +34,6 @@ export const exerciseVariationInsertSchema = exerciseVariationSchema
     targetSetsPerDay: true,
   })
   .extend({
-    parentVariationId: z.number().int().positive().nullable().optional().default(null),
     isFavorite: z.boolean().optional().default(false),
     imageUrl: optionalUrlSchema.optional().default(null),
     notes: optionalTextSchema.optional().default(null),

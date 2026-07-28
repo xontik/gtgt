@@ -27,94 +27,23 @@ async function seed() {
     throw new Error('Failed to seed exercises.');
   }
 
-  // Push-up progression forks after the standard push-up into two branches:
-  // a decline/archer route towards a one-arm push-up, and a pike/handstand route.
-  const [kneePushUp] = await db
+  const pushUpVariations = await db
     .insert(exerciseVariations)
-    .values({ exerciseId: pushUp.id, name: 'Knee push-up', difficultyRank: 1 })
+    .values([
+      { exerciseId: pushUp.id, name: 'Knee push-up', difficultyRank: 1 },
+      { exerciseId: pushUp.id, name: 'Push-up', difficultyRank: 2 },
+      { exerciseId: pushUp.id, name: 'Decline push-up', difficultyRank: 3 },
+      { exerciseId: pushUp.id, name: 'Archer push-up', difficultyRank: 4 },
+      { exerciseId: pushUp.id, name: 'One-arm assisted push-up', difficultyRank: 5 },
+    ])
     .returning();
-  if (!kneePushUp) throw new Error('Failed to seed knee push-up.');
 
-  const [standardPushUp] = await db
-    .insert(exerciseVariations)
-    .values({
-      exerciseId: pushUp.id,
-      name: 'Push-up',
-      difficultyRank: 2,
-      parentVariationId: kneePushUp.id,
-    })
-    .returning();
-  if (!standardPushUp) throw new Error('Failed to seed push-up.');
-
-  const [declinePushUp, pikePushUp] = await Promise.all([
-    db
-      .insert(exerciseVariations)
-      .values({
-        exerciseId: pushUp.id,
-        name: 'Decline push-up',
-        difficultyRank: 1,
-        parentVariationId: standardPushUp.id,
-      })
-      .returning()
-      .then(([v]) => v),
-    db
-      .insert(exerciseVariations)
-      .values({
-        exerciseId: pushUp.id,
-        name: 'Pike push-up',
-        difficultyRank: 2,
-        parentVariationId: standardPushUp.id,
-      })
-      .returning()
-      .then(([v]) => v),
-  ]);
-  if (!declinePushUp || !pikePushUp) throw new Error('Failed to seed push-up branches.');
-
-  const [archerPushUp, oneArmAssistedPushUp, wallHandstandPushUp, freestandingHandstandPushUp] =
-    await Promise.all([
-      db
-        .insert(exerciseVariations)
-        .values({
-          exerciseId: pushUp.id,
-          name: 'Archer push-up',
-          difficultyRank: 1,
-          parentVariationId: declinePushUp.id,
-        })
-        .returning()
-        .then(([v]) => v),
-      db
-        .insert(exerciseVariations)
-        .values({
-          exerciseId: pushUp.id,
-          name: 'One-arm assisted push-up',
-          difficultyRank: 2,
-          parentVariationId: declinePushUp.id,
-        })
-        .returning()
-        .then(([v]) => v),
-      db
-        .insert(exerciseVariations)
-        .values({
-          exerciseId: pushUp.id,
-          name: 'Wall handstand push-up',
-          difficultyRank: 1,
-          parentVariationId: pikePushUp.id,
-        })
-        .returning()
-        .then(([v]) => v),
-      db
-        .insert(exerciseVariations)
-        .values({
-          exerciseId: pushUp.id,
-          name: 'Freestanding handstand push-up',
-          difficultyRank: 2,
-          parentVariationId: pikePushUp.id,
-        })
-        .returning()
-        .then(([v]) => v),
-    ]);
-  if (!archerPushUp || !oneArmAssistedPushUp || !wallHandstandPushUp || !freestandingHandstandPushUp) {
-    throw new Error('Failed to seed push-up leaf variations.');
+  const kneePushUp = pushUpVariations.find((v) => v.difficultyRank === 1);
+  const standardPushUp = pushUpVariations.find((v) => v.difficultyRank === 2);
+  const declinePushUp = pushUpVariations.find((v) => v.difficultyRank === 3);
+  const archerPushUp = pushUpVariations.find((v) => v.difficultyRank === 4);
+  if (!kneePushUp || !standardPushUp || !declinePushUp || !archerPushUp) {
+    throw new Error('Failed to seed push-up variations.');
   }
 
   const pistolSquatVariations = await db
@@ -135,8 +64,8 @@ async function seed() {
 
   const pistolSquatStart = pistolSquatVariations.find((v) => v.difficultyRank === 1);
 
-  // Favorite a couple of push-up variations at once, to show working on
-  // multiple branches of the same exercise simultaneously.
+  // Favorite a couple of push-up variations at once, to show working
+  // multiple points on the same ladder simultaneously.
   const favoriteIds = [declinePushUp.id, archerPushUp.id, plankHold.id, pistolSquatStart?.id].filter(
     (id): id is number => id !== undefined,
   );
@@ -154,7 +83,7 @@ async function seed() {
     { variationId: declinePushUp.id, timestamp: daysAgo(0, 8), value: 8 },
     { variationId: declinePushUp.id, timestamp: daysAgo(0, 12), value: 9 },
     { variationId: declinePushUp.id, timestamp: daysAgo(0, 17), value: 7 },
-    // A few sets tried on the other branch, to show branches aren't mutually exclusive in history.
+    // A few sets tried on the harder variation, to show it's not one-at-a-time.
     { variationId: archerPushUp.id, timestamp: daysAgo(3, 18), value: 3 },
     ...(pistolSquatStart
       ? [

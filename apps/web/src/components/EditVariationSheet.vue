@@ -5,7 +5,6 @@ import type { ExerciseVariation } from '@gtg/shared';
 const props = defineProps<{
   modelValue: boolean;
   variation: ExerciseVariation | undefined;
-  parentOptions: { id: number; name: string }[];
 }>();
 
 const emit = defineEmits<{
@@ -13,7 +12,6 @@ const emit = defineEmits<{
   save: [
     details: {
       name: string;
-      parentVariationId: number | null;
       imageUrl: string | null;
       notes: string | null;
       videoUrl: string | null;
@@ -24,7 +22,6 @@ const emit = defineEmits<{
 }>();
 
 const name = ref('');
-const parentVariationId = ref<number | null>(null);
 const imageUrl = ref('');
 const notes = ref('');
 const videoUrl = ref('');
@@ -36,7 +33,6 @@ watch(
   (variation) => {
     if (variation) {
       name.value = variation.name;
-      parentVariationId.value = variation.parentVariationId;
       imageUrl.value = variation.imageUrl ?? '';
       notes.value = variation.notes ?? '';
       videoUrl.value = variation.videoUrl ?? '';
@@ -54,7 +50,6 @@ function save() {
   if (!name.value.trim()) return;
   emit('save', {
     name: name.value.trim(),
-    parentVariationId: parentVariationId.value,
     imageUrl: imageUrl.value.trim() || null,
     notes: notes.value.trim() || null,
     videoUrl: videoUrl.value.trim() || null,
@@ -76,16 +71,7 @@ function save() {
         contain
       />
 
-      <v-text-field v-model="name" label="Name" autofocus />
-
-      <v-select
-        v-model="parentVariationId"
-        label="Branches from"
-        :items="[{ id: null, name: 'No parent (root)' }, ...parentOptions]"
-        item-title="name"
-        item-value="id"
-        class="mb-2"
-      />
+      <v-text-field v-model="name" label="Name" autofocus class="mb-2" />
 
       <v-text-field
         v-model="imageUrl"

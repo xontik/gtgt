@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 
-const props = defineProps<{ modelValue: boolean; parentName?: string }>();
+const props = defineProps<{ modelValue: boolean }>();
 
 const emit = defineEmits<{
   'update:modelValue': [boolean];
@@ -28,9 +28,6 @@ function save() {
     <v-card>
       <v-card-title>Add variation</v-card-title>
       <v-card-text>
-        <div v-if="parentName" class="text-body-2 text-medium-emphasis mb-2">
-          Branching from <strong>{{ parentName }}</strong>
-        </div>
         <v-text-field v-model="name" label="Name" autofocus @keyup.enter="save" />
       </v-card-text>
       <v-card-actions>

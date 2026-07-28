@@ -78,30 +78,6 @@ const editSheetOpen = ref(false);
 const editingVariation = computed(() => variations.value.find((v) => v.id === editingVariationId.value));
 const editingVariationId = ref<number>();
 
-function descendantIds(variationId: number): Set<number> {
-  const ids = new Set<number>();
-  const stack = [variationId];
-  while (stack.length) {
-    const current = stack.pop()!;
-    for (const v of activeVariations.value) {
-      if (v.parentVariationId === current && !ids.has(v.id)) {
-        ids.add(v.id);
-        stack.push(v.id);
-      }
-    }
-  }
-  return ids;
-}
-
-const editingParentOptions = computed(() => {
-  if (!editingVariationId.value) return [];
-  const excluded = descendantIds(editingVariationId.value);
-  excluded.add(editingVariationId.value);
-  return activeVariations.value
-    .filter((v) => !excluded.has(v.id))
-    .map((v) => ({ id: v.id, name: v.name }));
-});
-
 function openEdit(variationId: number) {
   editingVariationId.value = variationId;
   editSheetOpen.value = true;
@@ -109,7 +85,6 @@ function openEdit(variationId: number) {
 
 async function saveVariationDetails(details: {
   name: string;
-  parentVariationId: number | null;
   imageUrl: string | null;
   notes: string | null;
   videoUrl: string | null;
@@ -141,18 +116,13 @@ async function undoRemoveVariation() {
 }
 
 const addDialogOpen = ref(false);
-const branchFromId = ref<number>();
-const branchFromName = computed(
-  () => variations.value.find((v) => v.id === branchFromId.value)?.name,
-);
 
-function openAddDialog(parentVariationId?: number) {
-  branchFromId.value = parentVariationId;
+function openAddDialog() {
   addDialogOpen.value = true;
 }
 
 async function addVariation(name: string) {
-  await store.addVariation(exerciseId, name, branchFromId.value ?? null);
+  await store.addVariation(exerciseId, name);
   addDialogOpen.value = false;
 }
 
@@ -196,7 +166,6 @@ async function removeExercise() {
       :variations="activeVariations"
       @reorder="reorderVariation"
       @edit="openEdit"
-      @branch="openAddDialog"
       @favorite="toggleFavorite"
     />
 
@@ -213,11 +182,10 @@ async function removeExercise() {
     <EditVariationSheet
       v-model="editSheetOpen"
       :variation="editingVariation"
-      :parent-options="editingParentOptions"
       @save="saveVariationDetails"
       @delete="removeVariation"
     />
-    <AddVariationDialog v-model="addDialogOpen" :parent-name="branchFromName" @save="addVariation" />
+    <AddVariationDialog v-model="addDialogOpen" @save="addVariation" />
     <EditExerciseSheet
       v-model="editExerciseSheetOpen"
       :exercise="exercise"

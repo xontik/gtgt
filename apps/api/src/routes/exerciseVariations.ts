@@ -68,10 +68,6 @@ export async function exerciseVariationRoutes(app: FastifyInstance) {
       .where(eq(exerciseVariations.id, id))
       .returning();
     if (!deleted) throw new NotFoundError('Variation not found');
-    await db
-      .update(exerciseVariations)
-      .set({ parentVariationId: deleted.parentVariationId })
-      .where(eq(exerciseVariations.parentVariationId, id));
     reply.code(204);
   });
 }

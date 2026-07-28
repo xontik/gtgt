@@ -1,5 +1,4 @@
 import type { FastifyInstance } from 'fastify';
-import { eq } from 'drizzle-orm';
 import { backupSchema } from '@gtg/shared';
 import { db } from '../db/client.js';
 import { exercises, exerciseVariations, logEntries } from '../db/schema.js';
@@ -22,8 +21,8 @@ export async function backupRoutes(app: FastifyInstance) {
   });
 
   // Wipes the database and replaces it with the backup, preserving ids so
-  // that relations (variation -> exercise, variation -> parent, log entry ->
-  // variation) stay intact.
+  // that relations (variation -> exercise, log entry -> variation) stay
+  // intact.
   app.post('/backup/restore', async (req) => {
     const backup = backupSchema.parse(req.body);
 
@@ -36,17 +35,7 @@ export async function backupRoutes(app: FastifyInstance) {
         await tx.insert(exercises).values(backup.exercises);
       }
       if (backup.exerciseVariations.length > 0) {
-        await tx.insert(exerciseVariations).values(
-          backup.exerciseVariations.map((v) => ({ ...v, parentVariationId: null })),
-        );
-        for (const v of backup.exerciseVariations) {
-          if (v.parentVariationId !== null) {
-            await tx
-              .update(exerciseVariations)
-              .set({ parentVariationId: v.parentVariationId })
-              .where(eq(exerciseVariations.id, v.id));
-          }
-        }
+        await tx.insert(exerciseVariations).values(backup.exerciseVariations);
       }
       if (backup.logEntries.length > 0) {
         await tx.insert(logEntries).values(backup.logEntries);
@@ -62,15 +51,14 @@ export async function backupRoutes(app: FastifyInstance) {
   // history. isFavorite carries over so newly imported variations can show
   // up on Home right away. Exercises and variations that already exist
   // (matched by trimmed, case-insensitive name - same exercise for
-  // exercises, same exercise + parent for variations) are reused instead of
+  // exercises, same exercise for variations) are reused instead of
   // duplicated, so re-importing the same or an overlapping backup is a
   // no-op for those.
   app.post('/backup/import-structure', async (req) => {
     const backup = backupSchema.parse(req.body);
 
     const normalize = (name: string) => name.trim().toLowerCase();
-    const variationKey = (exerciseId: number, parentVariationId: number | null, name: string) =>
-      `${exerciseId}::${parentVariationId ?? 'root'}::${normalize(name)}`;
+    const variationKey = (exerciseId: number, name: string) => `${exerciseId}::${normalize(name)}`;
 
     const exerciseIdMap = new Map<number, number>();
     const variationIdMap = new Map<number, number>();
@@ -102,25 +90,16 @@ export async function backupRoutes(app: FastifyInstance) {
       const variationByKey = new Map(
         existingVariations
           .filter((v) => v.deletedAt === null)
-          .map((v) => [variationKey(v.exerciseId, v.parentVariationId, v.name), v]),
+          .map((v) => [variationKey(v.exerciseId, v.name), v]),
       );
 
-      // Sorted ascending by id so a variation's parent (always a lower id,
-      // since the app never lets a variation parent a pre-existing one) has
-      // already been mapped by the time we resolve its child.
-      const liveVariations = [...backup.exerciseVariations]
-        .filter((v) => v.deletedAt === null)
-        .sort((a, b) => a.id - b.id);
+      const liveVariations = backup.exerciseVariations.filter((v) => v.deletedAt === null);
 
       for (const variation of liveVariations) {
         const newExerciseId = exerciseIdMap.get(variation.exerciseId);
         if (!newExerciseId) continue;
-        const resolvedParentId =
-          variation.parentVariationId === null
-            ? null
-            : (variationIdMap.get(variation.parentVariationId) ?? null);
 
-        const key = variationKey(newExerciseId, resolvedParentId, variation.name);
+        const key = variationKey(newExerciseId, variation.name);
         const existing = variationByKey.get(key);
         if (existing) {
           variationIdMap.set(variation.id, existing.id);
@@ -134,7 +113,6 @@ export async function backupRoutes(app: FastifyInstance) {
             exerciseId: newExerciseId,
             name: variation.name,
             difficultyRank: variation.difficultyRank,
-            parentVariationId: resolvedParentId,
             isFavorite: variation.isFavorite,
             imageUrl: variation.imageUrl,
             notes: variation.notes,

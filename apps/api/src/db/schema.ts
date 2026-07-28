@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text, real, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text, real } from 'drizzle-orm/sqlite-core';
 
 export const exercises = sqliteTable('exercises', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -15,10 +15,6 @@ export const exerciseVariations = sqliteTable('exercise_variations', {
   name: text('name').notNull(),
   difficultyRank: integer('difficulty_rank').notNull(),
   deletedAt: integer('deleted_at', { mode: 'timestamp' }),
-  parentVariationId: integer('parent_variation_id').references(
-    (): AnySQLiteColumn => exerciseVariations.id,
-    { onDelete: 'set null' },
-  ),
   isFavorite: integer('is_favorite', { mode: 'boolean' }).notNull().default(false),
   imageUrl: text('image_url'),
   notes: text('notes'),
