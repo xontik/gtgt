@@ -164,8 +164,10 @@ reachable from the public internet, set `APP_PASSCODE` in `.env` to a
 shared secret; the app then shows a login screen and gates every API route
 behind an HTTP-only session cookie (30-day expiry, in-memory session store —
 this is still single-user, just a lock on the door, not real multi-user
-auth). Leave `APP_PASSCODE` unset/empty and the app behaves exactly as
-before, no login prompt at all.
+auth). Failed attempts are rate-limited per IP (5 tries per 15 minutes, then
+a 15-minute lockout) to make the passcode harder to brute-force. Leave
+`APP_PASSCODE` unset/empty and the app behaves exactly as before, no login
+prompt at all.
 
 To update: `docker compose pull && docker compose up -d` for the published
 image, or `docker compose -f docker-compose.dev.yml up -d --build` after
@@ -177,24 +179,26 @@ manually removing the volume deletes logged data.
 
 - **Home / quick log** — a "Favorites" grid of working variations you're
   currently training. Any variation can be favorited (see Exercise detail
-  below), including several on the same exercise at once, since you can work
-  multiple progressions/branches simultaneously. Each card shows that
-  variation's today's total (set count + reps or time) and how long ago it
-  was last logged, sorted by recency (most recently logged first). Tap a
-  card to log a set: a rep stepper (+/-) or a start/stop timer, depending on
-  the exercise's metric type, defaulting to whatever you logged last time
-  (most sets repeat the same rep count/duration, so this saves a re-entry
-  almost every time). Either sheet has a "Log for yesterday" toggle to
-  backdate a forgotten set by 24h instead of logging it as today. Logging
-  gives a short vibration where supported (a longer one for a personal best
-  or hitting a daily target), and the confirmation snackbar calls out "new
-  best!" / "goal hit!" when either happens. The heart-off icon on a card
-  removes it from favorites (with a confirmation dialog) without touching
-  its log history. "Add working variation" opens a searchable picker over
-  every exercise's variations to favorite one. If a variation has a
-  daily-set target set (see Exercise detail below), its card shows progress
-  like "3/5 sets today" and switches to a success-tinted state with a
-  checkmark once the target's met. Below the grid: a today's-sets /
+  below), including several on the same exercise at once, e.g. to work two
+  points on the same ladder simultaneously. Each card shows the exercise's
+  streak (days in a row with a logged set on *any* of its variations - moving
+  up or down the ladder doesn't reset it), that variation's today's total
+  (set count + reps or time), and how long ago it was last logged, sorted by
+  recency (most recently logged first). Tap a card to open the full quick-log
+  sheet: a rep stepper (+/-) or a start/stop timer depending on the
+  exercise's metric type, defaulting to whatever you logged last time (most
+  sets repeat the same rep count/duration). A "+&lt;last value&gt;" button on
+  the card itself skips the sheet entirely for that common case - one tap,
+  logged. Either sheet also has a "Log for yesterday" toggle to backdate a
+  forgotten set by 24h instead of logging it as today. Logging gives a short
+  vibration where supported (a longer one for a personal best or hitting a
+  daily target), and the confirmation snackbar calls out "new best!" / "goal
+  hit!" when either happens. "Add working variation" opens a searchable
+  picker over every exercise's variations to favorite one (unfavoriting
+  happens from the exercise detail page, not from Home). If a variation has
+  a daily-set target set (see Exercise detail below), its card shows
+  progress like "3/5 sets today" and switches to a success-tinted state with
+  a checkmark once the target's met. Below the grid: a today's-sets /
   day-streak stat pair, a rolling weekly recap ("32 sets in the last 7 days,
   up from 25"), a "Hasn't been hit in a while" list of favorited variations
   not logged in 3+ days (tap to quick-log), and a recent-activity feed of
@@ -217,18 +221,19 @@ manually removing the volume deletes logged data.
   few seconds; Undo re-creates the entry (as a new log entry, since the
   original is already gone).
 - **Exercise detail** — tap a favorite card's chevron, or a row on Manage
-  exercises, to open an exercise's page: a visual progression ladder of its
-  variations, reorder them with the up/down arrows, rename or delete a
-  variation, add a new one, and see/edit recent entries for that exercise.
+  exercises, to open an exercise's page: a single ordered progression ladder
+  of its variations, reorder them with the up/down arrows, rename or delete
+  a variation, add a new one, and see/edit recent entries for that exercise.
   Each variation row has a heart icon to favorite/unfavorite it as a working
-  variation. Deleting a variation is a soft delete — it disappears from the
-  progression ladder but its past log entries are kept for stats/history; a
-  snackbar with Undo appears right after, in case that was a mistake.
-  Variations can branch: use the branch icon on any variation to add a new
-  variation forking from it (e.g. push-up splitting into a decline/archer
-  route and a handstand-push-up route), rather than a single straight-line
-  progression. Editing a variation also lets you set an image URL, notes/tips,
-  a video URL (e.g. a YouTube link), and an optional daily-set target — these
+  variation - this is the only place to unfavorite (Home only lets you add).
+  Deleting a variation is a soft delete — it disappears from the ladder but
+  its past log entries are kept for stats/history; a snackbar with Undo
+  appears right after, in case that was a mistake. There's no branching: each
+  exercise has one straight-line ladder low-to-high difficulty. If a
+  progression genuinely forks (e.g. push-up splitting into a decline/archer
+  route and a handstand-push-up route), model that as a second exercise
+  instead. Editing a variation also lets you set an image URL, notes/tips, a
+  video URL (e.g. a YouTube link), and an optional daily-set target — these
   show up in the quick-log bottom sheet (image/notes/video) and on the Home
   favorite card (target progress) so you have form cues and goals right when
   you're logging a set.

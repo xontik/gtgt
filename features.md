@@ -4,7 +4,7 @@
 - [x] let log arbitrary time for exercices with time, do not use timer
 - [x] graphic visualisation per periode, per exercices
 - [x] avoid loosing logged entries when deleting variation, use soft delete and keep a link to the variation that was deleted, maybe a "deleted" state for variations.
-- [x] how to handle variations ? (branching progression via parentVariationId)
+- [x] how to handle variations ? (originally: branching progression via parentVariationId; later reversed — see below, one flat ladder per exercise instead)
 - [x] on the stats view let me select variation under an exercices to just see the log from this variation, in a tree like checkbox structure, selecting an exercices select all variation or deselect all variation, i think vuetify have a component for that.
 - [x] remove current variation of exercices, because i can work on mulitple at the same time, but add a list of current variations, like favorites, and it's theses one that i can quick log from home screen. Add a button to look for anyvariation any exercices to quick log the "non favorites" ones. (per-variation isFavorite, Home shows a favorites grid + "Add working variation" search picker, heart toggle in exercise detail, remove-with-confirm on Home, new "Manage exercises" page for exercise CRUD, Stats preselects favorites)
 
@@ -15,7 +15,7 @@
 - [x] edit or delete a set from the stats view (directly or by linking to log page)
 - [x] pump up home page below favorites: today's-sets/streak stats, "hasn't been hit in a while" list, recent activity feed
 - [ ] reorder variation with drag and drop
-- [x] variation of the same exercices but that are not "more difficult" just another branch. maybe some ancestor link ?
+- [x] variation of the same exercices but that are not "more difficult" just another branch. maybe some ancestor link ? (reversed later — branching turned out unused and made reordering harder; removed in favor of one flat ladder per exercise, forks now modeled as a second exercise)
 - [x] simple deployement on home server docker compose
 - [ ] home page "progression nudge" (suggest moving up the ladder) once there's a good signal for it
 - [x] backup/restore data from the UI, plus import-just-exercises-and-variations for trying out configs
@@ -30,9 +30,14 @@
 - [x] CSV export of log entries alongside the existing JSON backup
 - [x] optional per-variation daily-set target, with "3/5 sets today" progress on the Home favorite card
 - [x] shared-secret passcode gate (`APP_PASSCODE`), still single-user — no-op if unset so existing deploys keep working
-- [x] installable as a PWA (manifest + service worker + iOS meta tags); icons currently reuse favicon.svg, raster PNGs are a follow-up
+- [x] installable as a PWA (manifest + service worker + iOS meta tags + real 192/512/maskable PNG icons via an idempotent `pnpm --filter @gtg/web generate-icons` script)
 - [x] quick-log sheets default to the last logged value ("same as last time") instead of always resetting
 - [x] haptic feedback on logging a set (longer pattern for a personal best or hitting a daily target)
 - [x] favorite card switches to a success state with a checkmark once its daily target is met
 - [x] personal-best and goal-hit callouts in the log confirmation snackbar
 - [x] rolling weekly recap banner on Home (this week's sets vs the prior week)
+- [x] removed variation parenting/branching entirely — one flat, reorderable ladder per exercise; a genuine fork is now a second exercise instead
+- [x] per-exercise streak (any variation on the ladder counts, kept across moving up/down) shown on the Home favorite card
+- [x] "+&lt;last value&gt;" quick-log button on the Home card, logs immediately with no sheet
+- [x] removed the unfavorite button from Home cards (unused in practice; unfavoriting still works from exercise detail)
+- [x] brute-force lockout on the passcode login (5 attempts / 15 min, then a 15-min lockout, per IP)
