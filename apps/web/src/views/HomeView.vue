@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Exercise, ExerciseVariation, LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
+import { useRoutinesStore } from '../stores/routines';
 import { createLogEntry, listLogEntries } from '../api/logEntries';
 import { formatDuration, formatRelativeTime } from '../lib/format';
 import { dateKey } from '../lib/heatmap';
@@ -12,14 +13,20 @@ import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
 import AddFavoriteDialog from '../components/AddFavoriteDialog.vue';
 import LogEntryList from '../components/LogEntryList.vue';
+import RoutineRunnerSheet, { type RoutineStep } from '../components/RoutineRunnerSheet.vue';
 
 const store = useExercisesStore();
+const routinesStore = useRoutinesStore();
 const entries = ref<LogEntry[]>([]);
 const route = useRoute();
 const router = useRouter();
 
 onMounted(async () => {
-  const [, fetchedEntries] = await Promise.all([store.fetchAll(), listLogEntries()]);
+  const [, fetchedEntries] = await Promise.all([
+    store.fetchAll(),
+    listLogEntries(),
+    routinesStore.fetchAll(),
+  ]);
   entries.value = fetchedEntries;
 
   // Deep link from notifications: ?logVariation=<id> opens the quick-log
@@ -302,6 +309,59 @@ async function addFavorite(variationId: number) {
   await store.setFavorite(variationId, true);
   addDialogOpen.value = false;
 }
+
+// A routine's "last done" is approximated as the most recent log entry
+// across any of its items - not a strict "all items logged together" check,
+// but close enough to tell you roughly when you last worked through it.
+function routineLastDoneLabel(routineId: number) {
+  const items = routinesStore.itemsFor(routineId);
+  let latest: Date | undefined;
+  for (const item of items) {
+    const last = lastLoggedByVariation.value.get(item.variationId);
+    if (last && (!latest || last > latest)) latest = last;
+  }
+  return latest ? formatRelativeTime(latest) : 'Not done yet';
+}
+
+const runnerOpen = ref(false);
+const runnerRoutineName = ref('');
+const runnerSteps = ref<RoutineStep[]>([]);
+
+function startRoutine(routineId: number) {
+  const routine = routinesStore.routines.find((r) => r.id === routineId);
+  if (!routine) return;
+
+  const steps: RoutineStep[] = [];
+  for (const item of routinesStore.itemsFor(routineId)) {
+    const variation = store.variations.find((v) => v.id === item.variationId);
+    const exercise = variation && store.exercises.find((e) => e.id === variation.exerciseId);
+    if (!variation || !exercise) continue;
+    const initialValue = item.targetValue ?? lastValueByVariation.value.get(variation.id) ?? (exercise.metricType === 'time' ? 30 : 5);
+    steps.push({
+      variationId: variation.id,
+      exerciseName: exercise.name,
+      variationName: variation.name,
+      metricType: exercise.metricType,
+      initialValue,
+    });
+  }
+  if (steps.length === 0) return;
+
+  runnerRoutineName.value = routine.name;
+  runnerSteps.value = steps;
+  runnerOpen.value = true;
+}
+
+async function logRoutineStep(variationId: number, value: number) {
+  const created = await createLogEntry({ variationId, value });
+  entries.value.push(created);
+}
+
+function finishRoutine() {
+  vibrateSuccess();
+  snackbarText.value = `Finished ${runnerRoutineName.value}`;
+  snackbar.value = true;
+}
 </script>
 
 <template>
@@ -332,6 +392,23 @@ async function addFavorite(variationId: number) {
     <v-btn block variant="tonal" prepend-icon="mdi-plus" class="mt-2" @click="addDialogOpen = true">
       Add working variation
     </v-btn>
+
+    <template v-if="routinesStore.routines.length > 0">
+      <div class="text-subtitle-2 text-medium-emphasis mt-4 mb-1">Routines</div>
+      <v-list density="compact" class="mb-2">
+        <v-list-item
+          v-for="routine in routinesStore.routines"
+          :key="routine.id"
+          :title="routine.name"
+          :subtitle="`${routinesStore.itemsFor(routine.id).length} exercise${routinesStore.itemsFor(routine.id).length === 1 ? '' : 's'} · ${routineLastDoneLabel(routine.id)}`"
+          @click="startRoutine(routine.id)"
+        >
+          <template #append>
+            <v-btn icon="mdi-play" size="small" variant="tonal" @click.stop="startRoutine(routine.id)" />
+          </template>
+        </v-list-item>
+      </v-list>
+    </template>
 
     <v-row class="mt-2 mb-2" dense>
       <v-col cols="6">
@@ -422,6 +499,14 @@ async function addFavorite(variationId: number) {
       :exercises="store.exercises"
       :variations="store.variations"
       @select="addFavorite"
+    />
+
+    <RoutineRunnerSheet
+      v-model="runnerOpen"
+      :routine-name="runnerRoutineName"
+      :steps="runnerSteps"
+      @log-step="logRoutineStep"
+      @finished="finishRoutine"
     />
   </v-container>
 </template>
