@@ -75,6 +75,15 @@ build involved.)
 To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
 `pnpm db:migrate && pnpm db:seed` from `apps/api`.
 
+If you had data from before variation branching was removed (migration
+`0007`), `difficultyRank` may be off — it used to be scoped per
+sibling-group under a `parentVariationId`, so unbranched variations can
+collide on the same rank once flattened into one ladder. Run
+`pnpm --filter @gtg/api db:backfill-difficulty-rank` once (from repo root,
+or `pnpm db:backfill-difficulty-rank` from `apps/api`) to renumber each
+exercise's variations sequentially in their current order. Safe to re-run;
+it's a no-op once ranks are already sequential.
+
 ## Deployment (Docker Compose on a VPS)
 
 A single `Dockerfile` at the root builds one image with one service
