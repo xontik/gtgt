@@ -9,6 +9,7 @@ defineProps<{
   goalLabel?: string;
   goalMet?: boolean;
   quickAddLabel?: string;
+  exerciseStreak?: number;
 }>();
 
 const emit = defineEmits<{ log: []; quickAdd: [] }>();
@@ -17,7 +18,12 @@ const emit = defineEmits<{ log: []; quickAdd: [] }>();
 <template>
   <v-card :variant="goalMet ? 'tonal' : 'elevated'" :color="goalMet ? 'success' : undefined" @click="emit('log')">
     <v-card-item>
-      <v-card-title>{{ exercise.name }}</v-card-title>
+      <v-card-title class="d-flex align-center ga-1">
+        {{ exercise.name }}
+        <span v-if="exerciseStreak" class="text-caption text-medium-emphasis d-flex align-center">
+          <v-icon icon="mdi-fire" size="14" color="orange" />{{ exerciseStreak }}
+        </span>
+      </v-card-title>
       <v-card-subtitle>{{ variation.name }}</v-card-subtitle>
       <template #append>
         <v-btn

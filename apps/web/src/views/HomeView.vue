@@ -125,17 +125,41 @@ const weeklyRecap = computed(() => {
 
 const loggedDayKeys = computed(() => new Set(entries.value.map((e) => dateKey(new Date(e.timestamp)))));
 
-const currentStreak = computed(() => {
+function streakFromDayKeys(dayKeys: Set<string>): number {
   let streak = 0;
   const cursor = new Date();
   // Today doesn't have to be logged yet for the streak to still count "so far".
-  if (!loggedDayKeys.value.has(dateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
-  while (loggedDayKeys.value.has(dateKey(cursor))) {
+  if (!dayKeys.has(dateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+  while (dayKeys.has(dateKey(cursor))) {
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
+}
+
+const currentStreak = computed(() => streakFromDayKeys(loggedDayKeys.value));
+
+// Streak per exercise (not per variation) - logging any variation on the
+// ladder keeps it going, so moving up or down doesn't reset it.
+const streakByExercise = computed(() => {
+  const dayKeysByExercise = new Map<number, Set<string>>();
+  for (const entry of entries.value) {
+    const variation = store.variations.find((v) => v.id === entry.variationId);
+    if (!variation) continue;
+    const set = dayKeysByExercise.get(variation.exerciseId) ?? new Set<string>();
+    set.add(dateKey(new Date(entry.timestamp)));
+    dayKeysByExercise.set(variation.exerciseId, set);
+  }
+  const map = new Map<number, number>();
+  for (const [exerciseId, dayKeys] of dayKeysByExercise) {
+    map.set(exerciseId, streakFromDayKeys(dayKeys));
+  }
+  return map;
 });
+
+function exerciseStreakFor(exercise: Exercise) {
+  return streakByExercise.value.get(exercise.id) ?? 0;
+}
 
 const NEGLECTED_DAYS = 3;
 
@@ -298,6 +322,7 @@ async function addFavorite(variationId: number) {
           :goal-label="goalLabelFor(favorite.variation)"
           :goal-met="goalMetFor(favorite.variation)"
           :quick-add-label="quickAddLabelFor(favorite.variation)"
+          :exercise-streak="exerciseStreakFor(favorite.exercise)"
           @log="openSheet(favorite.exercise, favorite.variation)"
           @quick-add="quickAdd(favorite.exercise, favorite.variation)"
         />
