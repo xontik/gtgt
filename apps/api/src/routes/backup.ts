@@ -1,14 +1,16 @@
 import type { FastifyInstance } from 'fastify';
 import { backupSchema } from '@gtg/shared';
 import { db } from '../db/client.js';
-import { exercises, exerciseVariations, logEntries } from '../db/schema.js';
+import { exercises, exerciseVariations, logEntries, routines, routineItems } from '../db/schema.js';
 
 export async function backupRoutes(app: FastifyInstance) {
   app.get('/backup', async () => {
-    const [allExercises, allVariations, allLogEntries] = await Promise.all([
+    const [allExercises, allVariations, allLogEntries, allRoutines, allRoutineItems] = await Promise.all([
       db.select().from(exercises),
       db.select().from(exerciseVariations),
       db.select().from(logEntries),
+      db.select().from(routines),
+      db.select().from(routineItems),
     ]);
 
     return {
@@ -17,16 +19,20 @@ export async function backupRoutes(app: FastifyInstance) {
       exercises: allExercises,
       exerciseVariations: allVariations,
       logEntries: allLogEntries,
+      routines: allRoutines,
+      routineItems: allRoutineItems,
     };
   });
 
   // Wipes the database and replaces it with the backup, preserving ids so
-  // that relations (variation -> exercise, log entry -> variation) stay
-  // intact.
+  // that relations (variation -> exercise, log entry -> variation, routine
+  // item -> routine/variation) stay intact.
   app.post('/backup/restore', async (req) => {
     const backup = backupSchema.parse(req.body);
 
     await db.transaction(async (tx) => {
+      await tx.delete(routineItems);
+      await tx.delete(routines);
       await tx.delete(logEntries);
       await tx.delete(exerciseVariations);
       await tx.delete(exercises);
@@ -39,6 +45,12 @@ export async function backupRoutes(app: FastifyInstance) {
       }
       if (backup.logEntries.length > 0) {
         await tx.insert(logEntries).values(backup.logEntries);
+      }
+      if (backup.routines.length > 0) {
+        await tx.insert(routines).values(backup.routines);
+      }
+      if (backup.routineItems.length > 0) {
+        await tx.insert(routineItems).values(backup.routineItems);
       }
     });
 

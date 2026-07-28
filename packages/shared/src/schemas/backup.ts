@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { exerciseSchema } from './exercise.js';
 import { exerciseVariationSchema } from './exerciseVariation.js';
 import { logEntrySchema } from './logEntry.js';
+import { routineSchema, routineItemSchema } from './routine.js';
 
 // The DB returns `null` (not `undefined`) for an unset notes column, which
 // logEntrySchema's `.optional()` doesn't accept as-is - a backup round-trips
@@ -27,5 +28,8 @@ export const backupSchema = z.object({
   exercises: z.array(exerciseSchema),
   exerciseVariations: z.array(backupExerciseVariationSchema),
   logEntries: z.array(backupLogEntrySchema),
+  // Backups created before routines existed won't have these keys at all.
+  routines: z.array(routineSchema).optional().default([]),
+  routineItems: z.array(routineItemSchema).optional().default([]),
 });
 export type Backup = z.infer<typeof backupSchema>;
