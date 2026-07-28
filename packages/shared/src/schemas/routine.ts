@@ -18,11 +18,13 @@ export const routineItemSchema = z.object({
   variationId: z.number().int().positive(),
   order: z.number().int(),
   targetValue: z.number().positive().nullable(),
+  setsCount: z.number().int().positive(),
 });
 export type RoutineItem = z.infer<typeof routineItemSchema>;
 
 export const routineItemInsertSchema = routineItemSchema.omit({ id: true }).extend({
   targetValue: z.number().positive().nullable().optional().default(null),
+  setsCount: z.number().int().positive().optional().default(1),
 });
 export type RoutineItemInsert = z.infer<typeof routineItemInsertSchema>;
 

@@ -51,15 +51,20 @@ export const useRoutinesStore = defineStore('routines', {
       this.items = this.items.filter((i) => i.routineId !== routineId);
     },
 
-    async addItem(routineId: number, variationId: number, targetValue: number | null = null) {
+    async addItem(
+      routineId: number,
+      variationId: number,
+      targetValue: number | null = null,
+      setsCount = 1,
+    ) {
       const siblings = this.itemsFor(routineId);
       const order = (siblings.at(-1)?.order ?? 0) + 1;
-      const created = await createRoutineItem({ routineId, variationId, order, targetValue });
+      const created = await createRoutineItem({ routineId, variationId, order, targetValue, setsCount });
       this.items.push(created);
     },
 
-    async updateItemTarget(itemId: number, targetValue: number | null) {
-      const updated = await updateRoutineItem(itemId, { targetValue });
+    async updateItemTemplate(itemId: number, details: { targetValue: number | null; setsCount: number }) {
+      const updated = await updateRoutineItem(itemId, details);
       const index = this.items.findIndex((i) => i.id === itemId);
       if (index !== -1) this.items[index] = updated;
     },

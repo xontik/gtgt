@@ -22,6 +22,11 @@ const backupExerciseVariationSchema = exerciseVariationSchema.extend({
   targetSetsPerDay: z.number().int().positive().nullish().transform((v) => v ?? null),
 });
 
+// Backups created before setsCount existed won't have that key at all.
+const backupRoutineItemSchema = routineItemSchema.extend({
+  setsCount: z.number().int().positive().nullish().transform((v) => v ?? 1),
+});
+
 export const backupSchema = z.object({
   version: z.literal(1),
   exportedAt: z.coerce.date(),
@@ -30,6 +35,6 @@ export const backupSchema = z.object({
   logEntries: z.array(backupLogEntrySchema),
   // Backups created before routines existed won't have these keys at all.
   routines: z.array(routineSchema).optional().default([]),
-  routineItems: z.array(routineItemSchema).optional().default([]),
+  routineItems: z.array(backupRoutineItemSchema).optional().default([]),
 });
 export type Backup = z.infer<typeof backupSchema>;

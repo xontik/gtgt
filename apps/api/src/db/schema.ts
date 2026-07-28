@@ -52,4 +52,5 @@ export const routineItems = sqliteTable('routine_items', {
     .references(() => exerciseVariations.id, { onDelete: 'cascade' }),
   order: integer('order').notNull(),
   targetValue: real('target_value'),
+  setsCount: integer('sets_count').notNull().default(1),
 });

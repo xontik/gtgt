@@ -10,11 +10,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [boolean];
-  select: [variationId: number, targetValue: number | null];
+  select: [variationId: number, targetValue: number | null, setsCount: number];
 }>();
 
 const selected = ref<number>();
 const targetValue = ref<number | null>(null);
+const setsCount = ref(1);
 
 watch(
   () => props.modelValue,
@@ -22,6 +23,7 @@ watch(
     if (open) {
       selected.value = undefined;
       targetValue.value = null;
+      setsCount.value = 1;
     }
   },
 );
@@ -41,7 +43,7 @@ const options = computed(() =>
 
 function save() {
   if (selected.value === undefined) return;
-  emit('select', selected.value, targetValue.value);
+  emit('select', selected.value, targetValue.value, Math.max(1, setsCount.value || 1));
 }
 </script>
 
@@ -60,12 +62,21 @@ function save() {
           clearable
           class="mb-2"
         />
-        <v-text-field
-          v-model.number="targetValue"
-          type="number"
-          label="Target reps/seconds (optional)"
-          min="0"
-        />
+        <div class="d-flex ga-2">
+          <v-text-field
+            v-model.number="setsCount"
+            type="number"
+            label="Sets"
+            min="1"
+            style="max-width: 120px"
+          />
+          <v-text-field
+            v-model.number="targetValue"
+            type="number"
+            label="Target reps/seconds per set (optional)"
+            min="0"
+          />
+        </div>
       </v-card-text>
       <v-card-actions>
         <v-spacer />

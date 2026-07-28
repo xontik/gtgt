@@ -57,9 +57,9 @@ function openAddItem(routineId: number) {
   addItemDialogOpen.value = true;
 }
 
-async function addItem(variationId: number, targetValue: number | null) {
+async function addItem(variationId: number, targetValue: number | null, setsCount: number) {
   if (!addItemRoutineId.value) return;
-  await routinesStore.addItem(addItemRoutineId.value, variationId, targetValue);
+  await routinesStore.addItem(addItemRoutineId.value, variationId, targetValue, setsCount);
   addItemDialogOpen.value = false;
 }
 </script>
@@ -103,7 +103,8 @@ async function addItem(variationId: number, targetValue: number | null) {
               :title="exerciseNameFor(item.variationId).exerciseName"
               :subtitle="
                 exerciseNameFor(item.variationId).variationName +
-                (item.targetValue ? ` · target ${item.targetValue}` : '')
+                ` · ${item.setsCount} set${item.setsCount === 1 ? '' : 's'}` +
+                (item.targetValue ? ` × ${item.targetValue}` : '')
               "
             >
               <template #append>

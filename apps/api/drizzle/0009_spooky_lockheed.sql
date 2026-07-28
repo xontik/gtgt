@@ -1,0 +1,1 @@
+ALTER TABLE `routine_items` ADD `sets_count` integer DEFAULT 1 NOT NULL;
