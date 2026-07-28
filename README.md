@@ -248,15 +248,30 @@ manually removing the volume deletes logged data.
   you're logging a set.
 - **Manage exercises** — a plain list of every exercise (name, category,
   metric type) for basic CRUD: add a new exercise, rename/change one, or
-  delete it entirely. Tap a row to jump to its detail page for variations.
+  delete it entirely. Tap a row to jump to its detail page for variations. A
+  "Manage routines" button at the top links to routine management.
+- **Routines** — for exercises done together in one sitting (e.g. an ankle
+  mobility warm-up) rather than spread throughout the day GtG-style. Manage
+  routines from its own page (linked off Manage exercises): create a
+  routine, add existing exercise variations to it in order with an optional
+  target reps/seconds per item, reorder with up/down arrows, rename or
+  delete. Routines needing multiple exercises are why this is a separate
+  concept from favoriting — a variation can be in a routine, favorited, both,
+  or neither. On Home, routines appear in their own section below the
+  favorites grid, each showing how long ago it was last done. Tap one to
+  open a guided step-through sheet: one exercise at a time, prefilled with
+  that item's target (or your last logged value), "Log & next" advances
+  through the routine (or "Skip" if you didn't do that one today). Each step
+  logs a normal set, so routine history shows up in Stats/CSV/backup exactly
+  like anything else — no separate tracking system.
 - **System** (server icon in the app bar) — backup/restore and notifications:
   - *Notifications*: a "Trigger reminder check" button manually runs the same
     idle-training check the cron job runs (see "Idle-training reminders"
     below) — useful for testing the Discord webhook without waiting for the
     schedule. No-ops if the webhook isn't configured.
-  - *Backup*: download everything (exercises, variations, log entries) as one
-    JSON file, or export just the log entries as a CSV (with resolved
-    exercise/variation names) for spreadsheets or other tools.
+  - *Backup*: download everything (exercises, variations, log entries,
+    routines) as one JSON file, or export just the log entries as a CSV
+    (with resolved exercise/variation names) for spreadsheets or other tools.
   - *Restore*: replaces everything in the app with the contents of a chosen
     backup file (destructive, confirmation required).
   - *Import exercises & variations only*: adds a backup file's
@@ -286,6 +301,10 @@ manually removing the volume deletes logged data.
    the progression ladder, or favorite/unfavorite specific variations.
 5. Use **Manage exercises** to add a brand-new exercise or edit/delete an
    existing one.
+6. For exercises done together as a session (mobility, warm-ups) rather than
+   spread through the day, build a **Routine** (linked from Manage
+   exercises) and run it from its Home section instead of favoriting each
+   exercise individually.
 
 ## Non-goals (for now)
 

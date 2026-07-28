@@ -22,8 +22,11 @@ See [README.md](README.md) for setup instructions, the current feature list, and
 - **Exercise** — `id`, `name`, `category` (e.g. push / pull / squat / core / hold), `metricType`: `'reps' | 'time'`
 - **ExerciseVariation** — `id`, `exerciseId`, `name` (e.g. "knee push up", "push up", "archer push up"), `difficultyRank` (integer, defines progression order low → high among all variations of the same exercise — one flat ladder per exercise, no branching), `isFavorite` (boolean — marks it a "working variation" quick-logged from Home; multiple variations, including several on the same exercise, can be favorited at once)
 - **LogEntry** — `id`, `variationId`, `timestamp`, `value` (reps count or seconds), `notes?` (optional text)
+- **Routine** — `id`, `name`. An ordered set of existing exercise variations done together in one sitting (e.g. an ankle mobility warm-up), as opposed to GtG-style favorites logged individually throughout the day.
+- **RoutineItem** — `id`, `routineId`, `variationId`, `order` (integer, position within the routine), `targetValue?` (nullable — reps/seconds to prefill when running the routine)
 
 Notes for the agent:
+- Routines are a separate concern from favoriting/GtG: a variation can be in a routine, favorited, both, or neither. Running a routine through its guided sheet (Home) produces plain `LogEntry` rows per item, so Stats/CSV/backup pick routine sets up automatically without any special-casing.
 - Each exercise has exactly one linear progression ladder ordered by `difficultyRank` — there is no branching/forking between variations. If a progression genuinely needs to fork (e.g. two different routes from the same base movement), that's modeled as a second `Exercise`, not a branch within one.
 - There is no single "active variation" per exercise anymore — favoriting is per-variation and many-to-many-ish (an exercise can have zero, one, or several favorited variations simultaneously, for working multiple points on the ladder at once). Home shows one card per favorited variation, not per exercise.
 - `metricType` on Exercise determines whether the logging UI shows a rep counter/stepper or a timer/stopwatch for that exercise's variations.

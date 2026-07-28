@@ -41,3 +41,5 @@
 - [x] "+&lt;last value&gt;" quick-log button on the Home card, logs immediately with no sheet
 - [x] removed the unfavorite button from Home cards (unused in practice; unfavoriting still works from exercise detail)
 - [x] brute-force lockout on the passcode login (5 attempts / 15 min, then a 15-min lockout, per IP)
+- [x] fixed uneven Home card heights when only some favorites have a daily-set target
+- [x] Routines — new Routine/RoutineItem entities for exercises done together in one sitting (mobility/warm-ups) instead of spread through the day GtG-style; Manage routines page, Home "Routines" section with a guided step-through logging sheet, included in backup/restore
