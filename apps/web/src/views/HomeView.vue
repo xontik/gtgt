@@ -312,8 +312,8 @@ async function addFavorite(variationId: number) {
       No favorites yet. Use "Add working variation" below to pick what you want to quick-log here.
     </v-alert>
 
-    <v-row>
-      <v-col v-for="favorite in sortedFavorites" :key="favorite.variation.id" cols="12" sm="6" md="4">
+    <v-row align="stretch">
+      <v-col v-for="favorite in sortedFavorites" :key="favorite.variation.id" cols="12" sm="6" md="4" class="d-flex">
         <FavoriteVariationCard
           :exercise="favorite.exercise"
           :variation="favorite.variation"
