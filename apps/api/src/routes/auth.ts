@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { authLoginSchema } from '@gtg/shared';
 import { createSession, destroySession } from '../auth/session.js';
+import { isLockedOut, recordFailedAttempt, clearAttempts } from '../auth/rateLimit.js';
 
 export const SESSION_COOKIE = 'gtg_session';
 
@@ -25,12 +26,20 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/auth/login', async (req, reply) => {
     const { passcode } = authLoginSchema.parse(req.body);
     const expected = process.env.APP_PASSCODE ?? '';
+    const key = req.ip;
+
+    if (isLockedOut(key)) {
+      reply.code(429);
+      return { error: 'Too many attempts. Try again later.' };
+    }
 
     if (!expected || !constantTimeEquals(passcode, expected)) {
+      recordFailedAttempt(key);
       reply.code(401);
       return { error: 'Invalid passcode' };
     }
 
+    clearAttempts(key);
     const token = createSession();
     reply.setCookie(SESSION_COOKIE, token, {
       httpOnly: true,

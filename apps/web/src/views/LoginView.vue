@@ -18,7 +18,9 @@ async function submit() {
     const redirect = (route.query.redirect as string) || '/';
     await router.replace(redirect);
   } catch (err) {
-    error.value = err instanceof ApiError && err.status === 401 ? 'Wrong passcode.' : 'Login failed.';
+    if (err instanceof ApiError && err.status === 401) error.value = 'Wrong passcode.';
+    else if (err instanceof ApiError && err.status === 429) error.value = 'Too many attempts. Try again later.';
+    else error.value = 'Login failed.';
   } finally {
     loading.value = false;
   }
