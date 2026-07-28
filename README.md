@@ -56,6 +56,22 @@ pnpm lint        # lint all packages
 pnpm build       # build all packages
 ```
 
+### Regenerating the PWA icons
+
+`apps/web/public/icon-192.png`, `icon-512.png`, and `icon-maskable-512.png`
+are generated from `apps/web/public/favicon.svg`. Re-run this whenever the
+favicon changes — it's idempotent, always overwrites, never accumulates
+files:
+
+```bash
+brew install librsvg imagemagick   # one-time, if you don't have them
+pnpm --filter @gtg/web generate-icons
+```
+
+(needs `rsvg-convert` and `convert` on `PATH` — the script is
+`apps/web/scripts/generate-icons.sh`, plain shell, no native Node module
+build involved.)
+
 To reset the local database, delete `apps/api/data/gtg.sqlite` and re-run
 `pnpm db:migrate && pnpm db:seed` from `apps/api`.
 
