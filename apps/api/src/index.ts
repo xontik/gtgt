@@ -8,6 +8,7 @@ import { ZodError } from 'zod';
 import { exerciseRoutes } from './routes/exercises.js';
 import { exerciseVariationRoutes } from './routes/exerciseVariations.js';
 import { logEntryRoutes } from './routes/logEntries.js';
+import { routineRoutes } from './routes/routines.js';
 import { backupRoutes } from './routes/backup.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { authRoutes, SESSION_COOKIE } from './routes/auth.js';
@@ -75,6 +76,7 @@ await app.register(authRoutes, { prefix: '/api' });
 await app.register(exerciseRoutes, { prefix: '/api' });
 await app.register(exerciseVariationRoutes, { prefix: '/api' });
 await app.register(logEntryRoutes, { prefix: '/api' });
+await app.register(routineRoutes, { prefix: '/api' });
 await app.register(backupRoutes, { prefix: '/api' });
 await app.register(notificationRoutes, { prefix: '/api' });
 

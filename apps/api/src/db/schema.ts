@@ -32,3 +32,24 @@ export const logEntries = sqliteTable('log_entries', {
   value: real('value').notNull(),
   notes: text('notes'),
 });
+
+// A routine is an ordered set of existing exercise variations done together
+// in one sitting (e.g. an ankle mobility warm-up), as opposed to GtG-style
+// favorites logged individually throughout the day. Running a routine still
+// produces plain logEntries per item, so Stats/CSV/backup need no changes.
+export const routines = sqliteTable('routines', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+});
+
+export const routineItems = sqliteTable('routine_items', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  routineId: integer('routine_id')
+    .notNull()
+    .references(() => routines.id, { onDelete: 'cascade' }),
+  variationId: integer('variation_id')
+    .notNull()
+    .references(() => exerciseVariations.id, { onDelete: 'cascade' }),
+  order: integer('order').notNull(),
+  targetValue: real('target_value'),
+});
