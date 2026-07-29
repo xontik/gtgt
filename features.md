@@ -46,3 +46,4 @@
 - [x] number of sets per routine item, with per-exercise set counting in the guided runner (log/advance, bonus "log & stay" set, skip) and a post-run prompt to update the routine template or save as a new routine when what you actually did differs from the plan
 - [x] moved the Stats exercise picker into a slide-out filter drawer instead of an always-visible sidebar, which squeezed charts unreadably narrow on mobile
 - [x] bottom safe-area padding (viewport-fit=cover + env(safe-area-inset-bottom)) so the bottom nav and bottom sheets aren't covered by rounded corners/home indicator on notched phones
+- [x] edit button on each Manage Routines exercise row to update its target reps/seconds and sets without removing/re-adding it

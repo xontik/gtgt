@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoutinesStore } from '../stores/routines';
 import { useExercisesStore } from '../stores/exercises';
 import AddRoutineItemDialog from '../components/AddRoutineItemDialog.vue';
+import EditRoutineItemDialog from '../components/EditRoutineItemDialog.vue';
 
 const routinesStore = useRoutinesStore();
 const exercisesStore = useExercisesStore();
@@ -61,6 +62,21 @@ async function addItem(variationId: number, targetValue: number | null, setsCoun
   if (!addItemRoutineId.value) return;
   await routinesStore.addItem(addItemRoutineId.value, variationId, targetValue, setsCount);
   addItemDialogOpen.value = false;
+}
+
+const editItemDialogOpen = ref(false);
+const editingItemId = ref<number>();
+const editingItem = computed(() => routinesStore.items.find((i) => i.id === editingItemId.value));
+
+function openEditItem(itemId: number) {
+  editingItemId.value = itemId;
+  editItemDialogOpen.value = true;
+}
+
+async function saveItemTemplate(details: { targetValue: number | null; setsCount: number }) {
+  if (!editingItemId.value) return;
+  await routinesStore.updateItemTemplate(editingItemId.value, details);
+  editItemDialogOpen.value = false;
 }
 </script>
 
@@ -122,6 +138,7 @@ async function addItem(variationId: number, targetValue: number | null, setsCoun
                   :disabled="index === routinesStore.itemsFor(routine.id).length - 1"
                   @click="routinesStore.moveItem(item.id, 'down')"
                 />
+                <v-btn icon="mdi-pencil" size="x-small" variant="text" @click="openEditItem(item.id)" />
                 <v-btn
                   icon="mdi-delete-outline"
                   size="x-small"
@@ -185,6 +202,14 @@ async function addItem(variationId: number, targetValue: number | null, setsCoun
       :exercises="exercisesStore.exercises"
       :variations="exercisesStore.variations"
       @select="addItem"
+    />
+
+    <EditRoutineItemDialog
+      v-model="editItemDialogOpen"
+      :item="editingItem"
+      :exercise-name="editingItem ? exerciseNameFor(editingItem.variationId).exerciseName : ''"
+      :variation-name="editingItem ? exerciseNameFor(editingItem.variationId).variationName : ''"
+      @save="saveItemTemplate"
     />
   </v-container>
 </template>
