@@ -1,0 +1,7 @@
+/* Bottom sheets (quick-log, routine runner, edit sheets, ...) sit above the
+   bottom nav and can reach the very edge of the viewport - give them the
+   same safe-area padding so their action buttons aren't under a rounded
+   corner / home-indicator area on notched phones. */
+.v-bottom-sheet__content > .v-sheet {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+}
