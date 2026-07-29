@@ -49,3 +49,4 @@
 - [x] edit button on each Manage Routines exercise row to update its target reps/seconds and sets without removing/re-adding it
 - [x] theme pass: self-hosted Inter, custom purple accent theme, flat/bordered surfaces instead of Material shadows, larger corner radii (Vuetify defaults + global.css, no component rewrites)
 - [x] theme feedback pass: dark-only (dropped light theme), flashier purple accent, stronger border+shadow delimitation, fixed inconsistent Home card widths, Home FAB to quick-log any variation (not just favorites) via a search picker
+- [x] round Home's list sections (Recent activity, Hasn't been hit in a while), stack the favorite card's quick-add/chevron buttons vertically, disable mobile autofill on all form fields, auto-create a same-named variation when adding an exercise, and a "go wild" motion/gradient pass (gradient app bar + primary buttons, card hover lift, button press scale, success-pulse animation, page transitions)

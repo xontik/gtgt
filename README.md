@@ -248,7 +248,10 @@ manually removing the volume deletes logged data.
   you're logging a set.
 - **Manage exercises** — a plain list of every exercise (name, category,
   metric type) for basic CRUD: add a new exercise, rename/change one, or
-  delete it entirely. Tap a row to jump to its detail page for variations. A
+  delete it entirely. Adding one automatically creates a same-named
+  variation too, so there's never an empty ladder with nothing to
+  favorite/log yet - rename or replace that first variation like any other.
+  Tap a row to jump to its detail page for variations. A
   "Manage routines" button at the top links to routine management.
 - **Routines** — for exercises done together in one sitting (e.g. an ankle
   mobility warm-up) rather than spread throughout the day GtG-style. Manage
