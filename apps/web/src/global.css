@@ -33,14 +33,6 @@
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
 }
 
-.v-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
-}
-
-.v-app-bar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-}
-
 .v-bottom-navigation {
   border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
@@ -51,4 +43,78 @@
    corner / home-indicator area on notched phones. */
 .v-bottom-sheet__content > .v-sheet {
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* --- "Pop" pass: gradients + motion. Go wild now, tame later if needed. --- */
+
+.v-app-bar {
+  background: linear-gradient(135deg, #c026fc 0%, #8b1fe0 55%, #4c1d95 100%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+.v-app-bar-title,
+.v-app-bar .v-icon,
+.v-app-bar .v-btn {
+  color: #fff !important;
+}
+
+/* Elevated primary buttons (default confirm/save actions) and the Home
+   FAB get the same gradient treatment plus a colored glow. */
+.v-btn--variant-elevated.bg-primary,
+.quick-log-fab {
+  background: linear-gradient(135deg, #e879f9 0%, #b026ff 50%, #7c3aed 100%) !important;
+  box-shadow: 0 4px 18px rgba(176, 38, 255, 0.5) !important;
+}
+
+.v-btn {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.v-btn:active {
+  transform: scale(0.95);
+}
+
+.v-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+@media (hover: hover) {
+  .v-card.v-card--link:hover {
+    transform: translateY(-2px);
+    border-color: rgba(176, 38, 255, 0.5) !important;
+  }
+}
+
+/* A goal met on a favorite card gets a slow success glow instead of just
+   sitting there tinted green. */
+@keyframes gtg-pulse-success {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
+  }
+}
+.v-card.bg-success {
+  animation: gtg-pulse-success 2.4s ease-in-out infinite;
+}
+
+/* Page transition between routes. */
+.page-enter-active,
+.page-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }

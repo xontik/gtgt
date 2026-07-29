@@ -109,9 +109,14 @@ export const useExercisesStore = defineStore('exercises', {
       if (index !== -1) this.variations[index] = restored;
     },
 
+    // Auto-adds a same-named variation so a freshly created exercise is
+    // never empty (no dead-end "add a variation before you can log
+    // anything" step) - it can be renamed/deleted like any other variation.
     async addExercise(body: ExerciseInsert) {
       const created = await createExercise(body);
       this.exercises.push(created);
+      await this.addVariation(created.id, created.name);
+      return created;
     },
 
     async updateExerciseDetails(exerciseId: number, body: ExerciseUpdate) {

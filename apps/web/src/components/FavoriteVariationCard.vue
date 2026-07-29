@@ -32,15 +32,17 @@ const emit = defineEmits<{ log: []; quickAdd: [] }>();
       </v-card-title>
       <v-card-subtitle class="text-truncate">{{ variation.name }}</v-card-subtitle>
       <template #append>
-        <v-btn
-          v-if="quickAddLabel"
-          icon="mdi-plus"
-          variant="tonal"
-          size="small"
-          :title="quickAddLabel"
-          @click.stop="emit('quickAdd')"
-        />
-        <v-btn icon="mdi-chevron-right" variant="text" :to="`/exercises/${exercise.id}`" @click.stop />
+        <div class="d-flex flex-column align-center ga-1">
+          <v-btn
+            v-if="quickAddLabel"
+            icon="mdi-plus"
+            variant="tonal"
+            size="small"
+            :title="quickAddLabel"
+            @click.stop="emit('quickAdd')"
+          />
+          <v-btn icon="mdi-chevron-right" variant="text" size="small" :to="`/exercises/${exercise.id}`" @click.stop />
+        </div>
       </template>
     </v-card-item>
     <v-card-text class="pt-0 text-caption text-medium-emphasis flex-grow-1 d-flex flex-column justify-end">
