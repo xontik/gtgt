@@ -61,6 +61,8 @@ function asPickerNode(item: unknown) {
   return item as PickerNode;
 }
 
+const filterDrawerOpen = ref(false);
+
 const selected = ref<string[]>([]);
 
 const selectedVariationIds = computed(
@@ -199,16 +201,24 @@ const mergedHeatmapSeries = computed(() =>
 
 <template>
   <v-container>
-    <v-btn-toggle v-model="period" mandatory density="comfortable" class="mb-2" divided>
-      <v-btn value="day">Day</v-btn>
-      <v-btn value="week">Week</v-btn>
-      <v-btn value="month">Month</v-btn>
-      <v-btn value="year">Year</v-btn>
-    </v-btn-toggle>
-    <v-btn-toggle v-model="period" mandatory density="comfortable" class="mb-4 ml-2" divided>
-      <v-btn value="last7">7d</v-btn>
-      <v-btn value="last30">30d</v-btn>
-    </v-btn-toggle>
+    <div class="d-flex align-center ga-2 mb-2 flex-wrap">
+      <v-btn-toggle v-model="period" mandatory density="comfortable" divided>
+        <v-btn value="day">Day</v-btn>
+        <v-btn value="week">Week</v-btn>
+        <v-btn value="month">Month</v-btn>
+        <v-btn value="year">Year</v-btn>
+      </v-btn-toggle>
+      <v-btn-toggle v-model="period" mandatory density="comfortable" divided>
+        <v-btn value="last7">7d</v-btn>
+        <v-btn value="last30">30d</v-btn>
+      </v-btn-toggle>
+      <v-spacer />
+      <v-btn icon variant="tonal" @click="filterDrawerOpen = true">
+        <v-badge :content="selectedExercises.length" :model-value="selectedExercises.length > 0" color="primary">
+          <v-icon icon="mdi-filter-variant" />
+        </v-badge>
+      </v-btn>
+    </div>
 
     <div class="d-flex align-center justify-space-between mb-4">
       <v-btn icon="mdi-chevron-left" variant="text" :disabled="isRolling" @click="goPrev" />
@@ -218,30 +228,10 @@ const mergedHeatmapSeries = computed(() =>
 
     <v-progress-linear v-if="loading" indeterminate class="mb-4" />
 
-    <div v-else class="d-flex ga-4">
-      <div class="exercise-picker">
-        <v-treeview
-          v-model:selected="selected"
-          :items="treeItems"
-          item-value="id"
-          select-strategy="classic"
-          selectable
-          density="compact"
-          open-all
-          slim
-        >
-          <template #title="{ item: rawItem }">
-            <div v-for="item in [asPickerNode(rawItem)]" :key="item.id" class="d-flex align-center ga-2">
-              <v-avatar size="10" :color="item.color" class="flex-shrink-0" />
-              <span class="text-body-2">{{ item.title }}</span>
-            </div>
-          </template>
-        </v-treeview>
-      </div>
-
-      <div class="flex-grow-1" style="min-width: 0">
+    <template v-else>
+      <div style="min-width: 0">
         <v-alert v-if="selectedExercises.length === 0" type="info" variant="tonal">
-          Select an exercise on the left to see its stats.
+          Tap the filter icon above to pick which exercises to show.
         </v-alert>
 
         <div v-else-if="viewLoading" class="d-flex justify-center pa-8">
@@ -296,13 +286,31 @@ const mergedHeatmapSeries = computed(() =>
           />
         </template>
       </div>
-    </div>
+    </template>
+
+    <v-navigation-drawer v-model="filterDrawerOpen" location="end" temporary width="280">
+      <div class="d-flex align-center justify-space-between pa-4 pb-2">
+        <div class="text-subtitle-1">Filter exercises</div>
+        <v-btn icon="mdi-close" variant="text" size="small" @click="filterDrawerOpen = false" />
+      </div>
+      <v-treeview
+        v-model:selected="selected"
+        :items="treeItems"
+        item-value="id"
+        select-strategy="classic"
+        selectable
+        density="compact"
+        open-all
+        slim
+        class="px-2"
+      >
+        <template #title="{ item: rawItem }">
+          <div v-for="item in [asPickerNode(rawItem)]" :key="item.id" class="d-flex align-center ga-2">
+            <v-avatar size="10" :color="item.color" class="flex-shrink-0" />
+            <span class="text-body-2">{{ item.title }}</span>
+          </div>
+        </template>
+      </v-treeview>
+    </v-navigation-drawer>
   </v-container>
 </template>
-
-<style scoped>
-.exercise-picker {
-  width: 200px;
-  flex-shrink: 0;
-}
-</style>
