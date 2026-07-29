@@ -13,9 +13,9 @@ const gtgDark = {
   colors: {
     background: '#19191c',
     surface: '#232327',
-    'surface-variant': '#2c2c31',
+    'surface-variant': '#2a2130',
     primary: '#b026ff',
-    secondary: '#3f3f46',
+    secondary: '#4c1d95',
     error: '#f87171',
     success: '#4ade80',
     warning: '#fbbf24',

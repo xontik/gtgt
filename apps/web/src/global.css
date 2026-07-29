@@ -1,3 +1,10 @@
+:root {
+  --gtg-purple-bright: #c026fc;
+  --gtg-purple: #8b1fe0;
+  --gtg-purple-dark: #4c1d95;
+  --gtg-purple-darker: #2e0f66;
+}
+
 /* Theme pass: Inter instead of Vuetify's default Roboto, tighter heading
    tracking, and a thin border standing in for the elevation/shadows we
    turned off via component defaults (vuetify.ts) - flat + bordered instead
@@ -20,8 +27,9 @@
 }
 
 /* Vuetify's default border token is ~12% white, too subtle on dark
-   surfaces to actually read as a boundary - use a visibly lighter border
-   plus a soft shadow so cards clearly lift off the page background. */
+   surfaces to actually read as a boundary - use a visibly lighter,
+   purple-tinted border plus a soft shadow so cards clearly lift off the
+   page background instead of blending into it. */
 .v-card,
 .v-alert,
 .v-expansion-panel,
@@ -30,11 +38,7 @@
 .v-select .v-field,
 .v-autocomplete .v-field,
 .v-textarea .v-field {
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-}
-
-.v-bottom-navigation {
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(176, 38, 255, 0.22) !important;
 }
 
 /* Bottom sheets (quick-log, routine runner, edit sheets, ...) sit above the
@@ -45,11 +49,31 @@
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
+/* iOS Safari can visibly jitter/detach position:fixed bars during
+   momentum scroll if a touch-driven :active state on their own buttons is
+   still transform-animating when the scroll starts - promote to its own
+   compositor layer and keep the nav's own buttons out of the global
+   press-scale effect below. */
+.v-bottom-navigation,
+.v-app-bar {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 /* --- "Pop" pass: gradients + motion. Go wild now, tame later if needed. --- */
 
 .v-app-bar {
-  background: linear-gradient(135deg, #c026fc 0%, #8b1fe0 55%, #4c1d95 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(
+    135deg,
+    var(--gtg-purple-bright) 0%,
+    var(--gtg-purple) 45%,
+    var(--gtg-purple-dark) 100%
+  ) !important;
+  border-bottom: 1px solid rgba(176, 38, 255, 0.3);
 }
 .v-app-bar-title,
 .v-app-bar .v-icon,
@@ -57,11 +81,31 @@
   color: #fff !important;
 }
 
+/* The bottom nav leans into the same darker purple, tinted rather than
+   the loud bright gradient the app bar gets, so it reads as chrome, not
+   another action surface - with the flashy primary reserved for the
+   active tab. */
+.v-bottom-navigation {
+  background: linear-gradient(180deg, #201830 0%, var(--gtg-purple-darker) 100%) !important;
+  border-top: 1px solid rgba(176, 38, 255, 0.3);
+}
+.v-bottom-navigation .v-btn {
+  color: rgba(255, 255, 255, 0.6);
+}
+.v-bottom-navigation .v-btn--selected {
+  color: #fff;
+}
+
 /* Elevated primary buttons (default confirm/save actions) and the Home
    FAB get the same gradient treatment plus a colored glow. */
 .v-btn--variant-elevated.bg-primary,
 .quick-log-fab {
-  background: linear-gradient(135deg, #e879f9 0%, #b026ff 50%, #7c3aed 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #e879f9 0%,
+    var(--gtg-purple-bright) 40%,
+    var(--gtg-purple-dark) 100%
+  ) !important;
   box-shadow: 0 4px 18px rgba(176, 38, 255, 0.5) !important;
 }
 
@@ -73,8 +117,16 @@
 .v-btn:active {
   transform: scale(0.95);
 }
+/* Nav chrome shouldn't visibly "press" - see the iOS scroll-jitter note
+   above for why this matters more than just taste here. */
+.v-bottom-navigation .v-btn:active,
+.v-app-bar .v-btn:active {
+  transform: none;
+}
 
 .v-card {
+  position: relative;
+  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
   transition:
     transform 0.15s ease,
@@ -86,6 +138,41 @@
     transform: translateY(-2px);
     border-color: rgba(176, 38, 255, 0.5) !important;
   }
+}
+
+/* Tech/algorithm accent: a faint flowing curve etched into the corner of
+   every card, like a circuit trace, plus a soft purple glow behind it -
+   subtle enough not to fight the content sitting on top. */
+.v-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(176, 38, 255, 0.16) 0%, transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M-20,60 C60,10 100,140 220,90' stroke='%23b026ff' stroke-width='1' fill='none' opacity='0.35'/%3E%3Cpath d='M-20,150 C80,190 120,40 220,20' stroke='%23b026ff' stroke-width='1' fill='none' opacity='0.2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: top right;
+  background-size: 220px 220px;
+}
+
+/* Same algorithmic-curve language, very faint, drifting across the whole
+   page behind everything - the "something is computing in the
+   background" feel. */
+.v-application::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'%3E%3Cpath d='M0,240 C120,120 360,360 480,240' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.12'/%3E%3Cpath d='M0,120 C180,300 300,-60 480,120' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.08'/%3E%3Cpath d='M0,360 C180,180 300,540 480,360' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.08'/%3E%3Ccircle cx='60' cy='240' r='2' fill='%23b026ff' opacity='0.3'/%3E%3Ccircle cx='420' cy='120' r='2' fill='%23b026ff' opacity='0.3'/%3E%3Ccircle cx='300' cy='360' r='2' fill='%23b026ff' opacity='0.25'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 480px 480px;
+}
+.v-application__wrap {
+  position: relative;
+  z-index: 1;
 }
 
 /* A goal met on a favorite card gets a slow success glow instead of just
