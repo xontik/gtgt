@@ -14,6 +14,7 @@ import TimerSheet from '../components/TimerSheet.vue';
 import AddFavoriteDialog from '../components/AddFavoriteDialog.vue';
 import QuickLogPickerDialog from '../components/QuickLogPickerDialog.vue';
 import LogEntryList from '../components/LogEntryList.vue';
+import { curveStyle } from '../lib/curveVariant';
 import RoutineRunnerSheet, {
   type RoutineStep,
   type RoutineStepResult,
@@ -456,7 +457,7 @@ async function saveRunAsNewRoutine() {
 
     <v-row align="stretch">
       <v-col
-        v-for="favorite in sortedFavorites"
+        v-for="(favorite, index) in sortedFavorites"
         :key="favorite.variation.id"
         cols="12"
         sm="6"
@@ -465,6 +466,7 @@ async function saveRunAsNewRoutine() {
         style="min-width: 0"
       >
         <FavoriteVariationCard
+          :style="curveStyle(index)"
           :exercise="favorite.exercise"
           :variation="favorite.variation"
           :today-label="todayLabelFor(favorite.exercise, favorite.variation)"
