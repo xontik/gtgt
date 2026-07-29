@@ -17,19 +17,20 @@ const emit = defineEmits<{ log: []; quickAdd: [] }>();
 
 <template>
   <v-card
-    class="h-100 d-flex flex-column"
+    class="h-100 w-100 d-flex flex-column"
+    style="min-width: 0"
     :variant="goalMet ? 'tonal' : 'elevated'"
     :color="goalMet ? 'success' : undefined"
     @click="emit('log')"
   >
     <v-card-item>
-      <v-card-title class="d-flex align-center ga-1">
-        {{ exercise.name }}
+      <v-card-title class="d-flex align-center ga-1" style="min-width: 0">
+        <span class="text-truncate" style="min-width: 0; flex: 1 1 auto">{{ exercise.name }}</span>
         <span v-if="exerciseStreak" class="text-caption text-medium-emphasis d-flex align-center flex-shrink-0">
           <v-icon icon="mdi-fire" size="14" color="orange" />{{ exerciseStreak }}
         </span>
       </v-card-title>
-      <v-card-subtitle>{{ variation.name }}</v-card-subtitle>
+      <v-card-subtitle class="text-truncate">{{ variation.name }}</v-card-subtitle>
       <template #append>
         <v-btn
           v-if="quickAddLabel"

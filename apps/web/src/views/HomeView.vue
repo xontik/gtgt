@@ -12,6 +12,7 @@ import FavoriteVariationCard from '../components/FavoriteVariationCard.vue';
 import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
 import AddFavoriteDialog from '../components/AddFavoriteDialog.vue';
+import QuickLogPickerDialog from '../components/QuickLogPickerDialog.vue';
 import LogEntryList from '../components/LogEntryList.vue';
 import RoutineRunnerSheet, {
   type RoutineStep,
@@ -313,6 +314,15 @@ async function addFavorite(variationId: number) {
   addDialogOpen.value = false;
 }
 
+const quickLogPickerOpen = ref(false);
+
+function quickLogPicked(variationId: number) {
+  quickLogPickerOpen.value = false;
+  const variation = store.variations.find((v) => v.id === variationId);
+  const exercise = variation && store.exercises.find((e) => e.id === variation.exerciseId);
+  if (variation && exercise) openSheet(exercise, variation);
+}
+
 // A routine's "last done" is approximated as the most recent log entry
 // across any of its items - not a strict "all items logged together" check,
 // but close enough to tell you roughly when you last worked through it.
@@ -445,7 +455,15 @@ async function saveRunAsNewRoutine() {
     </v-alert>
 
     <v-row align="stretch">
-      <v-col v-for="favorite in sortedFavorites" :key="favorite.variation.id" cols="12" sm="6" md="4" class="d-flex">
+      <v-col
+        v-for="favorite in sortedFavorites"
+        :key="favorite.variation.id"
+        cols="12"
+        sm="6"
+        md="4"
+        class="d-flex"
+        style="min-width: 0"
+      >
         <FavoriteVariationCard
           :exercise="favorite.exercise"
           :variation="favorite.variation"
@@ -573,6 +591,22 @@ async function saveRunAsNewRoutine() {
       @select="addFavorite"
     />
 
+    <QuickLogPickerDialog
+      v-model="quickLogPickerOpen"
+      :exercises="store.exercises"
+      :variations="store.variations"
+      @select="quickLogPicked"
+    />
+
+    <v-btn
+      icon="mdi-plus"
+      color="primary"
+      size="large"
+      rounded="circle"
+      class="quick-log-fab"
+      @click="quickLogPickerOpen = true"
+    />
+
     <RoutineRunnerSheet
       v-model="runnerOpen"
       :routine-name="runnerRoutineName"
@@ -617,3 +651,13 @@ async function saveRunAsNewRoutine() {
     </v-dialog>
   </v-container>
 </template>
+
+<style scoped>
+.quick-log-fab {
+  position: fixed;
+  right: 16px;
+  /* Above the bottom nav (56px) + its safe-area padding, plus a gap. */
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 5;
+}
+</style>

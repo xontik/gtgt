@@ -19,22 +19,30 @@
   font-weight: 600;
 }
 
+/* Vuetify's default border token is ~12% white, too subtle on dark
+   surfaces to actually read as a boundary - use a visibly lighter border
+   plus a soft shadow so cards clearly lift off the page background. */
 .v-card,
-.v-alert {
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+.v-alert,
+.v-expansion-panel,
+.v-list:not(.v-list--nav),
+.v-text-field .v-field,
+.v-select .v-field,
+.v-autocomplete .v-field,
+.v-textarea .v-field {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
 }
 
-.v-app-bar,
-.v-bottom-navigation {
-  border-color: rgba(var(--v-border-color), var(--v-border-opacity));
+.v-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
 }
 
 .v-app-bar {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .v-bottom-navigation {
-  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 /* Bottom sheets (quick-log, routine runner, edit sheets, ...) sit above the

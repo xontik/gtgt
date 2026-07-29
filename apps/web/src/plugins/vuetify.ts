@@ -5,30 +5,17 @@ import { createVuetify } from 'vuetify';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 
-// A near-monochrome, single-accent theme with flat/bordered surfaces
-// instead of Material's default drop shadows - see global.css for the
-// border-radius/elevation overrides that go with it.
-const gtgLight = {
-  dark: false,
-  colors: {
-    background: '#fafafa',
-    surface: '#ffffff',
-    primary: '#6d28d9',
-    secondary: '#0f172a',
-    error: '#dc2626',
-    success: '#16a34a',
-    warning: '#d97706',
-    info: '#2563eb',
-  },
-};
-
+// Dark-only, dark-gray surfaces (not near-black) with a single very
+// saturated purple accent - see global.css for the border/shadow that
+// give surfaces definition against the background.
 const gtgDark = {
   dark: true,
   colors: {
-    background: '#0b0b0f',
-    surface: '#151519',
-    primary: '#a78bfa',
-    secondary: '#e2e8f0',
+    background: '#19191c',
+    surface: '#232327',
+    'surface-variant': '#2c2c31',
+    primary: '#b026ff',
+    secondary: '#3f3f46',
     error: '#f87171',
     success: '#4ade80',
     warning: '#fbbf24',
@@ -40,9 +27,8 @@ export const vuetify = createVuetify({
   components,
   directives,
   theme: {
-    defaultTheme: 'gtgLight',
+    defaultTheme: 'gtgDark',
     themes: {
-      gtgLight,
       gtgDark,
     },
   },
