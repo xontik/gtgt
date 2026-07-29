@@ -1,3 +1,42 @@
+/* Theme pass: Inter instead of Vuetify's default Roboto, tighter heading
+   tracking, and a thin border standing in for the elevation/shadows we
+   turned off via component defaults (vuetify.ts) - flat + bordered instead
+   of Material's drop shadows. */
+:root,
+.v-application {
+  font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.v-application .text-h3,
+.v-application .text-h4,
+.v-application .text-h5,
+.v-application .text-h6,
+.v-application .text-subtitle-1,
+.v-application .text-subtitle-2,
+.v-application .v-card-title,
+.v-application .v-app-bar-title {
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.v-card,
+.v-alert {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.v-app-bar,
+.v-bottom-navigation {
+  border-color: rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.v-app-bar {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.v-bottom-navigation {
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
 /* Bottom sheets (quick-log, routine runner, edit sheets, ...) sit above the
    bottom nav and can reach the very edge of the viewport - give them the
    same safe-area padding so their action buttons aren't under a rounded
