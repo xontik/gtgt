@@ -47,3 +47,4 @@
 - [x] moved the Stats exercise picker into a slide-out filter drawer instead of an always-visible sidebar, which squeezed charts unreadably narrow on mobile
 - [x] bottom safe-area padding (viewport-fit=cover + env(safe-area-inset-bottom)) so the bottom nav and bottom sheets aren't covered by rounded corners/home indicator on notched phones
 - [x] edit button on each Manage Routines exercise row to update its target reps/seconds and sets without removing/re-adding it
+- [x] theme pass: self-hosted Inter, custom purple accent theme, flat/bordered surfaces instead of Material shadows, larger corner radii (Vuetify defaults + global.css, no component rewrites)
