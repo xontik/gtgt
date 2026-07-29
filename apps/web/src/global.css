@@ -3,6 +3,14 @@
   --gtg-purple: #8b1fe0;
   --gtg-purple-dark: #4c1d95;
   --gtg-purple-darker: #2e0f66;
+
+  /* Four card-corner "circuit trace" variants, cycled below so repeated
+     cards/list rows/panels don't all show the exact same curve - varies
+     both the line shapes and how many curves/nodes each one has. */
+  --gtg-curve-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M-20,60 C60,10 100,140 220,90' stroke='%23b026ff' stroke-width='1' fill='none' opacity='0.35'/%3E%3Cpath d='M-20,150 C80,190 120,40 220,20' stroke='%23b026ff' stroke-width='1' fill='none' opacity='0.2'/%3E%3C/svg%3E");
+  --gtg-curve-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M-20,20 C100,120 60,180 220,180' stroke='%23c026fc' stroke-width='1.5' fill='none' opacity='0.3'/%3E%3Ccircle cx='170' cy='40' r='2.5' fill='%23c026fc' opacity='0.4'/%3E%3Ccircle cx='120' cy='100' r='2' fill='%23c026fc' opacity='0.3'/%3E%3C/svg%3E");
+  --gtg-curve-3: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M0,10 C60,60 20,100 100,90' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.3'/%3E%3Cpath d='M0,50 C80,30 40,120 140,110' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.2'/%3E%3Cpath d='M0,90 C60,140 20,60 180,130' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.15'/%3E%3Ccircle cx='30' cy='20' r='2' fill='%23b026ff' opacity='0.35'/%3E%3C/svg%3E");
+  --gtg-curve-4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M-20,120 C80,60 100,180 220,140' stroke='%23c026fc' stroke-width='1' fill='none' opacity='0.3'/%3E%3Cpath d='M-20,40 C100,100 60,10 220,60' stroke='%23b026ff' stroke-width='1' fill='none' opacity='0.2'/%3E%3Ccircle cx='190' cy='30' r='2' fill='%23c026fc' opacity='0.4'/%3E%3Ccircle cx='40' cy='170' r='2.5' fill='%23b026ff' opacity='0.3'/%3E%3Ccircle cx='150' cy='150' r='1.5' fill='%23c026fc' opacity='0.3'/%3E%3C/svg%3E");
 }
 
 /* Theme pass: Inter instead of Vuetify's default Roboto, tighter heading
@@ -64,16 +72,43 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* --- "Pop" pass: gradients + motion. Go wild now, tame later if needed. --- */
+/* --- "Pop" pass: gradients + motion + glass. Go wild now, tame back later
+   if needed. --- */
 
+/* App bar: full curves, not just a gradient - a bold flowing-line overlay
+   on top of the gradient, a wavy bottom edge instead of a flat line, and
+   a frosted-glass blur (semi-transparent gradient + backdrop-filter). */
 .v-app-bar {
-  background: linear-gradient(
-    135deg,
-    var(--gtg-purple-bright) 0%,
-    var(--gtg-purple) 45%,
-    var(--gtg-purple-dark) 100%
-  ) !important;
+  position: relative;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='64' viewBox='0 0 400 64'%3E%3Cpath d='M-20,20 C80,-10 120,70 220,40 C300,18 340,55 420,25' stroke='white' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Cpath d='M-20,50 C100,70 140,10 260,35 C330,50 360,15 420,45' stroke='white' stroke-width='1' fill='none' opacity='0.15'/%3E%3C/svg%3E"),
+    linear-gradient(
+      135deg,
+      rgba(192, 38, 252, 0.92) 0%,
+      rgba(139, 31, 224, 0.92) 45%,
+      rgba(76, 29, 149, 0.92) 100%
+    ) !important;
+  background-repeat: repeat-x, no-repeat;
+  background-size:
+    400px 64px,
+    100% 100%;
   border-bottom: 1px solid rgba(176, 38, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+/* Wavy bottom edge instead of a straight line. */
+.v-app-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -11px;
+  height: 12px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='12' viewBox='0 0 80 12'%3E%3Cpath d='M0,0 C10,12 30,12 40,0 C50,12 70,12 80,0 L80,0 L0,0 Z' fill='%234c1d95'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 80px 12px;
+  opacity: 0.8;
 }
 .v-app-bar-title,
 .v-app-bar .v-icon,
@@ -84,16 +119,24 @@ body {
 /* The bottom nav leans into the same darker purple, tinted rather than
    the loud bright gradient the app bar gets, so it reads as chrome, not
    another action surface - with the flashy primary reserved for the
-   active tab. */
+   active tab. Same frosted-glass treatment as the app bar. */
 .v-bottom-navigation {
-  background: linear-gradient(180deg, #201830 0%, var(--gtg-purple-darker) 100%) !important;
+  background: linear-gradient(180deg, rgba(32, 24, 48, 0.92) 0%, rgba(46, 15, 102, 0.92) 100%) !important;
   border-top: 1px solid rgba(176, 38, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .v-bottom-navigation .v-btn {
   color: rgba(255, 255, 255, 0.6);
 }
 .v-bottom-navigation .v-btn--selected {
   color: #fff;
+}
+
+/* Frosted glass behind dialogs/bottom sheets/menus too. */
+.v-overlay__scrim {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 /* Elevated primary buttons (default confirm/save actions) and the Home
@@ -141,34 +184,75 @@ body {
 }
 
 /* Tech/algorithm accent: a faint flowing curve etched into the corner of
-   every card, like a circuit trace, plus a soft purple glow behind it -
-   subtle enough not to fight the content sitting on top. */
-.v-card::before {
+   cards, list rows, and panels alike - like a circuit trace - plus a soft
+   purple glow behind it, subtle enough not to fight the content on top.
+   Cycled through 4 shape/count variants and 2 corners so a repeated grid
+   or list doesn't show the same curve on every item. */
+.v-card::before,
+.v-list-item::before,
+.v-expansion-panel::before {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 100% 0%, rgba(176, 38, 255, 0.16) 0%, transparent 55%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M-20,60 C60,10 100,140 220,90' stroke='%23b026ff' stroke-width='1' fill='none' opacity='0.35'/%3E%3Cpath d='M-20,150 C80,190 120,40 220,20' stroke='%23b026ff' stroke-width='1' fill='none' opacity='0.2'/%3E%3C/svg%3E");
+    radial-gradient(circle at 100% 0%, rgba(176, 38, 255, 0.16) 0%, transparent 55%), var(--gtg-curve-1);
   background-repeat: no-repeat;
-  background-position: top right;
-  background-size: 220px 220px;
+  background-position:
+    center,
+    top right;
+  background-size:
+    100% 100%,
+    220px 220px;
+}
+.v-list-item,
+.v-expansion-panel {
+  position: relative;
+  overflow: hidden;
 }
 
-/* Same algorithmic-curve language, very faint, drifting across the whole
-   page behind everything - the "something is computing in the
-   background" feel. */
+.v-col:nth-of-type(4n + 2) .v-card::before,
+.v-list-item:nth-of-type(4n + 2)::before,
+.v-expansion-panel:nth-of-type(4n + 2)::before {
+  background-image: radial-gradient(circle at 0% 100%, rgba(192, 38, 252, 0.14) 0%, transparent 55%),
+    var(--gtg-curve-2);
+  background-position:
+    center,
+    bottom left;
+}
+.v-col:nth-of-type(4n + 3) .v-card::before,
+.v-list-item:nth-of-type(4n + 3)::before,
+.v-expansion-panel:nth-of-type(4n + 3)::before {
+  background-image: radial-gradient(circle at 0% 0%, rgba(139, 31, 224, 0.14) 0%, transparent 55%),
+    var(--gtg-curve-3);
+  background-position:
+    center,
+    top left;
+}
+.v-col:nth-of-type(4n + 4) .v-card::before,
+.v-list-item:nth-of-type(4n + 4)::before,
+.v-expansion-panel:nth-of-type(4n + 4)::before {
+  background-image: radial-gradient(circle at 100% 100%, rgba(192, 38, 252, 0.14) 0%, transparent 55%),
+    var(--gtg-curve-4);
+  background-position:
+    center,
+    bottom right;
+}
+
+/* Ambient glow: soft blurred purple blobs fixed behind everything -
+   replaces an earlier flat curve-line page background that didn't read
+   well; this is a subtler "something is glowing back there" effect. */
 .v-application::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'%3E%3Cpath d='M0,240 C120,120 360,360 480,240' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.12'/%3E%3Cpath d='M0,120 C180,300 300,-60 480,120' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.08'/%3E%3Cpath d='M0,360 C180,180 300,540 480,360' stroke='%238b1fe0' stroke-width='1' fill='none' opacity='0.08'/%3E%3Ccircle cx='60' cy='240' r='2' fill='%23b026ff' opacity='0.3'/%3E%3Ccircle cx='420' cy='120' r='2' fill='%23b026ff' opacity='0.3'/%3E%3Ccircle cx='300' cy='360' r='2' fill='%23b026ff' opacity='0.25'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 480px 480px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(176, 38, 255, 0.28) 0%, transparent 32%),
+    radial-gradient(circle at 88% 78%, rgba(139, 31, 224, 0.22) 0%, transparent 38%),
+    radial-gradient(circle at 90% 10%, rgba(192, 38, 252, 0.16) 0%, transparent 28%);
+  filter: blur(70px);
 }
 .v-application__wrap {
   position: relative;
