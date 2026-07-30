@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { isOnline } from './lib/network';
+import { queuedMutations } from './lib/offlineQueue';
 
 const route = useRoute();
+const pendingCount = computed(() => queuedMutations.value.length);
 </script>
 
 <template>
@@ -10,7 +14,14 @@ const route = useRoute();
       <v-app-bar-title>
         <router-link to="/" class="text-decoration-none text-high-emphasis">GtG Tracker</router-link>
       </v-app-bar-title>
-      <v-btn icon="mdi-server-outline" to="/system" />
+      <v-chip v-if="!isOnline" size="small" variant="tonal" color="warning" class="mr-2">
+        <v-icon start size="14">mdi-wifi-off</v-icon>
+        Offline
+      </v-chip>
+      <v-badge v-if="pendingCount > 0" :content="pendingCount" color="warning" offset-x="8" offset-y="8">
+        <v-btn icon="mdi-server-outline" to="/system" />
+      </v-badge>
+      <v-btn v-else icon="mdi-server-outline" to="/system" />
     </v-app-bar>
     <v-main>
       <router-view v-slot="{ Component }">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Exercise, ExerciseVariation, LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
@@ -8,6 +8,8 @@ import { createLogEntry, listLogEntries } from '../api/logEntries';
 import { formatDuration, formatRelativeTime } from '../lib/format';
 import { dateKey } from '../lib/heatmap';
 import { vibrateSuccess, vibrateMilestone } from '../lib/haptics';
+import { isOnline } from '../lib/network';
+import { queuedMutations, syncing } from '../lib/offlineQueue';
 import FavoriteVariationCard from '../components/FavoriteVariationCard.vue';
 import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
@@ -27,13 +29,51 @@ const entries = ref<LogEntry[]>([]);
 const route = useRoute();
 const router = useRouter();
 
+// A minimal cold-start cache: if the app is opened with no connectivity at
+// all (not just "went offline mid-session", where Pinia's in-memory state
+// already covers it), there's otherwise nothing to show or log against.
+// Snapshotted after every successful load, read back only when the real
+// fetch fails while offline.
+const OFFLINE_CACHE_KEY = 'gtg-offline-cache-v1';
+
+function saveOfflineCache() {
+  try {
+    localStorage.setItem(
+      OFFLINE_CACHE_KEY,
+      JSON.stringify({ exercises: store.exercises, variations: store.variations, entries: entries.value }),
+    );
+  } catch {
+    // best-effort - a full/unavailable localStorage shouldn't break the happy path
+  }
+}
+
+function loadOfflineCache(): { exercises: Exercise[]; variations: ExerciseVariation[]; entries: LogEntry[] } | null {
+  try {
+    const raw = localStorage.getItem(OFFLINE_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 onMounted(async () => {
-  const [, fetchedEntries] = await Promise.all([
-    store.fetchAll(),
-    listLogEntries(),
-    routinesStore.fetchAll(),
-  ]);
-  entries.value = fetchedEntries;
+  try {
+    const [, fetchedEntries] = await Promise.all([
+      store.fetchAll(),
+      listLogEntries(),
+      routinesStore.fetchAll(),
+    ]);
+    entries.value = fetchedEntries;
+    saveOfflineCache();
+  } catch (err) {
+    if (isOnline.value) throw err;
+    const cached = loadOfflineCache();
+    if (cached) {
+      store.exercises = cached.exercises;
+      store.variations = cached.variations;
+      entries.value = cached.entries;
+    }
+  }
 
   // Deep link from notifications: ?logVariation=<id> opens the quick-log
   // sheet immediately, no tap needed.
@@ -45,6 +85,19 @@ onMounted(async () => {
     router.replace({ query: {} });
   }
 });
+
+// Once the offline queue fully drains, refetch so client-generated temp
+// ids (negative, see api/logEntries.ts) get replaced by the real synced
+// entries instead of showing "Syncing" forever.
+watch(
+  () => queuedMutations.value.length,
+  async (count, prevCount) => {
+    if (prevCount > 0 && count === 0 && !syncing.value) {
+      entries.value = await listLogEntries().catch(() => entries.value);
+      saveOfflineCache();
+    }
+  },
+);
 
 const entriesByVariation = computed(() => {
   const map = new Map<number, LogEntry[]>();

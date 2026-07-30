@@ -19,6 +19,13 @@ const emit = defineEmits<{
 
 const store = useExercisesStore();
 
+// Entries created offline get a negative client-side id until they sync
+// (see api/logEntries.ts) - editing/deleting those before the real id
+// exists isn't supported, so they're shown read-only with a chip instead.
+function isPending(entry: LogEntry) {
+  return entry.id < 0;
+}
+
 function variationFor(entry: LogEntry) {
   return store.variations.find((v) => v.id === entry.variationId);
 }
@@ -44,12 +51,13 @@ const visibleEntries = computed(() =>
 );
 
 async function quickDelete(entry: LogEntry) {
+  if (isPending(entry)) return;
   pendingDeleteIds.value.add(entry.id);
   lastDeletedEntry.value = entry;
   undoSnackbarText.value = `Deleted ${valueLabel(entry)} set for ${exerciseFor(entry)?.name ?? 'exercise'}`;
   undoSnackbar.value = true;
 
-  await deleteLogEntry(entry.id);
+  await deleteLogEntry(entry);
   emit('remove', entry.id);
 }
 
@@ -81,20 +89,21 @@ const selectedMetricType = computed(
 );
 
 function openEntry(entry: LogEntry) {
+  if (isPending(entry)) return;
   selectedEntry.value = entry;
   sheetOpen.value = true;
 }
 
 async function saveEntry(value: number, timestamp: Date) {
   if (!selectedEntry.value) return;
-  const updated = await updateLogEntry(selectedEntry.value.id, { value, timestamp });
+  const updated = await updateLogEntry(selectedEntry.value, { value, timestamp });
   emit('update', updated);
   sheetOpen.value = false;
 }
 
 async function removeEntry() {
   if (!selectedEntry.value) return;
-  await deleteLogEntry(selectedEntry.value.id);
+  await deleteLogEntry(selectedEntry.value);
   emit('remove', selectedEntry.value.id);
   sheetOpen.value = false;
 }
@@ -114,10 +123,15 @@ async function removeEntry() {
     >
       <template #subtitle> {{ variationFor(entry)?.name }} · {{ valueLabel(entry) }} </template>
       <template #append>
-        <span class="text-caption text-medium-emphasis mr-1">{{
+        <v-chip v-if="isPending(entry)" size="x-small" variant="tonal" color="warning" class="mr-1">
+          <v-icon start size="12">mdi-cloud-sync-outline</v-icon>
+          Syncing
+        </v-chip>
+        <span v-else class="text-caption text-medium-emphasis mr-1">{{
           formatTimestamp(new Date(entry.timestamp))
         }}</span>
         <v-btn
+          v-if="!isPending(entry)"
           icon="mdi-delete-outline"
           size="small"
           variant="text"

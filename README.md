@@ -10,6 +10,9 @@ browser tab.
 
 - **Frontend**: Vite + Vue 3 + TypeScript + Vuetify 3 + Pinia (`apps/web`)
 - **Backend**: Fastify + TypeScript REST API (`apps/api`)
+- **Offline queue**: no extra library — a small IndexedDB-backed queue plus
+  a runtime-caching service worker (`apps/web/src/lib/offlineQueue.ts`,
+  `apps/web/public/sw.js`)
 - **Shared**: Zod schemas + types used by both apps (`packages/shared`)
 - **Database**: SQLite (via `@libsql/client`), Drizzle ORM
 - **Package manager**: pnpm workspaces
@@ -330,6 +333,18 @@ manually removing the volume deletes logged data.
 - **Optional passcode gate** — set `APP_PASSCODE` (see "Deployment" below) to
   put a login screen in front of the whole app if it's reachable from the
   public internet. Off by default.
+- **Offline logging** — if the connection drops (or the phone opens the app
+  with none at all, as long as it's loaded successfully at least once
+  before), logging still works: sets you log offline show up immediately
+  with a "Syncing" chip and queue in the background, and quick edits to an
+  existing exercise/variation (rename, favorite, target, reorder) work the
+  same way. The app bar's server icon shows a badge with how many changes
+  are waiting, and turns into an "Offline" chip while disconnected. Syncing
+  happens automatically the moment the connection comes back (or manually
+  from the System page); a set that fails to sync for a real reason (not
+  just "still offline") stays queued there for review instead of silently
+  vanishing. Creating brand-new exercises/variations/routines and any
+  routine edits still need a live connection.
 
 ## How to use it
 

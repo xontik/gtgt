@@ -33,10 +33,21 @@ Notes for the agent:
 - Deleting a variation is a soft delete (`deletedAt` timestamp set, row and its log entries kept). Soft-deleted variations stay out of the progression ladder and pickers but their history still counts toward stats.
 - Creating/renaming/deleting an `Exercise` itself happens on the "Manage exercises" page (`/exercises`), not on Home or the exercise detail page. The exercise detail page (`/exercises/:id`) only handles that exercise's variations.
 
+## Offline support
+
+Scoped deliberately narrow — this is not a general offline-first rewrite, just enough that a dropped connection mid-workout doesn't break logging:
+
+- **Fully supported offline**: creating/editing/deleting `LogEntry` rows (the core GtG logging flow), and editing an existing `Exercise`/`ExerciseVariation` (rename, favorite toggle, target, difficulty rank). Mutating API calls go through `mutateFetch` (`apps/web/src/lib/offlineQueue.ts`): on a genuine connectivity failure (not a server-rejected request) the call is queued in IndexedDB and an optimistic result is returned immediately, so calling code (stores, views) doesn't need offline-specific branches — it just gets the object back like normal.
+- **Not supported offline** (throws normally, same as before this existed): creating a brand-new `Exercise`/`ExerciseVariation`/`Routine`, deleting an `Exercise`, and all `Routine`/`RoutineItem` writes. These are rare mid-session actions; adding them would mean threading the same temp-id optimistic pattern through more entities for little practical benefit. Extend this list deliberately if a real need shows up, don't default to "just wire everything through the queue."
+- **Conflict resolution is intentionally trivial**: log entries can't conflict because deleting a variation is a soft delete — the row (and the FK a queued entry points at) still exists even if it's off the active ladder. Every other queued mutation is last-write-wins: replaying a queued PATCH just overwrites whatever the field is now, no merge/diff logic. This only works because the offline-supported action set above is all "full-object edit" style; don't add a queued action that needs a real 3-way merge without revisiting this.
+- **Sync** happens automatically on the browser's `online` event (`syncQueue()` in `offlineQueue.ts`), plus a manual "Sync now" button on `/system`. There is no push notification nudging you to reopen the app — just a persistent badge (app bar `/system` icon + an "Offline"/pending-count indicator) so it's visible whenever the app happens to be open, per explicit instruction not to build a proactive reminder for this.
+- Client-generated temp ids for offline-created log entries are negative numbers (`id < 0`); real SQLite ids are always positive, so that's the whole "is this still pending sync" check — don't add a separate boolean flag for it.
+- A minimal `localStorage` snapshot (`gtg-offline-cache-v1` in `HomeView.vue`) covers a cold app open with zero connectivity; it is not a general offline data cache for every view, just enough for Home to render and let you log.
+
 ## Non-goals (do not build these unless asked)
 
 - No auth/multi-user support — single user, no login flow needed yet.
-- No offline-first/sync layer — this is a plain client-server app for now.
+- No general offline-first/sync layer beyond the scoped logging support described above.
 - No workout planning/templates/scheduling — that's the previous app's job, not this one.
 - No charts/graphs — period totals (day/week/month/year) are in scope, but visualized as lists/numbers, not charts.
 

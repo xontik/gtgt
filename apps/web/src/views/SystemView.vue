@@ -11,6 +11,8 @@ import {
 } from '../api/backup';
 import { checkIdleNow } from '../api/notifications';
 import { useExercisesStore } from '../stores/exercises';
+import { isOnline } from '../lib/network';
+import { queuedMutations, syncing, syncQueue, discardMutation } from '../lib/offlineQueue';
 
 const store = useExercisesStore();
 
@@ -190,6 +192,40 @@ async function onImportFileSelected() {
 <template>
   <v-container>
     <h1 class="text-h5 mb-4">System</h1>
+
+    <v-card v-if="queuedMutations.length > 0 || !isOnline" class="mb-4" variant="tonal">
+      <v-card-title class="text-subtitle-1">Offline sync</v-card-title>
+      <v-card-text>
+        <span v-if="!isOnline">You're offline. </span>Changes made without a
+        connection (logging sets, quick edits) are queued here and sync
+        automatically once you're back online.
+      </v-card-text>
+      <v-card-text v-if="queuedMutations.length > 0">
+        <v-progress-linear v-if="syncing" indeterminate class="mb-2" />
+        <v-list density="compact">
+          <v-list-item
+            v-for="mutation in queuedMutations"
+            :key="mutation.id"
+            :title="mutation.label"
+            :subtitle="mutation.failed ? 'Failed to sync - the server rejected this change' : 'Waiting to sync'"
+          >
+            <template #prepend>
+              <v-icon :color="mutation.failed ? 'error' : 'warning'">
+                {{ mutation.failed ? 'mdi-alert-circle-outline' : 'mdi-cloud-sync-outline' }}
+              </v-icon>
+            </template>
+            <template #append>
+              <v-btn icon="mdi-close" size="small" variant="text" @click="discardMutation(mutation.id)" />
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+      <v-card-actions v-if="queuedMutations.length > 0">
+        <v-btn prepend-icon="mdi-sync" :loading="syncing" :disabled="!isOnline" @click="syncQueue">
+          Sync now
+        </v-btn>
+      </v-card-actions>
+    </v-card>
 
     <v-card class="mb-4" variant="tonal">
       <v-card-title class="text-subtitle-1">Notifications</v-card-title>

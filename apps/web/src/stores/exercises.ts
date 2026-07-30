@@ -39,7 +39,9 @@ export const useExercisesStore = defineStore('exercises', {
     },
 
     async setFavorite(variationId: number, isFavorite: boolean) {
-      const updated = await updateVariation(variationId, { isFavorite });
+      const existing = this.variations.find((v) => v.id === variationId);
+      if (!existing) return;
+      const updated = await updateVariation(existing, { isFavorite });
       const index = this.variations.findIndex((v) => v.id === variationId);
       if (index !== -1) this.variations[index] = updated;
     },
@@ -55,8 +57,8 @@ export const useExercisesStore = defineStore('exercises', {
       if (!neighbor) return;
 
       const [updatedVariation, updatedNeighbor] = await Promise.all([
-        updateVariation(variation.id, { difficultyRank: neighbor.difficultyRank }),
-        updateVariation(neighbor.id, { difficultyRank: variation.difficultyRank }),
+        updateVariation(variation, { difficultyRank: neighbor.difficultyRank }),
+        updateVariation(neighbor, { difficultyRank: variation.difficultyRank }),
       ]);
 
       for (const updated of [updatedVariation, updatedNeighbor]) {
@@ -92,19 +94,24 @@ export const useExercisesStore = defineStore('exercises', {
         targetSetsPerDay: number | null;
       },
     ) {
-      const updated = await updateVariation(variationId, details);
+      const existing = this.variations.find((v) => v.id === variationId);
+      if (!existing) return;
+      const updated = await updateVariation(existing, details);
       const index = this.variations.findIndex((v) => v.id === variationId);
       if (index !== -1) this.variations[index] = updated;
     },
 
     async removeVariation(variationId: number) {
-      await deleteVariation(variationId);
       const variation = this.variations.find((v) => v.id === variationId);
-      if (variation) variation.deletedAt = new Date();
+      if (!variation) return;
+      await deleteVariation(variation);
+      variation.deletedAt = new Date();
     },
 
     async undoRemoveVariation(variationId: number) {
-      const restored = await restoreVariation(variationId);
+      const existing = this.variations.find((v) => v.id === variationId);
+      if (!existing) return;
+      const restored = await restoreVariation(existing);
       const index = this.variations.findIndex((v) => v.id === variationId);
       if (index !== -1) this.variations[index] = restored;
     },
@@ -120,7 +127,9 @@ export const useExercisesStore = defineStore('exercises', {
     },
 
     async updateExerciseDetails(exerciseId: number, body: ExerciseUpdate) {
-      const updated = await updateExercise(exerciseId, body);
+      const existing = this.exercises.find((e) => e.id === exerciseId);
+      if (!existing) return;
+      const updated = await updateExercise(existing, body);
       const index = this.exercises.findIndex((e) => e.id === exerciseId);
       if (index !== -1) this.exercises[index] = updated;
     },
