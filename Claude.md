@@ -47,7 +47,7 @@ Scoped deliberately narrow — this is not a general offline-first rewrite, just
 ## Non-goals (do not build these unless asked)
 
 - No auth/multi-user support — single user, no login flow needed yet.
-- No general offline-first/sync layer beyond the scoped logging support described above.
+- No general offline-first/sync layer beyond the scoped logging support described above — in particular, Routines are entirely out of offline scope (creating, editing, and running one all require connectivity).
 - No workout planning/templates/scheduling — that's the previous app's job, not this one.
 - No charts/graphs — period totals (day/week/month/year) are in scope, but visualized as lists/numbers, not charts.
 
