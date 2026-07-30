@@ -90,7 +90,7 @@ body {
 .v-app-bar {
   position: relative;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' viewBox='0 0 1000 64'%3E%3Cpath d='M0,30 C60,5 110,55 170,30 C230,5 280,55 340,30 C400,5 450,55 510,30 C570,5 620,55 680,30 C740,5 790,55 850,30 C910,5 960,55 1000,30' stroke='white' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Cpath d='M0,48 C70,60 100,15 180,42 C250,64 290,20 370,45 C440,64 480,20 560,45 C630,64 670,20 750,45 C820,64 860,20 940,45 C970,55 990,45 1000,48' stroke='white' stroke-width='1' fill='none' opacity='0.15'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' viewBox='0 0 1000 64'%3E%3Cpath d='M0,26 C280,-6 380,62 620,32 C780,12 850,44 1000,24' stroke='white' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Cpath d='M0,50 C260,66 340,10 640,42 C800,60 880,22 1000,46' stroke='white' stroke-width='1' fill='none' opacity='0.15'/%3E%3C/svg%3E"),
     linear-gradient(
       135deg,
       rgba(192, 38, 252, 0.92) 0%,
