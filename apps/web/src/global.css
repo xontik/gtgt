@@ -110,12 +110,12 @@ body {
   color: #fff !important;
 }
 
-/* The bottom nav leans into the same darker purple, tinted rather than
-   the loud bright gradient the app bar gets, so it reads as chrome, not
-   another action surface - with the flashy primary reserved for the
-   active tab. Same frosted-glass treatment as the app bar. */
+/* The bottom nav matches the flat, bordered surface language every card
+   and list already uses, instead of competing with its own third gradient
+   treatment - the app bar stays the one bold gradient accent in the app.
+   Still a frosted glass surface (semi-transparent + blur), just neutral. */
 .v-bottom-navigation {
-  background: linear-gradient(180deg, rgba(32, 24, 48, 0.92) 0%, rgba(46, 15, 102, 0.92) 100%) !important;
+  background: rgba(56, 56, 63, 0.92) !important;
   border-top: 1px solid rgba(176, 38, 255, 0.3);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
