@@ -5,12 +5,15 @@ import { listLogEntries } from '../api/logEntries';
 import { periodRange, shiftPeriod, formatPeriodLabel, rollingPeriods, type Period } from '../lib/period';
 import { dateKey, buildWeekColumns, eachDayOfRange } from '../lib/heatmap';
 import { exerciseColorVar } from '../lib/colors';
+import { formatDuration, formatRelativeTime } from '../lib/format';
 import ExerciseStatsRow from '../components/ExerciseStatsRow.vue';
 import SegmentedBarsChart from '../components/SegmentedBarsChart.vue';
 import GroupedBarsChart from '../components/GroupedBarsChart.vue';
 import MergedHeatmap from '../components/MergedHeatmap.vue';
 import LogEntryList from '../components/LogEntryList.vue';
 import type { Exercise, LogEntry } from '@gtg/shared';
+
+const viewMode = ref<'trends' | 'records'>('trends');
 
 const store = useExercisesStore();
 const entries = ref<LogEntry[]>([]);
@@ -197,10 +200,90 @@ const mergedHeatmapSeries = computed(() =>
     dailyTotals: dailyTotalsFor(exercise.id),
   })),
 );
+
+interface VariationRecord {
+  variationId: number;
+  variationName: string;
+  bestValue: number;
+  bestDate: Date;
+}
+
+interface ExerciseRecords {
+  exercise: Exercise;
+  variations: VariationRecord[];
+}
+
+// All-time best per variation, independent of the period/exercise filter
+// above - records are a "what have I ever achieved" view, not scoped to
+// whatever's currently selected for the trend charts.
+const recordsByExercise = computed<ExerciseRecords[]>(() => {
+  const entriesByVariation = new Map<number, LogEntry[]>();
+  for (const entry of entries.value) {
+    const list = entriesByVariation.get(entry.variationId);
+    if (list) list.push(entry);
+    else entriesByVariation.set(entry.variationId, [entry]);
+  }
+
+  return store.exercises
+    .map((exercise) => {
+      const variations = store
+        .activeVariationsFor(exercise.id)
+        .map((variation) => {
+          const variationEntries = entriesByVariation.get(variation.id);
+          if (!variationEntries || variationEntries.length === 0) return null;
+          const best = variationEntries.reduce((acc, e) => (e.value > acc.value ? e : acc));
+          return {
+            variationId: variation.id,
+            variationName: variation.name,
+            bestValue: best.value,
+            bestDate: new Date(best.timestamp),
+          };
+        })
+        .filter((v): v is VariationRecord => v !== null);
+      return { exercise, variations };
+    })
+    .filter((e) => e.variations.length > 0);
+});
+
+function recordValueLabel(exercise: Exercise, value: number) {
+  return exercise.metricType === 'time' ? formatDuration(value) : `${value} reps`;
+}
 </script>
 
 <template>
   <v-container>
+    <v-tabs v-model="viewMode" class="mb-4" density="comfortable">
+      <v-tab value="trends">Trends</v-tab>
+      <v-tab value="records">Records</v-tab>
+    </v-tabs>
+
+    <template v-if="viewMode === 'records'">
+      <v-progress-linear v-if="loading" indeterminate class="mb-4" />
+      <v-alert v-else-if="recordsByExercise.length === 0" type="info" variant="tonal">
+        No sets logged yet - records show up here once you do.
+      </v-alert>
+      <v-expansion-panels v-else variant="accordion">
+        <v-expansion-panel v-for="record in recordsByExercise" :key="record.exercise.id">
+          <v-expansion-panel-title>{{ record.exercise.name }}</v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <v-list density="compact">
+              <v-list-item
+                v-for="variation in record.variations"
+                :key="variation.variationId"
+                :title="variation.variationName"
+                :subtitle="`Best: ${recordValueLabel(record.exercise, variation.bestValue)} · ${formatRelativeTime(variation.bestDate)}`"
+              >
+                <template #prepend>
+                  <v-icon icon="mdi-trophy-outline" color="warning" />
+                </template>
+              </v-list-item>
+            </v-list>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </template>
+
+    <template v-else>
     <div class="d-flex align-center ga-2 mb-2 flex-wrap">
       <v-btn-toggle v-model="period" mandatory density="comfortable" divided>
         <v-btn value="day">Day</v-btn>
