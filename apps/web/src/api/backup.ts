@@ -23,3 +23,11 @@ export function importStructure(backup: Backup) {
     body: JSON.stringify(backup),
   });
 }
+
+export function listAutoBackups() {
+  return apiFetch<{ filename: string; date: string; sizeBytes: number }[]>('/backup/auto');
+}
+
+export function autoBackupDownloadUrl(filename: string) {
+  return `/api/backup/auto/${encodeURIComponent(filename)}`;
+}

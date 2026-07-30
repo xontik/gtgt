@@ -14,6 +14,7 @@ import { notificationRoutes } from './routes/notifications.js';
 import { authRoutes, SESSION_COOKIE } from './routes/auth.js';
 import { isValidSession } from './auth/session.js';
 import { checkIdleAndNotify } from './notifications/checkIdle.js';
+import { runAutoBackup } from './backups/autoBackup.js';
 import { isNotFoundError } from './lib/errors.js';
 
 const app = Fastify({
@@ -107,6 +108,25 @@ cron.schedule(
   { timezone: notifyTimezone },
 );
 app.log.info({ notifySchedule, notifyTimezone }, 'idle-check cron scheduled');
+
+// Daily auto-backup to disk (same volume as the sqlite file): keeps every
+// backup from the last 7 days plus one per month for the 3 months before
+// that, deleting the rest. Independent of the manual "Download backup"
+// button on the System page - this one just sits on the server as a safety
+// net if you forget to click it.
+const backupSchedule = process.env.BACKUP_CRON_SCHEDULE ?? '0 3 * * *';
+const backupTimezone = process.env.NOTIFY_TIMEZONE ?? 'UTC';
+cron.schedule(
+  backupSchedule,
+  () => {
+    app.log.info('auto-backup cron fired');
+    runAutoBackup()
+      .then((result) => app.log.info(result, 'auto-backup ran'))
+      .catch((err) => app.log.error(err, 'auto-backup failed'));
+  },
+  { timezone: backupTimezone },
+);
+app.log.info({ backupSchedule, backupTimezone }, 'auto-backup cron scheduled');
 
 const port = Number(process.env.PORT ?? 3001);
 

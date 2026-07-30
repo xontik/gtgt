@@ -7,4 +7,5 @@ apps/api/public/
 .env.local
 *.sqlite
 *.sqlite3
+apps/api/data/
 .vite/

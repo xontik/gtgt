@@ -2,26 +2,22 @@ import type { FastifyInstance } from 'fastify';
 import { backupSchema } from '@gtg/shared';
 import { db } from '../db/client.js';
 import { exercises, exerciseVariations, logEntries, routines, routineItems } from '../db/schema.js';
+import { buildBackupPayload } from '../lib/backupData.js';
+import { listAutoBackups, readAutoBackup } from '../backups/autoBackup.js';
+import { NotFoundError } from '../lib/errors.js';
 
 export async function backupRoutes(app: FastifyInstance) {
-  app.get('/backup', async () => {
-    const [allExercises, allVariations, allLogEntries, allRoutines, allRoutineItems] = await Promise.all([
-      db.select().from(exercises),
-      db.select().from(exerciseVariations),
-      db.select().from(logEntries),
-      db.select().from(routines),
-      db.select().from(routineItems),
-    ]);
+  app.get('/backup', async () => buildBackupPayload());
 
-    return {
-      version: 1,
-      exportedAt: new Date(),
-      exercises: allExercises,
-      exerciseVariations: allVariations,
-      logEntries: allLogEntries,
-      routines: allRoutines,
-      routineItems: allRoutineItems,
-    };
+  app.get('/backup/auto', async () => listAutoBackups());
+
+  app.get('/backup/auto/:filename', async (req, reply) => {
+    const { filename } = req.params as { filename: string };
+    const contents = await readAutoBackup(filename);
+    if (!contents) throw new NotFoundError('Backup file not found');
+    reply.header('content-disposition', `attachment; filename="${filename}"`);
+    reply.type('application/json');
+    return contents;
   });
 
   // Wipes the database and replaces it with the backup, preserving ids so

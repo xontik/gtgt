@@ -1,12 +1,37 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import type { Backup } from '@gtg/shared';
 import { backupSchema } from '@gtg/shared';
-import { fetchBackup, restoreBackup, importStructure } from '../api/backup';
+import {
+  fetchBackup,
+  restoreBackup,
+  importStructure,
+  listAutoBackups,
+  autoBackupDownloadUrl,
+} from '../api/backup';
 import { checkIdleNow } from '../api/notifications';
 import { useExercisesStore } from '../stores/exercises';
 
 const store = useExercisesStore();
+
+const autoBackups = ref<{ filename: string; date: string; sizeBytes: number }[]>([]);
+const loadingAutoBackups = ref(false);
+
+async function loadAutoBackups() {
+  loadingAutoBackups.value = true;
+  try {
+    autoBackups.value = await listAutoBackups();
+  } finally {
+    loadingAutoBackups.value = false;
+  }
+}
+
+onMounted(loadAutoBackups);
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
+}
 
 const snackbar = ref(false);
 const snackbarText = ref('');
@@ -195,6 +220,38 @@ async function onImportFileSelected() {
           Export CSV
         </v-btn>
       </v-card-actions>
+    </v-card>
+
+    <v-card class="mb-4" variant="tonal">
+      <v-card-title class="text-subtitle-1">Automatic backups</v-card-title>
+      <v-card-text>
+        The server takes a backup on its own every night - a safety net if
+        you forget to download one manually. Keeps every daily backup from
+        the last 7 days, plus one per month for the 3 months before that.
+      </v-card-text>
+      <v-card-text>
+        <v-progress-linear v-if="loadingAutoBackups" indeterminate class="mb-2" />
+        <v-alert v-else-if="autoBackups.length === 0" type="info" variant="tonal" density="compact">
+          No automatic backups yet - the first one runs at the next scheduled time.
+        </v-alert>
+        <v-list v-else density="compact">
+          <v-list-item
+            v-for="backup in autoBackups"
+            :key="backup.filename"
+            :title="backup.date"
+            :subtitle="formatBytes(backup.sizeBytes)"
+          >
+            <template #append>
+              <v-btn
+                icon="mdi-download"
+                size="small"
+                variant="text"
+                :href="autoBackupDownloadUrl(backup.filename)"
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
     </v-card>
 
     <v-card class="mb-4" variant="tonal">
