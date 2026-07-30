@@ -15,6 +15,7 @@ import AddFavoriteDialog from '../components/AddFavoriteDialog.vue';
 import QuickLogPickerDialog from '../components/QuickLogPickerDialog.vue';
 import LogEntryList from '../components/LogEntryList.vue';
 import { curveStyle } from '../lib/curveVariant';
+import { computeInsights, type Insight } from '../lib/insights';
 import RoutineRunnerSheet, {
   type RoutineStep,
   type RoutineStepResult,
@@ -246,6 +247,58 @@ const progressionNudges = computed<ProgressionNudge[]>(() => {
   }
   return nudges;
 });
+
+// Insights: data-only "coach" detections (neglected favorites, plateaus,
+// trending up/down, category imbalance) computed purely from what's
+// already logged - see lib/insights.ts for the rules.
+const INSIGHT_DISMISS_KEY = 'gtg-dismissed-insights';
+const INSIGHT_DISMISS_DAYS = 3;
+
+function loadDismissedInsightIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(INSIGHT_DISMISS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as { id: string; until: number }[];
+    const now = Date.now();
+    return new Set(parsed.filter((d) => d.until > now).map((d) => d.id));
+  } catch {
+    return new Set();
+  }
+}
+
+const dismissedInsightIds = ref<Set<string>>(loadDismissedInsightIds());
+
+function dismissInsight(id: string) {
+  dismissedInsightIds.value = new Set([...dismissedInsightIds.value, id]);
+  let list: { id: string; until: number }[] = [];
+  try {
+    list = JSON.parse(localStorage.getItem(INSIGHT_DISMISS_KEY) ?? '[]');
+  } catch {
+    list = [];
+  }
+  list = list.filter((d) => d.id !== id);
+  list.push({ id, until: Date.now() + INSIGHT_DISMISS_DAYS * 24 * 60 * 60 * 1000 });
+  localStorage.setItem(INSIGHT_DISMISS_KEY, JSON.stringify(list));
+}
+
+const insights = computed<Insight[]>(() =>
+  computeInsights(store.exercises, favoritesWithExercise.value, entriesByVariation.value).filter(
+    (insight) => !dismissedInsightIds.value.has(insight.id),
+  ),
+);
+
+const insightIcons: Record<Insight['type'], string> = {
+  neglected: 'mdi-clock-alert-outline',
+  plateau: 'mdi-chart-line-variant',
+  improving: 'mdi-trending-up',
+  declining: 'mdi-trending-down',
+  imbalance: 'mdi-scale-balance',
+};
+
+async function postponeInsightFavorite(insight: Insight) {
+  if (insight.variation) await store.setFavorite(insight.variation.id, false);
+  dismissInsight(insight.id);
+}
 
 const RECENT_ENTRIES_LIMIT = 6;
 
@@ -583,6 +636,30 @@ async function saveRunAsNewRoutine() {
         <v-btn size="small" variant="text" class="mt-1 px-0" :to="`/exercises/${nudge.exercise.id}`">
           View progression
         </v-btn>
+      </v-alert>
+    </template>
+
+    <template v-if="insights.length > 0">
+      <v-alert
+        v-for="insight in insights"
+        :key="insight.id"
+        :type="insight.severity"
+        :icon="insightIcons[insight.type]"
+        variant="tonal"
+        density="compact"
+        class="mt-4"
+        closable
+        @click:close="dismissInsight(insight.id)"
+      >
+        <div class="text-body-2">{{ insight.message }}</div>
+        <div v-if="insight.type === 'neglected'" class="mt-1">
+          <v-btn size="small" variant="text" class="px-0" @click="postponeInsightFavorite(insight)">
+            Unfavorite
+          </v-btn>
+          <v-btn size="small" variant="text" class="px-0 ml-2" @click="dismissInsight(insight.id)">
+            Keep for now
+          </v-btn>
+        </div>
       </v-alert>
     </template>
 

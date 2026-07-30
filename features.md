@@ -54,3 +54,4 @@
 - [x] Records tab on Stats: all-time personal best per variation, grouped by exercise
 - [x] progression nudge on Home: dismissible alert when the last 5 sets on a favorited variation all met target and a harder variation is next on the ladder
 - [x] ergonomics pass on Home's middle section: combined stat-pair/weekly-recap into one compact card, collapsed "Hasn't been hit"/"Recent activity" into accordion panels instead of always-expanded lists
+- [x] Home "insights" alerts computed purely from existing log data: neglected-favorite postpone/unfavorite prompt, plateau/improving/declining trend per favorited variation (last week vs prior two weeks), and favorites-all-one-category imbalance nudge — dismissible, re-surfaces after a few days
