@@ -60,18 +60,9 @@
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
-/* Bottom nav's safe-area inset: content-box (overriding the app's global
-   border-box) so the padding adds below the standard 56px content region
-   instead of needing Vuetify's layout system told a matching taller
-   number - simpler and always correct, at the cost of v-main's own
-   bottom padding being a few px short of the nav's true height on
-   notched phones (unnoticeable in practice). Pure CSS env() also updates
-   live as a phone browser's own toolbar shows/hides, which a one-off JS
-   measurement can't track. */
-.v-bottom-navigation.pb-safe-area {
-  box-sizing: content-box;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+/* Bottom nav is left at Vuetify's default sizing/behavior for now (no
+   safe-area handling) - still glitchy across a couple of attempts, being
+   revisited separately. */
 
 /* iOS Safari can visibly jitter/detach position:fixed bars during
    momentum scroll if a touch-driven :active state on their own buttons is
@@ -92,20 +83,23 @@ body {
    if needed. --- */
 
 /* App bar: bold flowing-line overlay on top of the gradient, no hard
-   bottom edge - the gradient just ends. */
+   bottom edge - the gradient just ends. One continuous SVG stretched
+   across the full bar width (preserveAspectRatio="none" + background-size:
+   100% 100%, not tiled) so the curve doesn't break into disconnected
+   repeats at arbitrary tile-width boundaries. */
 .v-app-bar {
   position: relative;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='64' viewBox='0 0 400 64'%3E%3Cpath d='M-20,20 C80,-10 120,70 220,40 C300,18 340,55 420,25' stroke='white' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Cpath d='M-20,50 C100,70 140,10 260,35 C330,50 360,15 420,45' stroke='white' stroke-width='1' fill='none' opacity='0.15'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' viewBox='0 0 1000 64'%3E%3Cpath d='M0,30 C60,5 110,55 170,30 C230,5 280,55 340,30 C400,5 450,55 510,30 C570,5 620,55 680,30 C740,5 790,55 850,30 C910,5 960,55 1000,30' stroke='white' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Cpath d='M0,48 C70,60 100,15 180,42 C250,64 290,20 370,45 C440,64 480,20 560,45 C630,64 670,20 750,45 C820,64 860,20 940,45 C970,55 990,45 1000,48' stroke='white' stroke-width='1' fill='none' opacity='0.15'/%3E%3C/svg%3E"),
     linear-gradient(
       135deg,
       rgba(192, 38, 252, 0.92) 0%,
       rgba(139, 31, 224, 0.92) 45%,
       rgba(76, 29, 149, 0.92) 100%
     ) !important;
-  background-repeat: repeat-x, no-repeat;
+  background-repeat: no-repeat, no-repeat;
   background-size:
-    400px 64px,
+    100% 100%,
     100% 100%;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);

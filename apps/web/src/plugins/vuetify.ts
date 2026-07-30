@@ -11,9 +11,9 @@ import * as directives from 'vuetify/directives';
 const gtgDark = {
   dark: true,
   colors: {
-    background: '#19191c',
-    surface: '#232327',
-    'surface-variant': '#2a2130',
+    background: '#232328',
+    surface: '#2d2d34',
+    'surface-variant': '#38383f',
     primary: '#b026ff',
     secondary: '#4c1d95',
     error: '#f87171',

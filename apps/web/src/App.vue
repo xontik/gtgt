@@ -19,7 +19,7 @@ const route = useRoute();
         </transition>
       </router-view>
     </v-main>
-    <v-bottom-navigation :model-value="route.path" grow class="pb-safe-area">
+    <v-bottom-navigation :model-value="route.path" grow>
       <v-btn value="/" to="/">
         <v-icon>mdi-home</v-icon>
         Home
