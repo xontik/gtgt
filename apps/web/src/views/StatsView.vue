@@ -284,34 +284,34 @@ function recordValueLabel(exercise: Exercise, value: number) {
     </template>
 
     <template v-else>
-    <div class="d-flex align-center ga-2 mb-2 flex-wrap">
-      <v-btn-toggle v-model="period" mandatory density="comfortable" divided>
-        <v-btn value="day">Day</v-btn>
-        <v-btn value="week">Week</v-btn>
-        <v-btn value="month">Month</v-btn>
-        <v-btn value="year">Year</v-btn>
-      </v-btn-toggle>
-      <v-btn-toggle v-model="period" mandatory density="comfortable" divided>
-        <v-btn value="last7">7d</v-btn>
-        <v-btn value="last30">30d</v-btn>
-      </v-btn-toggle>
-      <v-spacer />
-      <v-btn icon variant="tonal" @click="filterDrawerOpen = true">
-        <v-badge :content="selectedExercises.length" :model-value="selectedExercises.length > 0" color="primary">
-          <v-icon icon="mdi-filter-variant" />
-        </v-badge>
-      </v-btn>
-    </div>
+      <div class="d-flex align-center ga-2 mb-2 flex-wrap">
+        <v-btn-toggle v-model="period" mandatory density="comfortable" divided>
+          <v-btn value="day">Day</v-btn>
+          <v-btn value="week">Week</v-btn>
+          <v-btn value="month">Month</v-btn>
+          <v-btn value="year">Year</v-btn>
+        </v-btn-toggle>
+        <v-btn-toggle v-model="period" mandatory density="comfortable" divided>
+          <v-btn value="last7">7d</v-btn>
+          <v-btn value="last30">30d</v-btn>
+        </v-btn-toggle>
+        <v-spacer />
+        <v-btn icon variant="tonal" @click="filterDrawerOpen = true">
+          <v-badge :content="selectedExercises.length" :model-value="selectedExercises.length > 0" color="primary">
+            <v-icon icon="mdi-filter-variant" />
+          </v-badge>
+        </v-btn>
+      </div>
 
-    <div class="d-flex align-center justify-space-between mb-4">
-      <v-btn icon="mdi-chevron-left" variant="text" :disabled="isRolling" @click="goPrev" />
-      <div class="text-subtitle-1">{{ label }}</div>
-      <v-btn icon="mdi-chevron-right" variant="text" :disabled="isRolling" @click="goNext" />
-    </div>
+      <div class="d-flex align-center justify-space-between mb-4">
+        <v-btn icon="mdi-chevron-left" variant="text" :disabled="isRolling" @click="goPrev" />
+        <div class="text-subtitle-1">{{ label }}</div>
+        <v-btn icon="mdi-chevron-right" variant="text" :disabled="isRolling" @click="goNext" />
+      </div>
 
-    <v-progress-linear v-if="loading" indeterminate class="mb-4" />
+      <v-progress-linear v-if="loading" indeterminate class="mb-4" />
 
-    <template v-else>
+      <template v-else>
       <div style="min-width: 0">
         <v-alert v-if="selectedExercises.length === 0" type="info" variant="tonal">
           Tap the filter icon above to pick which exercises to show.
@@ -369,6 +369,7 @@ function recordValueLabel(exercise: Exercise, value: number) {
           />
         </template>
       </div>
+    </template>
     </template>
 
     <v-navigation-drawer v-model="filterDrawerOpen" location="end" temporary width="280">
