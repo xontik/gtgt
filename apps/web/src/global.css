@@ -155,6 +155,20 @@ body {
   color: #fff;
 }
 
+/* The nav's content row is a normal (non-positioned) flex child, so by
+   default it only fills the safe-area-excluded content box - icons/labels
+   stay glued to the top, leaving the env(safe-area-inset-bottom) padding
+   below them looking like dead, unused space instead of intentional
+   inset. Positioning it against the nav's full padding box instead (the
+   nav itself is already `position: absolute` per Vuetify, so it's a valid
+   containing block) makes the buttons stretch across the whole bar
+   including that strip, so the icon/label center shifts down into the
+   available height rather than stranding it underneath. */
+.v-bottom-navigation__content {
+  position: absolute;
+  inset: 0;
+}
+
 /* Frosted glass behind dialogs/bottom sheets/menus too. */
 .v-overlay__scrim {
   backdrop-filter: blur(3px);
