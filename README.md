@@ -166,6 +166,18 @@ or via `curl -X POST http://<host>:8080/api/notifications/check-idle?force=true`
 cooldown, so it always sends (useful for testing); without it, the endpoint
 behaves exactly like the cron job.
 
+### Automatic backups
+
+The server takes its own backup on a schedule and writes it to disk next to
+the sqlite file (same Docker volume, so it survives redeploys), independent
+of the manual "Download backup" button on the System page. Retention: every
+daily backup from the last 7 days, plus the oldest snapshot found in each
+of the 3 months before that — everything else is deleted after each run.
+Browse and download them from the System page's "Automatic backups" card.
+
+- `BACKUP_CRON_SCHEDULE` — 5-field crontab syntax, default daily at 3am
+  (`0 3 * * *`), interpreted in `NOTIFY_TIMEZONE` above.
+
 ### Passcode-gating the app (optional)
 
 By default there's no login — fine for a home network. If the app is
@@ -207,21 +219,29 @@ manually removing the volume deletes logged data.
   happens from the exercise detail page, not from Home). If a variation has
   a daily-set target set (see Exercise detail below), its card shows
   progress like "3/5 sets today" and switches to a success-tinted state with
-  a checkmark once the target's met. Below the grid: a today's-sets /
-  day-streak stat pair, a rolling weekly recap ("32 sets in the last 7 days,
-  up from 25"), a "Hasn't been hit in a while" list of favorited variations
-  not logged in 3+ days (tap to quick-log), and a recent-activity feed of
-  your last few log entries anywhere (tap-to-edit and quick-delete/undo
-  just like the Log page), with a link to the full Log.
-- **Stats** — per-exercise totals (set count + reps or time), browsable by
-  Day / Week / Month / Year (calendar-aligned, with prev/next navigation) or
-  by rolling Last 7 days / Last 30 days (always ends today, no navigation).
-  Pick exactly which data to include from a variation tree checklist:
-  checking an exercise selects all its variations, or check individual
-  variations to narrow the stats down to just those. Favorited variations
-  are preselected on load. Under each exercise, an expandable "Sets" panel
-  lists the individual log entries for the current period, with the same
-  tap-to-edit and quick-delete/undo behavior as the Log page.
+  a checkmark once the target's met. If the last 5 sets on a favorited
+  variation all met its target and there's a harder variation next on that
+  exercise's ladder, a dismissible "ready to progress?" nudge appears
+  linking to the exercise page (dismissing it silences that one for 7
+  days). Below the grid: a compact card with today's-sets / day-streak
+  numbers and the rolling weekly recap ("32 sets in the last 7 days, up
+  from 25"), then two collapsed panels — "Hasn't been hit in a while"
+  (favorited variations not logged in 3+ days, tap to quick-log) and
+  "Recent activity" (your last few log entries anywhere, tap-to-edit and
+  quick-delete/undo just like the Log page, with a link to the full Log).
+- **Stats** — two tabs. *Trends*: per-exercise totals (set count + reps or
+  time), browsable by Day / Week / Month / Year (calendar-aligned, with
+  prev/next navigation) or by rolling Last 7 days / Last 30 days (always
+  ends today, no navigation). Pick exactly which data to include from a
+  variation tree checklist in a filter drawer: checking an exercise selects
+  all its variations, or check individual variations to narrow the stats
+  down to just those. Favorited variations are preselected on load. Under
+  each exercise, an expandable "Sets" panel lists the individual log
+  entries for the current period, with the same tap-to-edit and
+  quick-delete/undo behavior as the Log page. *Records*: all-time personal
+  bests, independent of the Trends filter/period — grouped by exercise, one
+  row per variation with a logged set, showing the best value and when it
+  happened.
 - **Log** — every log entry, newest first, with a search field to filter by
   exercise/variation name. Tap one to edit its value or timestamp (so you
   can backdate a forgotten entry), or delete it (with confirmation). Or use
@@ -282,6 +302,9 @@ manually removing the volume deletes logged data.
   - *Backup*: download everything (exercises, variations, log entries,
     routines) as one JSON file, or export just the log entries as a CSV
     (with resolved exercise/variation names) for spreadsheets or other tools.
+  - *Automatic backups*: a list of the server's own nightly backups (see
+    "Deployment" below), each downloadable — a safety net if you forget to
+    click the manual button above.
   - *Restore*: replaces everything in the app with the contents of a chosen
     backup file (destructive, confirmation required).
   - *Import exercises & variations only*: adds a backup file's

@@ -17,7 +17,7 @@
 - [ ] reorder variation with drag and drop
 - [x] variation of the same exercices but that are not "more difficult" just another branch. maybe some ancestor link ? (reversed later — branching turned out unused and made reordering harder; removed in favor of one flat ladder per exercise, forks now modeled as a second exercise)
 - [x] simple deployement on home server docker compose
-- [ ] home page "progression nudge" (suggest moving up the ladder) once there's a good signal for it
+- [x] home page "progression nudge" (suggest moving up the ladder) once there's a good signal for it
 - [x] backup/restore data from the UI, plus import-just-exercises-and-variations for trying out configs
 - [x] image, notes, and video URL per variation, shown in quick-log/edit bottom sheets, carried through backup/import
 - [x] Discord webhook reminder when nothing's been logged in N hours, suggesting top 3 overdue favorites with a no-click deep link into the quick-log sheet
@@ -50,3 +50,7 @@
 - [x] theme pass: self-hosted Inter, custom purple accent theme, flat/bordered surfaces instead of Material shadows, larger corner radii (Vuetify defaults + global.css, no component rewrites)
 - [x] theme feedback pass: dark-only (dropped light theme), flashier purple accent, stronger border+shadow delimitation, fixed inconsistent Home card widths, Home FAB to quick-log any variation (not just favorites) via a search picker
 - [x] round Home's list sections (Recent activity, Hasn't been hit in a while), stack the favorite card's quick-add/chevron buttons vertically, disable mobile autofill on all form fields, auto-create a same-named variation when adding an exercise, and a "go wild" motion/gradient pass (gradient app bar + primary buttons, card hover lift, button press scale, success-pulse animation, page transitions)
+- [x] nightly auto-backup to disk, 7-daily + 3-monthly retention, browsable/downloadable from the System page
+- [x] Records tab on Stats: all-time personal best per variation, grouped by exercise
+- [x] progression nudge on Home: dismissible alert when the last 5 sets on a favorited variation all met target and a harder variation is next on the ladder
+- [x] ergonomics pass on Home's middle section: combined stat-pair/weekly-recap into one compact card, collapsed "Hasn't been hit"/"Recent activity" into accordion panels instead of always-expanded lists
