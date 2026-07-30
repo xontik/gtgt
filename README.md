@@ -368,5 +368,8 @@ manually removing the volume deletes logged data.
 - No multi-user support — this is a single-user app. There's an optional
   shared-passcode gate (see "Deployment") but it's a lock on the door, not
   real per-user auth.
-- No offline-first / sync layer.
+- No general offline-first / sync layer — offline support is scoped to
+  logging sets and editing existing exercises/variations (see "Offline
+  logging" above); creating new exercises/variations/routines and any
+  routine edits still need a live connection.
 - No workout planning, templates, or scheduling.
