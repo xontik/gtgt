@@ -221,18 +221,18 @@ manually removing the volume deletes logged data.
   progress like "3/5 sets today" and switches to a success-tinted state with
   a checkmark once the target's met. If the last 5 sets on a favorited
   variation all met its target and there's a harder variation next on that
-  exercise's ladder, a dismissible "ready to progress?" nudge appears
-  linking to the exercise page (dismissing it silences that one for 7
-  days). Below that, dismissible "insights" alerts computed purely from
-  your existing log history (no extra config needed): a favorite untouched
-  for 7+ days after a real logging history prompts you to postpone it or
-  unfavorite it on the spot; a variation whose weekly average has barely
-  moved over the last two weeks gets flagged as a plateau, while a
-  meaningfully higher or lower average than two weeks ago is called out as
-  trending up or down; and if every current favorite is the same exercise
-  category (push/pull/squat/core/hold), a nudge suggests working in another
-  one for balance. Dismissing one silences it for 3 days. Below that: a
-  compact card with today's-sets / day-streak
+  exercise's ladder, a "ready to progress?" prompt is queued. Below that, a
+  collapsed **Coach** panel (closed by default, badge shows the count) holds
+  all such findings computed purely from your existing log history - no
+  extra config needed, and nothing takes up space until you open it:
+  progression-ready nudges; a favorite untouched for 7+ days after a real
+  logging history, with a one-tap postpone/unfavorite; a variation whose
+  weekly average has barely moved over the last two weeks flagged as a
+  plateau, or meaningfully higher/lower than two weeks ago flagged as
+  trending up/down; and if every current favorite is the same exercise
+  category (push/pull/squat/core/hold), a nudge to work in another one for
+  balance. Dismissing an item silences it for 3 days (7 for progression
+  nudges). Below that: a compact card with today's-sets / day-streak
   numbers and the rolling weekly recap ("32 sets in the last 7 days, up
   from 25"), then two collapsed panels — "Hasn't been hit in a while"
   (favorited variations not logged in 3+ days, tap to quick-log) and

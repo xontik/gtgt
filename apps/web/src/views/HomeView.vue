@@ -295,10 +295,54 @@ const insightIcons: Record<Insight['type'], string> = {
   imbalance: 'mdi-scale-balance',
 };
 
+const insightColors: Record<Insight['severity'], string> = {
+  info: 'info',
+  warning: 'warning',
+  success: 'success',
+};
+
 async function postponeInsightFavorite(insight: Insight) {
   if (insight.variation) await store.setFavorite(insight.variation.id, false);
   dismissInsight(insight.id);
 }
+
+// Nudges + insights used to render as one always-open v-alert each, which
+// piled into a wall of banners above the favorites grid on a day with
+// several findings. Collapsed into one summary panel (closed by default,
+// like the other Home accordions) so the common case - nothing/one finding
+// - stays compact, and a bad day is one tap away instead of a scroll past.
+interface CoachItem {
+  id: string;
+  icon: string;
+  color: string;
+  message: string;
+  showProgressionLink?: { exerciseId: number };
+  showUnfavorite?: Insight;
+  onDismiss: () => void;
+}
+
+const coachItems = computed<CoachItem[]>(() => [
+  ...progressionNudges.value.map(
+    (nudge): CoachItem => ({
+      id: `nudge-${nudge.variation.id}`,
+      icon: 'mdi-arrow-up-bold-circle-outline',
+      color: 'success',
+      message: `${nudge.exercise.name}: you've hit target on ${nudge.variation.name} ${NUDGE_STREAK} sets in a row. Ready for ${nudge.nextVariation.name}?`,
+      showProgressionLink: { exerciseId: nudge.exercise.id },
+      onDismiss: () => dismissNudge(nudge.variation.id),
+    }),
+  ),
+  ...insights.value.map(
+    (insight): CoachItem => ({
+      id: insight.id,
+      icon: insightIcons[insight.type],
+      color: insightColors[insight.severity],
+      message: insight.message,
+      showUnfavorite: insight.type === 'neglected' ? insight : undefined,
+      onDismiss: () => dismissInsight(insight.id),
+    }),
+  ),
+]);
 
 const RECENT_ENTRIES_LIMIT = 6;
 
@@ -618,50 +662,44 @@ async function saveRunAsNewRoutine() {
       </v-list>
     </template>
 
-    <template v-if="progressionNudges.length > 0">
-      <v-alert
-        v-for="nudge in progressionNudges"
-        :key="nudge.variation.id"
-        type="success"
-        variant="tonal"
-        density="compact"
-        class="mt-4"
-        closable
-        @click:close="dismissNudge(nudge.variation.id)"
-      >
-        <div class="text-body-2">
-          {{ nudge.exercise.name }}: you've hit target on {{ nudge.variation.name }} {{ NUDGE_STREAK }} sets in a
-          row. Ready for <strong>{{ nudge.nextVariation.name }}</strong>?
-        </div>
-        <v-btn size="small" variant="text" class="mt-1 px-0" :to="`/exercises/${nudge.exercise.id}`">
-          View progression
-        </v-btn>
-      </v-alert>
-    </template>
-
-    <template v-if="insights.length > 0">
-      <v-alert
-        v-for="insight in insights"
-        :key="insight.id"
-        :type="insight.severity"
-        :icon="insightIcons[insight.type]"
-        variant="tonal"
-        density="compact"
-        class="mt-4"
-        closable
-        @click:close="dismissInsight(insight.id)"
-      >
-        <div class="text-body-2">{{ insight.message }}</div>
-        <div v-if="insight.type === 'neglected'" class="mt-1">
-          <v-btn size="small" variant="text" class="px-0" @click="postponeInsightFavorite(insight)">
-            Unfavorite
-          </v-btn>
-          <v-btn size="small" variant="text" class="px-0 ml-2" @click="dismissInsight(insight.id)">
-            Keep for now
-          </v-btn>
-        </div>
-      </v-alert>
-    </template>
+    <v-expansion-panels v-if="coachItems.length > 0" class="mt-4" variant="accordion">
+      <v-expansion-panel>
+        <v-expansion-panel-title>
+          Coach
+          <v-chip size="small" class="ml-2" :color="coachItems.some((i) => i.color === 'warning') ? 'warning' : 'primary'">
+            {{ coachItems.length }}
+          </v-chip>
+        </v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <v-list density="compact">
+            <v-list-item v-for="item in coachItems" :key="item.id" :prepend-icon="item.icon" :base-color="item.color">
+              <v-list-item-title class="text-wrap text-body-2">{{ item.message }}</v-list-item-title>
+              <div class="mt-1">
+                <v-btn
+                  v-if="item.showProgressionLink"
+                  size="small"
+                  variant="text"
+                  class="px-0"
+                  :to="`/exercises/${item.showProgressionLink.exerciseId}`"
+                >
+                  View progression
+                </v-btn>
+                <v-btn
+                  v-if="item.showUnfavorite"
+                  size="small"
+                  variant="text"
+                  class="px-0"
+                  @click="postponeInsightFavorite(item.showUnfavorite)"
+                >
+                  Unfavorite
+                </v-btn>
+                <v-btn size="small" variant="text" class="px-0" @click="item.onDismiss">Dismiss</v-btn>
+              </div>
+            </v-list-item>
+          </v-list>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
     <v-card variant="tonal" class="mt-4 pa-3">
       <div class="d-flex ga-4">
