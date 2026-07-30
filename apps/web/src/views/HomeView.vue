@@ -184,6 +184,69 @@ const neglectedFavorites = computed(() =>
   }),
 );
 
+// Progression nudge: if the last few sets on a favorited variation all met
+// or beat its target, and there's a harder variation next on that
+// exercise's ladder, suggest moving up instead of staying put forever.
+const NUDGE_STREAK = 5;
+const NUDGE_DISMISS_KEY = 'gtg-dismissed-nudges';
+const NUDGE_DISMISS_DAYS = 7;
+
+function loadDismissedNudgeIds(): Set<number> {
+  try {
+    const raw = localStorage.getItem(NUDGE_DISMISS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as { variationId: number; until: number }[];
+    const now = Date.now();
+    return new Set(parsed.filter((d) => d.until > now).map((d) => d.variationId));
+  } catch {
+    return new Set();
+  }
+}
+
+const dismissedNudgeIds = ref<Set<number>>(loadDismissedNudgeIds());
+
+function dismissNudge(variationId: number) {
+  dismissedNudgeIds.value = new Set([...dismissedNudgeIds.value, variationId]);
+  let list: { variationId: number; until: number }[] = [];
+  try {
+    list = JSON.parse(localStorage.getItem(NUDGE_DISMISS_KEY) ?? '[]');
+  } catch {
+    list = [];
+  }
+  list = list.filter((d) => d.variationId !== variationId);
+  list.push({ variationId, until: Date.now() + NUDGE_DISMISS_DAYS * 24 * 60 * 60 * 1000 });
+  localStorage.setItem(NUDGE_DISMISS_KEY, JSON.stringify(list));
+}
+
+interface ProgressionNudge {
+  variation: ExerciseVariation;
+  exercise: Exercise;
+  nextVariation: ExerciseVariation;
+}
+
+const progressionNudges = computed<ProgressionNudge[]>(() => {
+  const nudges: ProgressionNudge[] = [];
+  for (const { variation, exercise } of favoritesWithExercise.value) {
+    if (dismissedNudgeIds.value.has(variation.id)) continue;
+    if (!variation.targetValue) continue;
+
+    const recent = (entriesByVariation.value.get(variation.id) ?? [])
+      .slice()
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, NUDGE_STREAK);
+    if (recent.length < NUDGE_STREAK) continue;
+    if (!recent.every((e) => e.value >= variation.targetValue!)) continue;
+
+    const ladder = store.activeVariationsFor(exercise.id);
+    const index = ladder.findIndex((v) => v.id === variation.id);
+    const next = ladder[index + 1];
+    if (!next) continue;
+
+    nudges.push({ variation, exercise, nextVariation: next });
+  }
+  return nudges;
+});
+
 const RECENT_ENTRIES_LIMIT = 6;
 
 const recentEntries = computed(() =>
@@ -502,62 +565,83 @@ async function saveRunAsNewRoutine() {
       </v-list>
     </template>
 
-    <v-row class="mt-2 mb-2" dense>
-      <v-col cols="6">
-        <v-card variant="tonal" class="pa-3 text-center">
+    <template v-if="progressionNudges.length > 0">
+      <v-alert
+        v-for="nudge in progressionNudges"
+        :key="nudge.variation.id"
+        type="success"
+        variant="tonal"
+        density="compact"
+        class="mt-4"
+        closable
+        @click:close="dismissNudge(nudge.variation.id)"
+      >
+        <div class="text-body-2">
+          {{ nudge.exercise.name }}: you've hit target on {{ nudge.variation.name }} {{ NUDGE_STREAK }} sets in a
+          row. Ready for <strong>{{ nudge.nextVariation.name }}</strong>?
+        </div>
+        <v-btn size="small" variant="text" class="mt-1 px-0" :to="`/exercises/${nudge.exercise.id}`">
+          View progression
+        </v-btn>
+      </v-alert>
+    </template>
+
+    <v-card variant="tonal" class="mt-4 pa-3">
+      <div class="d-flex ga-4">
+        <div class="text-center flex-1-1">
           <div class="text-h5">{{ todaySetCount }}</div>
           <div class="text-caption text-medium-emphasis">set{{ todaySetCount === 1 ? '' : 's' }} today</div>
-        </v-card>
-      </v-col>
-      <v-col cols="6">
-        <v-card variant="tonal" class="pa-3 text-center">
+        </div>
+        <div class="text-center flex-1-1">
           <div class="text-h5">{{ currentStreak }}</div>
           <div class="text-caption text-medium-emphasis">day streak</div>
-        </v-card>
-      </v-col>
-    </v-row>
+        </div>
+      </div>
+      <div
+        v-if="weeklyRecap.lastWeek > 0 || weeklyRecap.thisWeek > 0"
+        class="text-caption text-medium-emphasis text-center mt-2"
+      >
+        {{ weeklyRecap.thisWeek }} set{{ weeklyRecap.thisWeek === 1 ? '' : 's' }} in the last 7 days
+        <template v-if="weeklyRecap.lastWeek > 0">
+          ({{ weeklyRecap.thisWeek >= weeklyRecap.lastWeek ? 'up' : 'down' }} from {{ weeklyRecap.lastWeek }} the
+          7 days before)
+        </template>
+      </div>
+    </v-card>
 
-    <v-alert
-      v-if="weeklyRecap.lastWeek > 0 || weeklyRecap.thisWeek > 0"
-      :type="weeklyRecap.thisWeek >= weeklyRecap.lastWeek ? 'success' : 'info'"
-      variant="tonal"
-      density="compact"
-      class="mb-2"
-    >
-      {{ weeklyRecap.thisWeek }} set{{ weeklyRecap.thisWeek === 1 ? '' : 's' }} in the last 7 days
-      <template v-if="weeklyRecap.lastWeek > 0">
-        ({{ weeklyRecap.thisWeek >= weeklyRecap.lastWeek ? 'up' : 'down' }} from {{ weeklyRecap.lastWeek }} the
-        7 days before)
-      </template>
-    </v-alert>
+    <v-expansion-panels v-if="neglectedFavorites.length > 0 || recentEntries.length > 0" class="mt-4" variant="accordion">
+      <v-expansion-panel v-if="neglectedFavorites.length > 0">
+        <v-expansion-panel-title>Hasn't been hit in a while ({{ neglectedFavorites.length }})</v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <v-list density="compact">
+            <v-list-item
+              v-for="favorite in neglectedFavorites"
+              :key="favorite.variation.id"
+              :title="favorite.exercise.name"
+              :subtitle="`${favorite.variation.name} · ${lastLoggedLabelFor(favorite.variation)}`"
+              @click="openSheet(favorite.exercise, favorite.variation)"
+            >
+              <template #append>
+                <v-btn icon="mdi-plus" size="small" variant="text" @click.stop="openSheet(favorite.exercise, favorite.variation)" />
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
 
-    <template v-if="neglectedFavorites.length > 0">
-      <div class="text-subtitle-2 text-medium-emphasis mt-4 mb-1">Hasn't been hit in a while</div>
-      <v-list density="compact" class="mb-2">
-        <v-list-item
-          v-for="favorite in neglectedFavorites"
-          :key="favorite.variation.id"
-          :title="favorite.exercise.name"
-          :subtitle="`${favorite.variation.name} · ${lastLoggedLabelFor(favorite.variation)}`"
-          @click="openSheet(favorite.exercise, favorite.variation)"
-        >
-          <template #append>
-            <v-btn icon="mdi-plus" size="small" variant="text" @click.stop="openSheet(favorite.exercise, favorite.variation)" />
-          </template>
-        </v-list-item>
-      </v-list>
-    </template>
-
-    <template v-if="recentEntries.length > 0">
-      <div class="text-subtitle-2 text-medium-emphasis mt-4 mb-1">Recent activity</div>
-      <LogEntryList
-        :entries="recentEntries"
-        @update="onRecentUpdate"
-        @remove="onRecentRemove"
-        @restore="onRecentRestore"
-      />
-      <v-btn block variant="text" class="mt-1" to="/log">See full log</v-btn>
-    </template>
+      <v-expansion-panel v-if="recentEntries.length > 0">
+        <v-expansion-panel-title>Recent activity</v-expansion-panel-title>
+        <v-expansion-panel-text>
+          <LogEntryList
+            :entries="recentEntries"
+            @update="onRecentUpdate"
+            @remove="onRecentRemove"
+            @restore="onRecentRestore"
+          />
+          <v-btn block variant="text" class="mt-1" to="/log">See full log</v-btn>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
     <template v-if="selectedExercise && selectedVariation">
       <RepStepperSheet
