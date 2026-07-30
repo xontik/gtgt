@@ -60,9 +60,37 @@
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
-/* Bottom nav is left at Vuetify's default sizing/behavior for now (no
-   safe-area handling) - still glitchy across a couple of attempts, being
-   revisited separately. */
+/* App-bar safe-area inset (notch / Dynamic Island): content-box so
+   env(safe-area-inset-top) adds *above* the standard content height
+   instead of shrinking it - the title stays correctly centered in the
+   original content box, and the app-bar's gradient/curve background
+   (percentage-sized) stretches to cover the extra height with no visible
+   seam. This one's simple: the status-bar-height inset comes from the OS,
+   not a live-hiding browser toolbar, so a static CSS value never needs to
+   react to scrolling. */
+.v-app-bar {
+  box-sizing: content-box;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Bottom nav gets the same content-box + env() padding technique - but
+   here it matters more: outside of an installed PWA, the phone browser's
+   own bottom toolbar occupies this exact strip and hides/shows as you
+   scroll, live-changing env(safe-area-inset-bottom) between 0 and the
+   full inset. Plain CSS tracks that automatically with zero lag; an
+   earlier attempt measured the inset once in JS and folded it into
+   Vuetify's `height` prop instead, which couldn't keep up with that live
+   change and was reverted (see git history). Trade-off: Vuetify's layout
+   system still sizes v-main's bottom padding from the unpadded `height`
+   prop, not the actual rendered box, so v-main's own padding is a few px
+   short of the nav's true height on notched phones - unnoticeable in
+   practice, same trade-off as the app-bar above. The iOS momentum-scroll
+   jitter that sank earlier attempts was actually the :active transform
+   below fighting position:fixed, already fixed independently of this. */
+.v-bottom-navigation {
+  box-sizing: content-box;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
 /* iOS Safari can visibly jitter/detach position:fixed bars during
    momentum scroll if a touch-driven :active state on their own buttons is
