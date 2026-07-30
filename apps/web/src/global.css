@@ -43,7 +43,7 @@
    page background instead of blending into it. */
 .v-card,
 .v-alert,
-.v-expansion-panel,
+.v-expansion-panels,
 .v-list:not(.v-list--nav),
 .v-text-field .v-field,
 .v-select .v-field,
@@ -185,7 +185,7 @@ body {
    every card in a grid showing the identical one. */
 .v-card::before,
 .v-list:not(.v-list--nav)::before,
-.v-expansion-panel::before,
+.v-expansion-panels::before,
 .v-bottom-sheet__content > .v-sheet::before {
   content: '';
   position: absolute;
@@ -202,26 +202,39 @@ body {
     220px 220px;
 }
 .v-list:not(.v-list--nav),
-.v-expansion-panel,
+.v-expansion-panels,
 .v-bottom-sheet__content > .v-sheet {
   position: relative;
   overflow: hidden;
 }
+/* One accent (and one border, above) per accordion as a whole, not per
+   panel inside it - individual panels used to each get their own boxed
+   background, which looked like a stack of separate cards instead of one
+   grouped section. */
+.v-expansion-panels {
+  border-radius: 8px;
+}
+.v-expansion-panel {
+  background: transparent !important;
+}
+.v-expansion-panel:not(:last-child) {
+  border-bottom: 1px solid rgba(176, 38, 255, 0.14);
+}
 
-/* Expansion panels (Manage Routines' per-routine panels, Stats' "Sets"
-   panel) are true repeated siblings, so plain nth-of-type cycling works
-   here (unlike grid cards, each wrapped in its own v-col). */
-.v-expansion-panel:nth-of-type(4n + 2)::before {
+/* Multiple separate accordions in a row (e.g. Stats' one-per-exercise
+   "Sets" panels) are true repeated siblings, so plain nth-of-type cycling
+   works here (unlike grid cards, each wrapped in its own v-col). */
+.v-expansion-panels:nth-of-type(4n + 2)::before {
   --gtg-curve: var(--gtg-curve-2);
   --gtg-curve-anchor: bottom left;
   --gtg-curve-glow: 0% 100%;
 }
-.v-expansion-panel:nth-of-type(4n + 3)::before {
+.v-expansion-panels:nth-of-type(4n + 3)::before {
   --gtg-curve: var(--gtg-curve-3);
   --gtg-curve-anchor: top left;
   --gtg-curve-glow: 0% 0%;
 }
-.v-expansion-panel:nth-of-type(4n + 4)::before {
+.v-expansion-panels:nth-of-type(4n + 4)::before {
   --gtg-curve: var(--gtg-curve-4);
   --gtg-curve-anchor: bottom right;
   --gtg-curve-glow: 100% 100%;
