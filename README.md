@@ -343,7 +343,11 @@ manually removing the volume deletes logged data.
   happens automatically the moment the connection comes back (or manually
   from the System page); a set that fails to sync for a real reason (not
   just "still offline") stays queued there for review instead of silently
-  vanishing. Creating brand-new exercises/variations/routines and any
+  vanishing, and one that keeps failing for non-connectivity reasons stops
+  retrying after 3 tries instead of silently blocking everything queued
+  behind it. Discarding a queued item from the System page refetches the
+  affected page rather than leaving the optimistic edit it stood for
+  stranded. Creating brand-new exercises/variations/routines and any
   routine edits still need a live connection.
 
 ## How to use it

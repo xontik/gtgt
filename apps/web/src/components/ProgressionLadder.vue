@@ -31,6 +31,7 @@ const sorted = computed(() => [...props.variations].sort((a, b) => a.difficultyR
             size="x-small"
             variant="text"
             title="Toggle favorite"
+            :aria-label="variation.isFavorite ? 'Unfavorite' : 'Favorite'"
             @click.stop="emit('favorite', variation.id, !variation.isFavorite)"
           />
           <v-btn
@@ -38,6 +39,7 @@ const sorted = computed(() => [...props.variations].sort((a, b) => a.difficultyR
             size="x-small"
             variant="text"
             :disabled="index === 0"
+            aria-label="Move up"
             @click.stop="emit('reorder', variation.id, 'up')"
           />
           <v-btn
@@ -45,9 +47,16 @@ const sorted = computed(() => [...props.variations].sort((a, b) => a.difficultyR
             size="x-small"
             variant="text"
             :disabled="index === sorted.length - 1"
+            aria-label="Move down"
             @click.stop="emit('reorder', variation.id, 'down')"
           />
-          <v-btn icon="mdi-pencil" size="x-small" variant="text" @click.stop="emit('edit', variation.id)" />
+          <v-btn
+            icon="mdi-pencil"
+            size="x-small"
+            variant="text"
+            aria-label="Edit"
+            @click.stop="emit('edit', variation.id)"
+          />
         </div>
       </template>
     </v-list-item>

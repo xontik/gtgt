@@ -135,6 +135,7 @@ async function removeEntry() {
           icon="mdi-delete-outline"
           size="small"
           variant="text"
+          aria-label="Delete set"
           @click.stop="quickDelete(entry)"
         />
       </template>

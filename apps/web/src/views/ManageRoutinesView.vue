@@ -129,6 +129,7 @@ async function saveItemTemplate(details: { targetValue: number | null; setsCount
                   size="x-small"
                   variant="text"
                   :disabled="index === 0"
+                  aria-label="Move up"
                   @click="routinesStore.moveItem(item.id, 'up')"
                 />
                 <v-btn
@@ -136,13 +137,21 @@ async function saveItemTemplate(details: { targetValue: number | null; setsCount
                   size="x-small"
                   variant="text"
                   :disabled="index === routinesStore.itemsFor(routine.id).length - 1"
+                  aria-label="Move down"
                   @click="routinesStore.moveItem(item.id, 'down')"
                 />
-                <v-btn icon="mdi-pencil" size="x-small" variant="text" @click="openEditItem(item.id)" />
+                <v-btn
+                  icon="mdi-pencil"
+                  size="x-small"
+                  variant="text"
+                  aria-label="Edit"
+                  @click="openEditItem(item.id)"
+                />
                 <v-btn
                   icon="mdi-delete-outline"
                   size="x-small"
                   variant="text"
+                  aria-label="Remove from routine"
                   @click="routinesStore.removeItem(item.id)"
                 />
               </template>

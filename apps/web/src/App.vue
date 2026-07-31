@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { isOnline } from './lib/network';
 import { queuedMutations } from './lib/offlineQueue';
+import { errorMessage, errorVisible } from './lib/globalError';
 
 const route = useRoute();
 const pendingCount = computed(() => queuedMutations.value.length);
@@ -19,9 +20,9 @@ const pendingCount = computed(() => queuedMutations.value.length);
         Offline
       </v-chip>
       <v-badge v-if="pendingCount > 0" :content="pendingCount" color="warning" offset-x="8" offset-y="8">
-        <v-btn icon="mdi-server-outline" to="/system" />
+        <v-btn icon="mdi-server-outline" aria-label="System" to="/system" />
       </v-badge>
-      <v-btn v-else icon="mdi-server-outline" to="/system" />
+      <v-btn v-else icon="mdi-server-outline" aria-label="System" to="/system" />
     </v-app-bar>
     <v-main>
       <router-view v-slot="{ Component }">
@@ -48,5 +49,6 @@ const pendingCount = computed(() => queuedMutations.value.length);
         Manage
       </v-btn>
     </v-bottom-navigation>
+    <v-snackbar v-model="errorVisible" timeout="5000" color="error">{{ errorMessage }}</v-snackbar>
   </v-app>
 </template>

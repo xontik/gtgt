@@ -47,9 +47,9 @@ function confirm() {
       <VariationInfoPanel :image-url="imageUrl" :notes="notes" :video-url="videoUrl" />
 
       <div class="d-flex align-center justify-center ga-4 my-6">
-        <v-btn icon="mdi-minus" size="large" :disabled="reps <= 0" @click="reps--" />
+        <v-btn icon="mdi-minus" size="large" :disabled="reps <= 0" aria-label="Decrease reps" @click="reps--" />
         <div class="text-h3" style="min-width: 4rem; text-align: center">{{ reps }}</div>
-        <v-btn icon="mdi-plus" size="large" @click="reps++" />
+        <v-btn icon="mdi-plus" size="large" aria-label="Increase reps" @click="reps++" />
       </div>
 
       <v-chip

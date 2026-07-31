@@ -12,7 +12,15 @@ import {
 import { checkIdleNow } from '../api/notifications';
 import { useExercisesStore } from '../stores/exercises';
 import { isOnline } from '../lib/network';
-import { queuedMutations, syncing, syncQueue, discardMutation } from '../lib/offlineQueue';
+import { queuedMutations, syncing, syncQueue, discardMutation, type QueuedMutation } from '../lib/offlineQueue';
+
+function failureSubtitle(mutation: QueuedMutation): string {
+  if (!mutation.failed) return 'Waiting to sync';
+  if (mutation.failureReason === 'stuck') {
+    return "Failed to sync repeatedly, not just a connectivity blip - won't retry automatically";
+  }
+  return 'Failed to sync - the server rejected this change';
+}
 
 const store = useExercisesStore();
 
@@ -207,7 +215,7 @@ async function onImportFileSelected() {
             v-for="mutation in queuedMutations"
             :key="mutation.id"
             :title="mutation.label"
-            :subtitle="mutation.failed ? 'Failed to sync - the server rejected this change' : 'Waiting to sync'"
+            :subtitle="failureSubtitle(mutation)"
           >
             <template #prepend>
               <v-icon :color="mutation.failed ? 'error' : 'warning'">
@@ -215,7 +223,13 @@ async function onImportFileSelected() {
               </v-icon>
             </template>
             <template #append>
-              <v-btn icon="mdi-close" size="small" variant="text" @click="discardMutation(mutation.id)" />
+              <v-btn
+                icon="mdi-close"
+                size="small"
+                variant="text"
+                aria-label="Discard queued change"
+                @click="discardMutation(mutation.id)"
+              />
             </template>
           </v-list-item>
         </v-list>
@@ -282,6 +296,7 @@ async function onImportFileSelected() {
                 icon="mdi-download"
                 size="small"
                 variant="text"
+                :aria-label="`Download backup from ${backup.date}`"
                 :href="autoBackupDownloadUrl(backup.filename)"
               />
             </template>

@@ -10,6 +10,13 @@ export interface QueuedMutation {
   label: string;
   createdAt: number;
   failed?: boolean;
+  /** "rejected": the server actively said no (won't be retried further).
+   *  "stuck": network-error-shaped failures repeatedly, past MAX_NETWORK_RETRIES -
+   *  either a real client bug or a connectivity issue this app can't
+   *  distinguish from one, but either way it shouldn't silently block
+   *  every mutation queued after it forever. */
+  failureReason?: 'rejected' | 'stuck';
+  networkFailureCount?: number;
 }
 
 const DB_NAME = 'gtg-offline-queue';
@@ -75,17 +82,49 @@ async function removeMutation(id: string) {
   queuedMutations.value = queuedMutations.value.filter((m) => m.id !== id);
 }
 
-async function markFailed(id: string) {
+async function markFailed(id: string, reason: 'rejected' | 'stuck') {
   const mutation = queuedMutations.value.find((m) => m.id === id);
   if (!mutation) return;
-  const updated = { ...mutation, failed: true };
+  const updated = { ...mutation, failed: true, failureReason: reason };
   await withStore('readwrite', (store) => store.put(updated));
   queuedMutations.value = queuedMutations.value.map((m) => (m.id === id ? updated : m));
 }
 
+async function recordNetworkFailure(id: string): Promise<number> {
+  const mutation = queuedMutations.value.find((m) => m.id === id);
+  if (!mutation) return 0;
+  const networkFailureCount = (mutation.networkFailureCount ?? 0) + 1;
+  const updated = { ...mutation, networkFailureCount };
+  await withStore('readwrite', (store) => store.put(updated));
+  queuedMutations.value = queuedMutations.value.map((m) => (m.id === id ? updated : m));
+  return networkFailureCount;
+}
+
+// Bumped whenever a queued mutation is discarded. Discarding only removes
+// it from the replay queue - the optimistic edit it stood for is already
+// applied in whatever store/view triggered it (mutateFetch returns that
+// result immediately), and there's no recorded "before" state to roll
+// back to. Rather than build a generic undo stack for a rare, deliberate
+// System-page action, views/stores that hold offline-editable data watch
+// this and refetch from the server, which is simple and always correct.
+export const dataVersion = ref(0);
+
 export async function discardMutation(id: string) {
   await removeMutation(id);
+  dataVersion.value += 1;
 }
+
+// A "network-shaped" failure (fetch throwing, not an ApiError from a real
+// response) is normally a genuine connectivity drop mid-sync, worth
+// stopping for and retrying whole on the next 'online' event. But
+// isOnline can say true while a real client bug throws the same shape of
+// error every time (see CLAUDE.md) - without a cap, that single mutation
+// would silently block every mutation queued after it forever, with no
+// visible error anywhere. After this many network-shaped failures for the
+// *same* mutation, stop trusting it's just connectivity and mark it
+// failed instead, so it stops blocking the rest of the queue and becomes
+// visible on the System page like a server-rejected one.
+const MAX_NETWORK_RETRIES = 3;
 
 // Replays queued mutations in the order they were made. Stops at the
 // first genuine connectivity failure (rest stay queued for next time);
@@ -106,11 +145,16 @@ export async function syncQueue(): Promise<void> {
         await removeMutation(mutation.id);
       } catch (err) {
         if (err instanceof ApiError) {
-          await markFailed(mutation.id);
+          await markFailed(mutation.id, 'rejected');
           continue;
         }
-        // Network error mid-sync - connectivity dropped again, stop and
-        // wait for the next 'online' event.
+        const failureCount = await recordNetworkFailure(mutation.id);
+        if (failureCount >= MAX_NETWORK_RETRIES) {
+          await markFailed(mutation.id, 'stuck');
+          continue;
+        }
+        // Still within retry budget - treat as a genuine connectivity
+        // drop, stop and wait for the next 'online' event.
         break;
       }
     }

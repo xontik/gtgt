@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import type { LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
 import { listLogEntries } from '../api/logEntries';
+import { dataVersion } from '../lib/offlineQueue';
 import LogEntryList from '../components/LogEntryList.vue';
 
 const store = useExercisesStore();
@@ -33,6 +34,7 @@ async function load() {
 }
 
 onMounted(load);
+watch(dataVersion, load);
 
 function onUpdate(updated: LogEntry) {
   const index = entries.value.findIndex((e) => e.id === updated.id);

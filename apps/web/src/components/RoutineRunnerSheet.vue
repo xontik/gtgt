@@ -164,9 +164,9 @@ const hasLoggedThisStep = computed(() => (progress.value[stepIndex.value]?.perfo
 
       <template v-if="currentStep.metricType === 'reps'">
         <div class="d-flex align-center justify-center ga-4 my-6">
-          <v-btn icon="mdi-minus" size="large" :disabled="value <= 0" @click="value--" />
+          <v-btn icon="mdi-minus" size="large" :disabled="value <= 0" aria-label="Decrease reps" @click="value--" />
           <div class="text-h3" style="min-width: 4rem; text-align: center">{{ value }}</div>
-          <v-btn icon="mdi-plus" size="large" @click="value++" />
+          <v-btn icon="mdi-plus" size="large" aria-label="Increase reps" @click="value++" />
         </div>
       </template>
       <template v-else>

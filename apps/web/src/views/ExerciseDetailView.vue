@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Exercise, LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
 import { listLogEntries } from '../api/logEntries';
+import { recentHistorySince } from '../lib/dateRange';
+import { dataVersion } from '../lib/offlineQueue';
 import { formatDuration } from '../lib/format';
 import LogEntryList from '../components/LogEntryList.vue';
 import ProgressionLadder from '../components/ProgressionLadder.vue';
@@ -23,13 +25,14 @@ async function load() {
   loading.value = true;
   try {
     await store.fetchAll();
-    entries.value = await listLogEntries();
+    entries.value = await listLogEntries({ since: recentHistorySince() });
   } finally {
     loading.value = false;
   }
 }
 
 onMounted(load);
+watch(dataVersion, load);
 
 const exercise = computed(() => store.exercises.find((e) => e.id === exerciseId));
 const variations = computed(() => store.variationsFor(exerciseId));
@@ -148,7 +151,13 @@ async function removeExercise() {
   <v-container v-if="exercise">
     <div class="d-flex align-center justify-space-between mb-1">
       <h1 class="text-h5">{{ exercise.name }}</h1>
-      <v-btn icon="mdi-pencil" variant="text" size="small" @click="editExerciseSheetOpen = true" />
+      <v-btn
+        icon="mdi-pencil"
+        variant="text"
+        size="small"
+        aria-label="Edit exercise"
+        @click="editExerciseSheetOpen = true"
+      />
     </div>
     <div class="text-body-2 text-medium-emphasis mb-4">
       Today: {{ todayTotal.setCount }} set{{ todayTotal.setCount === 1 ? '' : 's' }} ·

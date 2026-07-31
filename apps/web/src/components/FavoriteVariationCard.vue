@@ -39,9 +39,17 @@ const emit = defineEmits<{ log: []; quickAdd: [] }>();
             variant="tonal"
             size="small"
             :title="quickAddLabel"
+            :aria-label="`Log ${quickAddLabel}`"
             @click.stop="emit('quickAdd')"
           />
-          <v-btn icon="mdi-chevron-right" variant="text" size="small" :to="`/exercises/${exercise.id}`" @click.stop />
+          <v-btn
+            icon="mdi-chevron-right"
+            variant="text"
+            size="small"
+            :to="`/exercises/${exercise.id}`"
+            :aria-label="`View ${exercise.name}`"
+            @click.stop
+          />
         </div>
       </template>
     </v-card-item>

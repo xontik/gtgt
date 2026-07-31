@@ -9,7 +9,8 @@ import { formatDuration, formatRelativeTime } from '../lib/format';
 import { dateKey } from '../lib/heatmap';
 import { vibrateSuccess, vibrateMilestone } from '../lib/haptics';
 import { isOnline } from '../lib/network';
-import { queuedMutations, syncing } from '../lib/offlineQueue';
+import { queuedMutations, syncing, dataVersion } from '../lib/offlineQueue';
+import { recentHistorySince } from '../lib/dateRange';
 import FavoriteVariationCard from '../components/FavoriteVariationCard.vue';
 import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
@@ -56,11 +57,11 @@ function loadOfflineCache(): { exercises: Exercise[]; variations: ExerciseVariat
   }
 }
 
-onMounted(async () => {
+async function load() {
   try {
     const [, fetchedEntries] = await Promise.all([
       store.fetchAll(),
-      listLogEntries(),
+      listLogEntries({ since: recentHistorySince() }),
       routinesStore.fetchAll(),
     ]);
     entries.value = fetchedEntries;
@@ -74,6 +75,10 @@ onMounted(async () => {
       entries.value = cached.entries;
     }
   }
+}
+
+onMounted(async () => {
+  await load();
 
   // Deep link from notifications: ?logVariation=<id> opens the quick-log
   // sheet immediately, no tap needed.
@@ -86,6 +91,11 @@ onMounted(async () => {
   }
 });
 
+// A discarded offline mutation (see System page) leaves the store stale
+// until the next real fetch - full reload rather than trying to reverse
+// just that one edit, same reasoning as offlineQueue.ts's dataVersion doc.
+watch(dataVersion, load);
+
 // Once the offline queue fully drains, refetch so client-generated temp
 // ids (negative, see api/logEntries.ts) get replaced by the real synced
 // entries instead of showing "Syncing" forever.
@@ -93,7 +103,7 @@ watch(
   () => queuedMutations.value.length,
   async (count, prevCount) => {
     if (prevCount > 0 && count === 0 && !syncing.value) {
-      entries.value = await listLogEntries().catch(() => entries.value);
+      entries.value = await listLogEntries({ since: recentHistorySince() }).catch(() => entries.value);
       saveOfflineCache();
     }
   },
@@ -709,7 +719,13 @@ async function saveRunAsNewRoutine() {
           @click="startRoutine(routine.id)"
         >
           <template #append>
-            <v-btn icon="mdi-play" size="small" variant="tonal" @click.stop="startRoutine(routine.id)" />
+            <v-btn
+              icon="mdi-play"
+              size="small"
+              variant="tonal"
+              :aria-label="`Start ${routine.name}`"
+              @click.stop="startRoutine(routine.id)"
+            />
           </template>
         </v-list-item>
       </v-list>
@@ -790,7 +806,13 @@ async function saveRunAsNewRoutine() {
               @click="openSheet(favorite.exercise, favorite.variation)"
             >
               <template #append>
-                <v-btn icon="mdi-plus" size="small" variant="text" @click.stop="openSheet(favorite.exercise, favorite.variation)" />
+                <v-btn
+                  icon="mdi-plus"
+                  size="small"
+                  variant="text"
+                  :aria-label="`Log ${favorite.exercise.name}`"
+                  @click.stop="openSheet(favorite.exercise, favorite.variation)"
+                />
               </template>
             </v-list-item>
           </v-list>
@@ -858,6 +880,7 @@ async function saveRunAsNewRoutine() {
       size="large"
       rounded="circle"
       class="quick-log-fab"
+      aria-label="Quick log any exercise"
       @click="quickLogPickerOpen = true"
     />
 

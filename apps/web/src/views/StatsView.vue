@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useExercisesStore } from '../stores/exercises';
 import { listLogEntries } from '../api/logEntries';
+import { dataVersion } from '../lib/offlineQueue';
 import { periodRange, shiftPeriod, formatPeriodLabel, rollingPeriods, type Period } from '../lib/period';
 import { dateKey, buildWeekColumns, eachDayOfRange } from '../lib/heatmap';
 import { exerciseColorVar } from '../lib/colors';
@@ -103,19 +104,24 @@ watch(
   { deep: true },
 );
 
-async function load() {
+async function load(resetSelection = false) {
   loading.value = true;
   try {
     await store.fetchAll();
     entries.value = await listLogEntries();
 
-    selected.value = store.favoriteVariations.map((v) => `var-${v.id}`);
+    if (resetSelection) selected.value = store.favoriteVariations.map((v) => `var-${v.id}`);
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(load);
+onMounted(() => load(true));
+
+// A discarded offline mutation (see System page) leaves whatever store it
+// touched stale until the next real fetch - refetch here too so Stats
+// doesn't keep showing an edit that got dropped from the sync queue.
+watch(dataVersion, () => load());
 
 function entriesForExercise(exerciseId: number) {
   return entries.value.filter((e) => {
@@ -296,7 +302,7 @@ function recordValueLabel(exercise: Exercise, value: number) {
           <v-btn value="last30">30d</v-btn>
         </v-btn-toggle>
         <v-spacer />
-        <v-btn icon variant="tonal" @click="filterDrawerOpen = true">
+        <v-btn icon variant="tonal" aria-label="Filter exercises" @click="filterDrawerOpen = true">
           <v-badge :content="selectedExercises.length" :model-value="selectedExercises.length > 0" color="primary">
             <v-icon icon="mdi-filter-variant" />
           </v-badge>
@@ -304,9 +310,9 @@ function recordValueLabel(exercise: Exercise, value: number) {
       </div>
 
       <div class="d-flex align-center justify-space-between mb-4">
-        <v-btn icon="mdi-chevron-left" variant="text" :disabled="isRolling" @click="goPrev" />
+        <v-btn icon="mdi-chevron-left" variant="text" :disabled="isRolling" aria-label="Previous period" @click="goPrev" />
         <div class="text-subtitle-1">{{ label }}</div>
-        <v-btn icon="mdi-chevron-right" variant="text" :disabled="isRolling" @click="goNext" />
+        <v-btn icon="mdi-chevron-right" variant="text" :disabled="isRolling" aria-label="Next period" @click="goNext" />
       </div>
 
       <v-progress-linear v-if="loading" indeterminate class="mb-4" />
@@ -375,7 +381,7 @@ function recordValueLabel(exercise: Exercise, value: number) {
     <v-navigation-drawer v-model="filterDrawerOpen" location="end" temporary width="280">
       <div class="d-flex align-center justify-space-between pa-4 pb-2">
         <div class="text-subtitle-1">Filter exercises</div>
-        <v-btn icon="mdi-close" variant="text" size="small" @click="filterDrawerOpen = false" />
+        <v-btn icon="mdi-close" variant="text" size="small" aria-label="Close filter" @click="filterDrawerOpen = false" />
       </div>
       <v-treeview
         v-model:selected="selected"

@@ -62,7 +62,13 @@ async function removeExercise() {
         :to="`/exercises/${exercise.id}`"
       >
         <template #append>
-          <v-btn icon="mdi-pencil" variant="text" size="small" @click.stop.prevent="openEdit(exercise)" />
+          <v-btn
+            icon="mdi-pencil"
+            variant="text"
+            size="small"
+            :aria-label="`Edit ${exercise.name}`"
+            @click.stop.prevent="openEdit(exercise)"
+          />
         </template>
       </v-list-item>
     </v-list>
