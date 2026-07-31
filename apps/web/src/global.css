@@ -22,7 +22,12 @@
    of Material's drop shadows. */
 :root,
 .v-application {
-  font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family:
+    'Inter Variable',
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif !important;
 }
 
 .v-application .text-h3,
@@ -164,30 +169,26 @@ body {
    containing block) makes the buttons stretch across the whole bar
    including that strip, so the icon/label center shifts down into the
    available height rather than stranding it underneath. */
+/* Side padding keeps the now-full-height buttons clear of the screen's
+   rounded corners - flat equal constant, not env(safe-area-inset-left/
+   right), which is for OS-reserved notch/gesture areas, not decorative
+   screen-corner rounding (no CSS-exposed way to query that at all); it
+   also reported visibly unequal left/right on the actual device. Applied
+   on __content itself (with an explicit `width` - Vuetify's own
+   width: 100% on this element otherwise wins and the padding does
+   nothing) rather than on .v-bottom-navigation, and paired with a
+   smaller min-width on the buttons so shrinking the row doesn't push
+   the last one past the container into overflow:hidden clipping (what
+   happened on an earlier attempt at this). */
 .v-bottom-navigation__content {
   position: absolute;
   inset: 0;
-}
-
-/* Side padding to keep the now-full-height buttons clear of the screen's
-   rounded corners. Flat equal constant, not env(safe-area-inset-left/right)
-   - that API is for OS-reserved notch/gesture areas, not decorative
-   screen-corner rounding, and there's no CSS-exposed way to query the
-   latter at all; using it here was a guess, and if it reports unequal
-   left/right on a given phone (camera cutout, foldable, etc.) that guess
-   becomes visibly asymmetric padding, which is what happened. A flat
-   value is guaranteed equal on both sides, and the buttons (flex-grow:1,
-   flex-basis:0 - see the --grow modifier) flow to fill whatever's left
-   evenly by construction once the container's own padding is symmetric;
-   paired with a smaller min-width below so shrinking the row doesn't
-   push the last button past the container into overflow:hidden clipping
-   (what happened two attempts ago). */
-.v-bottom-navigation {
+  width: calc(100% - 24px);
   padding-left: 12px;
   padding-right: 12px;
 }
 .v-bottom-navigation .v-bottom-navigation__content > .v-btn {
-  min-width: 56px;
+  min-width: 50px;
 }
 
 /* Frosted glass behind dialogs/bottom sheets/menus too. */
@@ -254,12 +255,15 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle at var(--gtg-curve-glow, 100% 0%), rgba(176, 38, 255, 0.16) 0%, transparent 55%),
+  background-image:
+    radial-gradient(
+      circle at var(--gtg-curve-glow, 100% 0%),
+      rgba(176, 38, 255, 0.16) 0%,
+      transparent 55%
+    ),
     var(--gtg-curve, var(--gtg-curve-1));
   background-repeat: no-repeat;
-  background-position:
-    center,
-    var(--gtg-curve-anchor, top right);
+  background-position: center, var(--gtg-curve-anchor, top right);
   background-size:
     100% 100%,
     220px 220px;
