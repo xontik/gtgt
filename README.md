@@ -175,15 +175,17 @@ behaves exactly like the cron job.
 
 ### TRMNL e-ink dashboard
 
-`GET /trmnl` returns a static, self-contained HTML page sized for the
+`GET /api/trmnl` returns a static, self-contained HTML page sized for the
 original 800×480 TRMNL display, listing your most-overdue working
 variations (name, last-logged time, and the value that'll be logged next)
 in large e-ink-friendly black-on-white text - no client JS, since TRMNL's
 server screenshots the URL on its own schedule rather than running a
 browser on the device. Point a TRMNL "private plugin" (polling strategy)
-at `http://<host>:8080/trmnl`. Deliberately public/unauthenticated, same
-as `/manifest.webmanifest` - TRMNL's fetcher can't carry a session cookie
-or passcode, so don't rely on `APP_PASSCODE` to keep this one private.
+at `http://<host>:8080/api/trmnl` (under `/api` specifically so it's
+reachable if your reverse proxy only forwards `/api/*` to this service).
+Deliberately public/unauthenticated even under `/api` - the passcode-gate
+hook explicitly excludes it, since TRMNL's fetcher can't carry a session
+cookie, so don't rely on `APP_PASSCODE` to keep this one private.
 
 ### Automatic backups
 

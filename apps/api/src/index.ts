@@ -72,6 +72,10 @@ app.addHook('onRequest', async (req, reply) => {
   if (!expected) return;
   if (!req.url.startsWith('/api')) return;
   if (req.url.startsWith('/api/auth/login') || req.url.startsWith('/api/auth/status')) return;
+  // TRMNL's server fetches this on its own schedule with no way to carry a
+  // session cookie - see routes/trmnl.ts, deliberately public like
+  // manifest.webmanifest.
+  if (req.url.startsWith('/api/trmnl')) return;
 
   const token = req.cookies[SESSION_COOKIE];
   if (!isValidSession(token)) {
@@ -80,7 +84,7 @@ app.addHook('onRequest', async (req, reply) => {
 });
 
 await app.register(manifestRoutes);
-await app.register(trmnlRoutes);
+await app.register(trmnlRoutes, { prefix: '/api' });
 await app.register(authRoutes, { prefix: '/api' });
 await app.register(exerciseRoutes, { prefix: '/api' });
 await app.register(exerciseVariationRoutes, { prefix: '/api' });

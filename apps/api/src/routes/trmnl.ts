@@ -25,10 +25,11 @@ function escapeHtml(text: string): string {
 
 // A static (no client JS) page sized for the original TRMNL e-ink display
 // (800x480, 1-bit black/white - TRMNL's server screenshots this URL on its
-// own schedule, there's no browser on the device itself). Deliberately
-// public, same as manifest.webmanifest: TRMNL's fetcher can't carry the
-// app's session cookie, and there's no passcode configured on this
-// deployment to protect anyway - see CLAUDE.md if that ever changes.
+// own schedule, there's no browser on the device itself). Registered under
+// /api (as /api/trmnl) purely so it's reachable through a reverse proxy
+// that only forwards /api/* to this service - it's still deliberately
+// public even there: index.ts's passcode-gate hook explicitly excludes
+// /api/trmnl, since TRMNL's fetcher can't carry a session cookie.
 export async function trmnlRoutes(app: FastifyInstance) {
   app.get('/trmnl', async (_req, reply) => {
     const overdue = await getOverdueFavorites(SHOWN_COUNT);
