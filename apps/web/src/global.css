@@ -167,6 +167,13 @@ body {
 .v-bottom-navigation__content {
   position: absolute;
   inset: 0;
+  /* Now that the buttons stretch full-height (above), their bottom-outer
+     corners sit right where the physical screen's rounded corners are -
+     a max() floor keeps a small buffer from the edge even on square-ish
+     screens/landscape where env(safe-area-inset-left/right) is 0, while
+     still respecting a real notch/cutout inset if it's actually bigger. */
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
 }
 
 /* Frosted glass behind dialogs/bottom sheets/menus too. */
