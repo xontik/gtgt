@@ -167,13 +167,20 @@ body {
 .v-bottom-navigation__content {
   position: absolute;
   inset: 0;
-  /* Now that the buttons stretch full-height (above), their bottom-outer
-     corners sit right where the physical screen's rounded corners are -
-     a max() floor keeps a small buffer from the edge even on square-ish
-     screens/landscape where env(safe-area-inset-left/right) is 0, while
-     still respecting a real notch/cutout inset if it's actually bigger. */
-  padding-left: max(8px, env(safe-area-inset-left, 0px));
-  padding-right: max(8px, env(safe-area-inset-right, 0px));
+}
+
+/* Side padding on __content (an earlier attempt at this) shrinks the flex
+   row's available width, and the outer buttons' min-width floor (Vuetify
+   default) doesn't shrink with it - on narrower phones that pushed total
+   button width past the container and the last button got clipped by
+   `overflow: hidden` above, worse than the corner-rounding issue it was
+   meant to fix. Rounding the bar's own bottom corners instead means the
+   background recedes from the hardware curve without touching flex
+   sizing at all - full-width buttons are untouched, only the visual
+   silhouette of the bar changes right at the two bottom corners. */
+.v-bottom-navigation {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
 }
 
 /* Frosted glass behind dialogs/bottom sheets/menus too. */
