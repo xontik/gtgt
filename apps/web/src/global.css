@@ -169,18 +169,17 @@ body {
   inset: 0;
 }
 
-/* Side padding on __content (an earlier attempt at this) shrinks the flex
-   row's available width, and the outer buttons' min-width floor (Vuetify
-   default) doesn't shrink with it - on narrower phones that pushed total
-   button width past the container and the last button got clipped by
-   `overflow: hidden` above, worse than the corner-rounding issue it was
-   meant to fix. Rounding the bar's own bottom corners instead means the
-   background recedes from the hardware curve without touching flex
-   sizing at all - full-width buttons are untouched, only the visual
-   silhouette of the bar changes right at the two bottom corners. */
+/* Side padding to keep the now-full-height buttons clear of the screen's
+   rounded corners - on the nav bar itself rather than __content, and
+   paired with a smaller min-width on the buttons below so shrinking the
+   available row width doesn't push the last button past the container
+   and into `overflow: hidden` clipping (what happened last time). */
 .v-bottom-navigation {
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
+}
+.v-bottom-navigation .v-bottom-navigation__content > .v-btn {
+  min-width: 56px;
 }
 
 /* Frosted glass behind dialogs/bottom sheets/menus too. */
