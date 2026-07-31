@@ -47,8 +47,18 @@ function confirm() {
       <VariationInfoPanel :image-url="imageUrl" :notes="notes" :video-url="videoUrl" />
 
       <div class="d-flex align-center justify-center ga-4 my-6">
-        <v-btn icon="mdi-minus" size="large" :disabled="reps <= 0" aria-label="Decrease reps" @click="reps--" />
-        <div class="text-h3" style="min-width: 4rem; text-align: center">{{ reps }}</div>
+        <v-btn icon="mdi-minus" size="large" :disabled="!reps || reps <= 0" aria-label="Decrease reps" @click="reps--" />
+        <v-text-field
+          v-model.number="reps"
+          type="number"
+          inputmode="numeric"
+          variant="plain"
+          density="compact"
+          hide-details
+          class="rep-stepper-input text-h3 text-center"
+          style="max-width: 5rem"
+          aria-label="Reps"
+        />
         <v-btn icon="mdi-plus" size="large" aria-label="Increase reps" @click="reps++" />
       </div>
 
@@ -62,9 +72,21 @@ function confirm() {
         {{ forYesterday ? 'Logging for yesterday' : 'Log for yesterday' }}
       </v-chip>
 
-      <v-btn block color="primary" size="large" :disabled="reps <= 0" @click="confirm">
-        Log {{ reps }} reps
+      <v-btn block color="primary" size="large" :disabled="!reps || reps <= 0" @click="confirm">
+        Log {{ reps || 0 }} reps
       </v-btn>
     </v-sheet>
   </v-bottom-sheet>
 </template>
+
+<style scoped>
+.rep-stepper-input :deep(input) {
+  text-align: center;
+  -moz-appearance: textfield;
+}
+.rep-stepper-input :deep(input::-webkit-outer-spin-button),
+.rep-stepper-input :deep(input::-webkit-inner-spin-button) {
+  -webkit-appearance: none;
+  margin: 0;
+}
+</style>

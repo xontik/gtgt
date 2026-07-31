@@ -4,7 +4,11 @@ A personal web app to log "Grease the Groove" (GtG) style calisthenics training:
 frequent, low-fatigue sets of an exercise spread across the day, logged fast
 from a phone. It's installable as a PWA (look for "Add to Home Screen" /
 "Install app" in your browser) so it opens like a native app instead of a
-browser tab.
+browser tab. On Android/Chrome, long-pressing the installed icon also
+surfaces quick-log shortcuts for your 3 most-recently-logged working
+variations, each showing the value that'll be logged - iOS Safari doesn't
+support this (no manifest `shortcuts` support there), so it's Android-only
+for now.
 
 ## Stack
 
@@ -201,8 +205,8 @@ manually removing the volume deletes logged data.
 
 ## Features
 
-- **Home / quick log** — a "Favorites" grid of working variations you're
-  currently training. Any variation can be favorited (see Exercise detail
+- **Home / quick log** — a grid of the working variations you're currently
+  training. Any variation can be marked as one (see Exercise detail
   below), including several on the same exercise at once, e.g. to work two
   points on the same ladder simultaneously. Each card shows the exercise's
   streak (days in a row with a logged set on *any* of its variations - moving

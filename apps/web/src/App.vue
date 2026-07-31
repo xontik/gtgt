@@ -3,7 +3,8 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { isOnline } from './lib/network';
 import { queuedMutations } from './lib/offlineQueue';
-import { errorMessage, errorVisible } from './lib/globalError';
+import { isLoading } from './lib/globalLoading';
+import { current, visible, onSnackbarClosed } from './lib/snackbarQueue';
 
 const route = useRoute();
 const pendingCount = computed(() => queuedMutations.value.length);
@@ -23,6 +24,12 @@ const pendingCount = computed(() => queuedMutations.value.length);
         <v-btn icon="mdi-server-outline" aria-label="System" to="/system" />
       </v-badge>
       <v-btn v-else icon="mdi-server-outline" aria-label="System" to="/system" />
+      <!-- One shared indicator for every in-flight API call (see
+           lib/globalLoading.ts + api/client.ts) instead of each view
+           owning its own loading ref/bar - consistent everywhere, and
+           covers views that previously showed nothing at all while their
+           first fetch was still in flight. -->
+      <v-progress-linear v-if="isLoading" indeterminate absolute location="bottom" color="primary" />
     </v-app-bar>
     <v-main>
       <router-view v-slot="{ Component }">
@@ -49,6 +56,18 @@ const pendingCount = computed(() => queuedMutations.value.length);
         Manage
       </v-btn>
     </v-bottom-navigation>
-    <v-snackbar v-model="errorVisible" timeout="5000" color="error">{{ errorMessage }}</v-snackbar>
+    <v-snackbar
+      :model-value="visible"
+      :timeout="current?.timeout ?? 3000"
+      :color="current?.color"
+      @update:model-value="(v) => !v && onSnackbarClosed()"
+    >
+      {{ current?.text }}
+      <template v-if="current?.actionLabel" #actions>
+        <v-btn color="white" variant="text" @click="current?.onAction?.(); onSnackbarClosed()">
+          {{ current.actionLabel }}
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-app>
 </template>

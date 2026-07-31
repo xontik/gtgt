@@ -30,8 +30,8 @@ const sorted = computed(() => [...props.variations].sort((a, b) => a.difficultyR
             :color="variation.isFavorite ? 'error' : undefined"
             size="x-small"
             variant="text"
-            title="Toggle favorite"
-            :aria-label="variation.isFavorite ? 'Unfavorite' : 'Favorite'"
+            title="Toggle working variation"
+            :aria-label="variation.isFavorite ? 'Remove from working variations' : 'Add as working variation'"
             @click.stop="emit('favorite', variation.id, !variation.isFavorite)"
           />
           <v-btn

@@ -264,11 +264,10 @@ function recordValueLabel(exercise: Exercise, value: number) {
     </v-tabs>
 
     <template v-if="viewMode === 'records'">
-      <v-progress-linear v-if="loading" indeterminate class="mb-4" />
-      <v-alert v-else-if="recordsByExercise.length === 0" type="info" variant="tonal">
+      <v-alert v-if="!loading && recordsByExercise.length === 0" type="info" variant="tonal">
         No sets logged yet - records show up here once you do.
       </v-alert>
-      <v-expansion-panels v-else variant="accordion">
+      <v-expansion-panels v-else-if="!loading" variant="accordion">
         <v-expansion-panel v-for="record in recordsByExercise" :key="record.exercise.id">
           <v-expansion-panel-title>{{ record.exercise.name }}</v-expansion-panel-title>
           <v-expansion-panel-text>
@@ -315,9 +314,7 @@ function recordValueLabel(exercise: Exercise, value: number) {
         <v-btn icon="mdi-chevron-right" variant="text" :disabled="isRolling" aria-label="Next period" @click="goNext" />
       </div>
 
-      <v-progress-linear v-if="loading" indeterminate class="mb-4" />
-
-      <template v-else>
+      <template v-if="!loading">
       <div style="min-width: 0">
         <v-alert v-if="selectedExercises.length === 0" type="info" variant="tonal">
           Tap the filter icon above to pick which exercises to show.

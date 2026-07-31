@@ -35,13 +35,16 @@ const emit = defineEmits<{ log: []; quickAdd: [] }>();
         <div class="d-flex flex-column align-center ga-1">
           <v-btn
             v-if="quickAddLabel"
-            icon="mdi-plus"
             variant="tonal"
+            color="primary"
             size="small"
-            :title="quickAddLabel"
+            density="comfortable"
+            class="px-2"
             :aria-label="`Log ${quickAddLabel}`"
             @click.stop="emit('quickAdd')"
-          />
+          >
+            {{ quickAddLabel }}
+          </v-btn>
           <v-btn
             icon="mdi-chevron-right"
             variant="text"

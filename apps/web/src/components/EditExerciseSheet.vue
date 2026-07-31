@@ -72,10 +72,16 @@ function save() {
       >
         Delete
       </v-btn>
-      <div v-else class="d-flex ga-2">
-        <v-btn class="flex-1-1" variant="tonal" @click="confirmingDelete = false">Cancel</v-btn>
-        <v-btn class="flex-1-1" color="error" @click="emit('delete')">Confirm delete</v-btn>
-      </div>
+      <template v-else>
+        <div class="text-body-2 text-medium-emphasis mb-2">
+          This permanently deletes every variation on this exercise's ladder and all their logged
+          sets. Unlike deleting a single variation, this can't be undone.
+        </div>
+        <div class="d-flex ga-2">
+          <v-btn class="flex-1-1" variant="tonal" @click="confirmingDelete = false">Cancel</v-btn>
+          <v-btn class="flex-1-1" color="error" @click="emit('delete')">Confirm delete</v-btn>
+        </div>
+      </template>
 
       <v-btn block variant="text" class="mt-2" @click="close">Close</v-btn>
     </v-sheet>

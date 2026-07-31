@@ -11,6 +11,7 @@ import { vibrateSuccess, vibrateMilestone } from '../lib/haptics';
 import { isOnline } from '../lib/network';
 import { queuedMutations, syncing, dataVersion } from '../lib/offlineQueue';
 import { recentHistorySince } from '../lib/dateRange';
+import { notify } from '../lib/snackbarQueue';
 import FavoriteVariationCard from '../components/FavoriteVariationCard.vue';
 import RepStepperSheet from '../components/RepStepperSheet.vue';
 import TimerSheet from '../components/TimerSheet.vue';
@@ -455,9 +456,6 @@ function goalMetFor(variation: ExerciseVariation) {
 const sheetOpen = ref(false);
 const selectedExercise = ref<Exercise>();
 const selectedVariation = ref<ExerciseVariation>();
-const snackbar = ref(false);
-const snackbarText = ref('');
-
 function openSheet(exercise: Exercise, variation: ExerciseVariation) {
   selectedExercise.value = exercise;
   selectedVariation.value = variation;
@@ -493,13 +491,13 @@ async function logSet(value: number, forYesterday = false) {
   let note = '';
   if (isPersonalBest) note = ' — new best!';
   else if (justHitGoal) note = ' — goal hit!';
-  snackbarText.value = `Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}${when}${note}`;
-  snackbar.value = true;
+  notify(`Logged ${value}${unit === 's' ? 's' : ' reps'} for ${exercise.name}${when}${note}`);
 }
 
-function quickAddLabelFor(variation: ExerciseVariation) {
+function quickAddLabelFor(exercise: Exercise, variation: ExerciseVariation) {
   const last = lastValueByVariation.value.get(variation.id);
-  return last ? `+${last}` : undefined;
+  if (!last) return undefined;
+  return exercise.metricType === 'time' ? `+${formatDuration(last)}` : `+${last}`;
 }
 
 async function quickAdd(exercise: Exercise, variation: ExerciseVariation) {
@@ -527,8 +525,7 @@ async function quickAdd(exercise: Exercise, variation: ExerciseVariation) {
   let note = '';
   if (isPersonalBest) note = ' — new best!';
   else if (justHitGoal) note = ' — goal hit!';
-  snackbarText.value = `Logged ${last}${unit} for ${exercise.name}${note}`;
-  snackbar.value = true;
+  notify(`Logged ${last}${unit} for ${exercise.name}${note}`);
 }
 
 const addDialogOpen = ref(false);
@@ -618,8 +615,7 @@ const newRoutineNameInput = ref('');
 
 function finishRoutine(results: RoutineStepResult[]) {
   vibrateSuccess();
-  snackbarText.value = `Finished ${runnerRoutineName.value}`;
-  snackbar.value = true;
+  notify(`Finished ${runnerRoutineName.value}`);
 
   const diffs: RoutineDiffItem[] = [];
   for (const result of results) {
@@ -675,7 +671,7 @@ async function saveRunAsNewRoutine() {
     <v-progress-linear v-if="store.loading" indeterminate class="mb-4" />
 
     <v-alert v-if="!store.loading && sortedFavorites.length === 0" type="info" variant="tonal" class="mb-4">
-      No favorites yet. Use "Add working variation" below to pick what you want to quick-log here.
+      No working variations yet. Use "Add working variation" below to pick what you want to quick-log here.
     </v-alert>
 
     <v-row align="stretch">
@@ -696,7 +692,7 @@ async function saveRunAsNewRoutine() {
           :last-logged-label="lastLoggedLabelFor(favorite.variation)"
           :goal-label="goalLabelFor(favorite.variation)"
           :goal-met="goalMetFor(favorite.variation)"
-          :quick-add-label="quickAddLabelFor(favorite.variation)"
+          :quick-add-label="quickAddLabelFor(favorite.exercise, favorite.variation)"
           :exercise-streak="exerciseStreakFor(favorite.exercise)"
           @log="openSheet(favorite.exercise, favorite.variation)"
           @quick-add="quickAdd(favorite.exercise, favorite.variation)"
@@ -760,7 +756,7 @@ async function saveRunAsNewRoutine() {
                   class="px-0"
                   @click="postponeInsightFavorite(item.showUnfavorite)"
                 >
-                  Unfavorite
+                  Remove from working variations
                 </v-btn>
                 <v-btn size="small" variant="text" class="px-0" @click="item.onDismiss">Dismiss</v-btn>
               </div>
@@ -857,8 +853,6 @@ async function saveRunAsNewRoutine() {
         @confirm="logSet"
       />
     </template>
-
-    <v-snackbar v-model="snackbar" timeout="2500">{{ snackbarText }}</v-snackbar>
 
     <AddFavoriteDialog
       v-model="addDialogOpen"

@@ -13,6 +13,7 @@ import { checkIdleNow } from '../api/notifications';
 import { useExercisesStore } from '../stores/exercises';
 import { isOnline } from '../lib/network';
 import { queuedMutations, syncing, syncQueue, discardMutation, type QueuedMutation } from '../lib/offlineQueue';
+import { notify } from '../lib/snackbarQueue';
 
 function failureSubtitle(mutation: QueuedMutation): string {
   if (!mutation.failed) return 'Waiting to sync';
@@ -20,6 +21,18 @@ function failureSubtitle(mutation: QueuedMutation): string {
     return "Failed to sync repeatedly, not just a connectivity blip - won't retry automatically";
   }
   return 'Failed to sync - the server rejected this change';
+}
+
+// Discarding is the one irreversible action on this page with no undo -
+// the queued mutation and whatever local edit it stood for are both gone
+// for good (see dataVersion in offlineQueue.ts), so it gets a confirm
+// step rather than firing straight from the list's close icon.
+const confirmingDiscardId = ref<string>();
+
+function confirmDiscard() {
+  if (!confirmingDiscardId.value) return;
+  discardMutation(confirmingDiscardId.value);
+  confirmingDiscardId.value = undefined;
 }
 
 const store = useExercisesStore();
@@ -41,14 +54,6 @@ onMounted(loadAutoBackups);
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   return `${(bytes / 1024).toFixed(1)} KB`;
-}
-
-const snackbar = ref(false);
-const snackbarText = ref('');
-
-function notify(text: string) {
-  snackbarText.value = text;
-  snackbar.value = true;
 }
 
 const checkingIdle = ref(false);
@@ -228,7 +233,7 @@ async function onImportFileSelected() {
                 size="small"
                 variant="text"
                 aria-label="Discard queued change"
-                @click="discardMutation(mutation.id)"
+                @click="confirmingDiscardId = mutation.id"
               />
             </template>
           </v-list-item>
@@ -244,7 +249,7 @@ async function onImportFileSelected() {
     <v-card class="mb-4" variant="tonal">
       <v-card-title class="text-subtitle-1">Notifications</v-card-title>
       <v-card-text>
-        Manually send a Discord reminder with your most-overdue favorites
+        Manually send a Discord reminder with your most-overdue working variations
         right now, bypassing the idle-time check and cooldown (no-op if the
         Discord webhook isn't configured). The automatic version runs on a
         schedule and only actually notifies once per idle stretch.
@@ -328,9 +333,10 @@ async function onImportFileSelected() {
       <v-card-title class="text-subtitle-1">Import exercises & variations only</v-card-title>
       <v-card-text>
         Add the exercises and variations from a backup file, without their
-        log entries or favorites. Useful for trying out a different setup.
-        Exercises and variations that already exist (same name, same
-        exercise/parent) are skipped rather than duplicated.
+        log entries (working-variation status carries over). Useful for
+        trying out a different setup. Exercises and variations that already
+        exist (same name, same exercise/parent) are skipped rather than
+        duplicated.
       </v-card-text>
       <v-card-text>
         <v-file-input
@@ -361,6 +367,19 @@ async function onImportFileSelected() {
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" timeout="4000">{{ snackbarText }}</v-snackbar>
+    <v-dialog :model-value="confirmingDiscardId !== undefined" max-width="360">
+      <v-card>
+        <v-card-title class="text-subtitle-1">Discard this change?</v-card-title>
+        <v-card-text>
+          It won't sync to the server, and there's no undo - if it was a logged set or an
+          edit, that change is gone for good.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="confirmingDiscardId = undefined">Cancel</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmDiscard">Discard</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>

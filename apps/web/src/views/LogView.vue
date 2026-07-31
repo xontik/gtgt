@@ -66,10 +66,8 @@ function onRestore(entry: LogEntry) {
       hide-details
     />
 
-    <v-progress-linear v-if="loading" indeterminate class="mb-4" />
-
     <LogEntryList
-      v-else
+      v-if="!loading"
       :entries="filteredEntries"
       @update="onUpdate"
       @remove="onRemove"

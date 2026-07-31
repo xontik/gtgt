@@ -61,7 +61,7 @@ export function computeInsights(
         id: `neglected-${variation.id}`,
         type: 'neglected',
         severity: 'warning',
-        message: `${exercise.name} (${variation.name}) is a favorite but hasn't been logged in ${Math.floor(daysSinceLast)} days. Postpone it, or unfavorite it for now?`,
+        message: `${exercise.name} (${variation.name}) is a working variation but hasn't been logged in ${Math.floor(daysSinceLast)} days. Postpone it, or remove it for now?`,
         variation,
         exercise,
       });
@@ -131,7 +131,7 @@ export function computeInsights(
         id: 'imbalance',
         type: 'imbalance',
         severity: 'info',
-        message: `All ${favorites.length} of your favorites are ${category} exercises. Consider working in a ${[...others].join('/')} movement for balance.`,
+        message: `All ${favorites.length} of your working variations are ${category} exercises. Consider working in a ${[...others].join('/')} movement for balance.`,
       });
     }
   }

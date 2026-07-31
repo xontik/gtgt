@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoutinesStore } from '../stores/routines';
 import { useExercisesStore } from '../stores/exercises';
+import { notify } from '../lib/snackbarQueue';
 import AddRoutineItemDialog from '../components/AddRoutineItemDialog.vue';
 import EditRoutineItemDialog from '../components/EditRoutineItemDialog.vue';
 
@@ -50,6 +51,19 @@ async function confirmDeleteRoutine() {
   confirmingDeleteRoutineId.value = undefined;
 }
 
+async function removeItem(itemId: number) {
+  const item = routinesStore.items.find((i) => i.id === itemId);
+  if (!item) return;
+  const { exerciseName } = exerciseNameFor(item.variationId);
+  await routinesStore.removeItem(itemId);
+
+  notify(`Removed ${exerciseName} from the routine`, {
+    timeout: 4000,
+    actionLabel: 'Undo',
+    onAction: () => routinesStore.addItem(item.routineId, item.variationId, item.targetValue, item.setsCount),
+  });
+}
+
 const addItemDialogOpen = ref(false);
 const addItemRoutineId = ref<number>();
 
@@ -93,8 +107,8 @@ async function saveItemTemplate(details: { targetValue: number | null; setsCount
 
     <v-alert v-else-if="routinesStore.routines.length === 0" type="info" variant="tonal">
       No routines yet. A routine is an ordered set of exercises done together
-      in one sitting (e.g. an ankle mobility warm-up), as opposed to
-      favorites logged individually throughout the day.
+      in one sitting (e.g. an ankle mobility warm-up), as opposed to working
+      variations logged individually throughout the day.
     </v-alert>
 
     <v-expansion-panels v-else variant="accordion">
@@ -152,7 +166,7 @@ async function saveItemTemplate(details: { targetValue: number | null; setsCount
                   size="x-small"
                   variant="text"
                   aria-label="Remove from routine"
-                  @click="routinesStore.removeItem(item.id)"
+                  @click="removeItem(item.id)"
                 />
               </template>
             </v-list-item>

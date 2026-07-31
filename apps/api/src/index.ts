@@ -12,6 +12,7 @@ import { routineRoutes } from './routes/routines.js';
 import { backupRoutes } from './routes/backup.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { authRoutes, SESSION_COOKIE } from './routes/auth.js';
+import { manifestRoutes } from './routes/manifest.js';
 import { isValidSession } from './auth/session.js';
 import { checkIdleAndNotify } from './notifications/checkIdle.js';
 import { runAutoBackup } from './backups/autoBackup.js';
@@ -30,7 +31,11 @@ const app = Fastify({
 const staticDir = process.env.STATIC_DIR ?? fileURLToPath(new URL('../public', import.meta.url));
 const serveStatic = existsSync(staticDir);
 if (serveStatic) {
-  await app.register(fastifyStatic, { root: staticDir, wildcard: false });
+  // manifest.webmanifest is served dynamically instead (see routes/manifest.ts,
+  // registered below) so it can list the current top favorites as
+  // installable shortcuts - excluded here so that route isn't shadowed by
+  // the static file of the same name.
+  await app.register(fastifyStatic, { root: staticDir, wildcard: false, globIgnore: ['manifest.webmanifest'] });
 } else {
   app.log.warn({ staticDir }, 'static dir not found, not serving the web app from this process');
 }
@@ -73,6 +78,7 @@ app.addHook('onRequest', async (req, reply) => {
   }
 });
 
+await app.register(manifestRoutes);
 await app.register(authRoutes, { prefix: '/api' });
 await app.register(exerciseRoutes, { prefix: '/api' });
 await app.register(exerciseVariationRoutes, { prefix: '/api' });

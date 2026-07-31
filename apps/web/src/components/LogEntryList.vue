@@ -4,6 +4,7 @@ import type { LogEntry } from '@gtg/shared';
 import { useExercisesStore } from '../stores/exercises';
 import { createLogEntry, updateLogEntry, deleteLogEntry } from '../api/logEntries';
 import { formatDuration, formatTimestamp } from '../lib/format';
+import { notify } from '../lib/snackbarQueue';
 import EditLogEntrySheet from './EditLogEntrySheet.vue';
 
 const props = defineProps<{
@@ -42,30 +43,12 @@ function valueLabel(entry: LogEntry) {
 }
 
 const pendingDeleteIds = ref(new Set<number>());
-const undoSnackbar = ref(false);
-const undoSnackbarText = ref('');
-const lastDeletedEntry = ref<LogEntry>();
 
 const visibleEntries = computed(() =>
   props.entries.filter((entry) => !pendingDeleteIds.value.has(entry.id)),
 );
 
-async function quickDelete(entry: LogEntry) {
-  if (isPending(entry)) return;
-  pendingDeleteIds.value.add(entry.id);
-  lastDeletedEntry.value = entry;
-  undoSnackbarText.value = `Deleted ${valueLabel(entry)} set for ${exerciseFor(entry)?.name ?? 'exercise'}`;
-  undoSnackbar.value = true;
-
-  await deleteLogEntry(entry);
-  emit('remove', entry.id);
-}
-
-async function undoQuickDelete() {
-  const entry = lastDeletedEntry.value;
-  if (!entry) return;
-  undoSnackbar.value = false;
-
+async function undoQuickDelete(entry: LogEntry) {
   const restored = await createLogEntry({
     variationId: entry.variationId,
     timestamp: entry.timestamp,
@@ -73,6 +56,20 @@ async function undoQuickDelete() {
     notes: entry.notes ?? undefined,
   });
   emit('restore', restored);
+}
+
+async function quickDelete(entry: LogEntry) {
+  if (isPending(entry)) return;
+  pendingDeleteIds.value.add(entry.id);
+
+  notify(`Deleted ${valueLabel(entry)} set for ${exerciseFor(entry)?.name ?? 'exercise'}`, {
+    timeout: 4000,
+    actionLabel: 'Undo',
+    onAction: () => undoQuickDelete(entry),
+  });
+
+  await deleteLogEntry(entry);
+  emit('remove', entry.id);
 }
 
 const sheetOpen = ref(false);
@@ -141,13 +138,6 @@ async function removeEntry() {
       </template>
     </v-list-item>
   </v-list>
-
-  <v-snackbar v-model="undoSnackbar" timeout="4000">
-    {{ undoSnackbarText }}
-    <template #actions>
-      <v-btn color="primary" variant="text" @click="undoQuickDelete">Undo</v-btn>
-    </template>
-  </v-snackbar>
 
   <EditLogEntrySheet
     v-model="sheetOpen"

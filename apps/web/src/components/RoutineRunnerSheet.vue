@@ -164,8 +164,18 @@ const hasLoggedThisStep = computed(() => (progress.value[stepIndex.value]?.perfo
 
       <template v-if="currentStep.metricType === 'reps'">
         <div class="d-flex align-center justify-center ga-4 my-6">
-          <v-btn icon="mdi-minus" size="large" :disabled="value <= 0" aria-label="Decrease reps" @click="value--" />
-          <div class="text-h3" style="min-width: 4rem; text-align: center">{{ value }}</div>
+          <v-btn icon="mdi-minus" size="large" :disabled="!value || value <= 0" aria-label="Decrease reps" @click="value--" />
+          <v-text-field
+            v-model.number="value"
+            type="number"
+            inputmode="numeric"
+            variant="plain"
+            density="compact"
+            hide-details
+            class="rep-stepper-input text-h3 text-center"
+            style="max-width: 5rem"
+            aria-label="Reps"
+          />
           <v-btn icon="mdi-plus" size="large" aria-label="Increase reps" @click="value++" />
         </div>
       </template>
@@ -184,13 +194,15 @@ const hasLoggedThisStep = computed(() => (progress.value[stepIndex.value]?.perfo
         </div>
       </template>
 
-      <v-btn block color="primary" size="large" class="mb-2" @click="logSet">
+      <v-btn block color="primary" size="large" class="mb-2" :disabled="!currentValue()" @click="logSet">
         <template v-if="!isFinalPlannedSet">Log set ({{ setNumber }}/{{ plannedSets }})</template>
         <template v-else-if="isLastStep">Log & finish</template>
         <template v-else>Log & next exercise</template>
       </v-btn>
 
-      <v-btn block variant="tonal" class="mb-2" @click="logAndStay">Log & do another set here</v-btn>
+      <v-btn block variant="tonal" class="mb-2" :disabled="!currentValue()" @click="logAndStay">
+        Log & do another set here
+      </v-btn>
 
       <v-btn block variant="text" @click="skipStep">
         {{ hasLoggedThisStep ? 'Next exercise' : 'Skip' }}
@@ -198,3 +210,15 @@ const hasLoggedThisStep = computed(() => (progress.value[stepIndex.value]?.perfo
     </v-sheet>
   </v-bottom-sheet>
 </template>
+
+<style scoped>
+.rep-stepper-input :deep(input) {
+  text-align: center;
+  -moz-appearance: textfield;
+}
+.rep-stepper-input :deep(input::-webkit-outer-spin-button),
+.rep-stepper-input :deep(input::-webkit-inner-spin-button) {
+  -webkit-appearance: none;
+  margin: 0;
+}
+</style>

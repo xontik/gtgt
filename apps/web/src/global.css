@@ -229,6 +229,12 @@ body {
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
+  /* Without this, quickly tapping the same button repeatedly (the rep
+     stepper's +/- buttons especially) can get misread by mobile Safari/
+     Chrome as a double-tap-to-zoom gesture, briefly zooming the page.
+     touch-action: manipulation disables that gesture on the element while
+     leaving normal single-tap and scroll behavior untouched. */
+  touch-action: manipulation;
 }
 .v-btn:active {
   transform: scale(0.95);
