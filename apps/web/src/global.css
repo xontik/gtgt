@@ -97,6 +97,21 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* The "unnoticeable" trade-off above assumed the shortfall was only a
+   few px - true for the bottom's home-indicator inset, but wrong for
+   the top: in an installed PWA there's no browser chrome eating the
+   status-bar area, so env(safe-area-inset-top) is a real ~44-59px
+   (notch/Dynamic Island), not a few px, and v-main's own padding-top
+   (Vuetify's `--v-layout-top` var, driven by the app-bar's unpadded
+   registered height) never accounts for it - page content actually
+   renders behind the app bar by that amount. Explicitly adding both
+   insets on top of Vuetify's own layout vars fixes this for real,
+   instead of hoping the shortfall stays small. */
+.v-main {
+  padding-top: calc(var(--v-layout-top, 0px) + env(safe-area-inset-top, 0px)) !important;
+  padding-bottom: calc(var(--v-layout-bottom, 0px) + env(safe-area-inset-bottom, 0px)) !important;
+}
+
 /* iOS Safari can visibly jitter/detach position:fixed bars during
    momentum scroll if a touch-driven :active state on their own buttons is
    still transform-animating when the scroll starts - promote to its own
