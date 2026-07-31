@@ -1,7 +1,8 @@
-import { desc, isNull, and, eq } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
 import { db } from '../db/client.js';
-import { exercises, exerciseVariations, logEntries } from '../db/schema.js';
+import { logEntries } from '../db/schema.js';
 import { isDiscordConfigured, sendDiscordMessage } from '../lib/discord.js';
+import { getOverdueFavorites } from '../lib/overdueFavorites.js';
 
 const IDLE_HOURS = Number(process.env.NOTIFY_IDLE_HOURS ?? 1);
 const SUGGESTION_COUNT = 3;
@@ -39,43 +40,18 @@ export async function checkIdleAndNotify(options: { force?: boolean } = {}): Pro
     return { notified: false, reason: 'Already sent a reminder since the last logged set' };
   }
 
-  const favorites = await db
-    .select({ variation: exerciseVariations, exercise: exercises })
-    .from(exerciseVariations)
-    .innerJoin(exercises, eq(exerciseVariations.exerciseId, exercises.id))
-    .where(and(eq(exerciseVariations.isFavorite, true), isNull(exerciseVariations.deletedAt)));
+  const suggestions = await getOverdueFavorites(SUGGESTION_COUNT);
 
-  if (favorites.length === 0) {
+  if (suggestions.length === 0) {
     return { notified: false, reason: 'No favorite variations to suggest' };
   }
 
-  const lastLoggedByVariation = new Map<number, Date>();
-  for (const { variation } of favorites) {
-    const [lastEntry] = await db
-      .select({ timestamp: logEntries.timestamp })
-      .from(logEntries)
-      .where(eq(logEntries.variationId, variation.id))
-      .orderBy(desc(logEntries.timestamp))
-      .limit(1);
-    if (lastEntry) lastLoggedByVariation.set(variation.id, lastEntry.timestamp);
-  }
-
-  // Most-overdue first; never-logged favorites count as maximally overdue.
-  const suggestions = [...favorites]
-    .sort((a, b) => {
-      const aTime = lastLoggedByVariation.get(a.variation.id)?.getTime() ?? 0;
-      const bTime = lastLoggedByVariation.get(b.variation.id)?.getTime() ?? 0;
-      return aTime - bTime;
-    })
-    .slice(0, SUGGESTION_COUNT);
-
   const appUrl = (process.env.PUBLIC_APP_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 
-  const lines = suggestions.map(({ variation, exercise }) => {
-    const link = `${appUrl}/?logVariation=${variation.id}`;
-    const last = lastLoggedByVariation.get(variation.id);
-    const lastLabel = last ? `last done ${formatRelative(last)}` : 'never logged';
-    return `• **${exercise.name}** — ${variation.name} (${lastLabel}) — <${link}>`;
+  const lines = suggestions.map(({ variationId, exerciseName, variationName, lastLoggedAt }) => {
+    const link = `${appUrl}/?logVariation=${variationId}`;
+    const lastLabel = lastLoggedAt ? `last done ${formatRelative(lastLoggedAt)}` : 'never logged';
+    return `• **${exerciseName}** — ${variationName} (${lastLabel}) — <${link}>`;
   });
 
   const message = [

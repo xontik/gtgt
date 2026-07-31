@@ -13,6 +13,7 @@ import { backupRoutes } from './routes/backup.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { authRoutes, SESSION_COOKIE } from './routes/auth.js';
 import { manifestRoutes } from './routes/manifest.js';
+import { trmnlRoutes } from './routes/trmnl.js';
 import { isValidSession } from './auth/session.js';
 import { checkIdleAndNotify } from './notifications/checkIdle.js';
 import { runAutoBackup } from './backups/autoBackup.js';
@@ -79,6 +80,7 @@ app.addHook('onRequest', async (req, reply) => {
 });
 
 await app.register(manifestRoutes);
+await app.register(trmnlRoutes);
 await app.register(authRoutes, { prefix: '/api' });
 await app.register(exerciseRoutes, { prefix: '/api' });
 await app.register(exerciseVariationRoutes, { prefix: '/api' });

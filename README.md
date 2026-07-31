@@ -173,6 +173,18 @@ or via `curl -X POST http://<host>:8080/api/notifications/check-idle?force=true`
 cooldown, so it always sends (useful for testing); without it, the endpoint
 behaves exactly like the cron job.
 
+### TRMNL e-ink dashboard
+
+`GET /trmnl` returns a static, self-contained HTML page sized for the
+original 800×480 TRMNL display, listing your most-overdue working
+variations (name, last-logged time, and the value that'll be logged next)
+in large e-ink-friendly black-on-white text - no client JS, since TRMNL's
+server screenshots the URL on its own schedule rather than running a
+browser on the device. Point a TRMNL "private plugin" (polling strategy)
+at `http://<host>:8080/trmnl`. Deliberately public/unauthenticated, same
+as `/manifest.webmanifest` - TRMNL's fetcher can't carry a session cookie
+or passcode, so don't rely on `APP_PASSCODE` to keep this one private.
+
 ### Automatic backups
 
 The server takes its own backup on a schedule and writes it to disk next to
