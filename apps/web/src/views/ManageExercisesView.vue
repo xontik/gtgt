@@ -40,11 +40,16 @@ async function removeExercise() {
 
 <template>
   <v-container>
-    <div class="d-flex align-center justify-space-between mb-4">
+    <div class="d-flex align-center justify-space-between mb-4 flex-wrap ga-2">
       <h1 class="text-h5">Manage exercises</h1>
-      <v-btn size="small" variant="tonal" prepend-icon="mdi-format-list-checks" to="/routines">
-        Manage routines
-      </v-btn>
+      <div class="d-flex ga-2">
+        <v-btn size="small" variant="tonal" prepend-icon="mdi-format-list-checks" to="/routines">
+          Manage routines
+        </v-btn>
+        <v-btn size="small" variant="tonal" prepend-icon="mdi-server-outline" to="/system">
+          System
+        </v-btn>
+      </div>
     </div>
 
     <v-progress-linear v-if="store.loading" indeterminate class="mb-4" />

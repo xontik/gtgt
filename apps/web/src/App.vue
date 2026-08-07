@@ -20,10 +20,23 @@ const pendingCount = computed(() => queuedMutations.value.length);
         <v-icon start size="14">mdi-wifi-off</v-icon>
         Offline
       </v-chip>
-      <v-badge v-if="pendingCount > 0" :content="pendingCount" color="warning" offset-x="8" offset-y="8">
-        <v-btn icon="mdi-server-outline" aria-label="System" to="/system" />
-      </v-badge>
-      <v-btn v-else icon="mdi-server-outline" aria-label="System" to="/system" />
+      <!-- The System page (backup/offline-sync/notifications) moved off the
+           app bar to make room for the timer - reach it from "Manage
+           exercises" instead. Pending-sync count still needs to be visible
+           from anywhere though, so it's a small chip linking there instead
+           of a badge on an icon that no longer exists here. -->
+      <v-chip
+        v-if="pendingCount > 0"
+        size="small"
+        variant="tonal"
+        color="warning"
+        class="mr-2"
+        to="/system"
+      >
+        <v-icon start size="14">mdi-cloud-sync-outline</v-icon>
+        {{ pendingCount }}
+      </v-chip>
+      <v-btn icon="mdi-timer-outline" aria-label="Timer" to="/timer" />
       <!-- One shared indicator for every in-flight API call (see
            lib/globalLoading.ts + api/client.ts) instead of each view
            owning its own loading ref/bar - consistent everywhere, and

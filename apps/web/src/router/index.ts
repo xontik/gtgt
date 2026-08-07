@@ -6,6 +6,7 @@ import ExerciseDetailView from '../views/ExerciseDetailView.vue';
 import ManageExercisesView from '../views/ManageExercisesView.vue';
 import ManageRoutinesView from '../views/ManageRoutinesView.vue';
 import SystemView from '../views/SystemView.vue';
+import TimerView from '../views/TimerView.vue';
 import LoginView from '../views/LoginView.vue';
 import { authCheck } from '../api/auth';
 import { ApiError } from '../api/client';
@@ -20,6 +21,7 @@ export const router = createRouter({
     { path: '/routines', name: 'manage-routines', component: ManageRoutinesView },
     { path: '/exercises/:id', name: 'exercise-detail', component: ExerciseDetailView },
     { path: '/system', name: 'system', component: SystemView },
+    { path: '/timer', name: 'timer', component: TimerView },
     { path: '/login', name: 'login', component: LoginView },
   ],
 });

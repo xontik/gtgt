@@ -301,8 +301,8 @@ manually removing the volume deletes logged data.
   delete it entirely. Adding one automatically creates a same-named
   variation too, so there's never an empty ladder with nothing to
   favorite/log yet - rename or replace that first variation like any other.
-  Tap a row to jump to its detail page for variations. A
-  "Manage routines" button at the top links to routine management.
+  Tap a row to jump to its detail page for variations. Buttons at the top
+  link to routine management and the System page.
 - **Routines** — for exercises done together in one sitting (e.g. an ankle
   mobility warm-up) rather than spread throughout the day GtG-style. Manage
   routines from its own page (linked off Manage exercises): create a
@@ -324,7 +324,12 @@ manually removing the volume deletes logged data.
   routine's template (different set count or a different logged value than
   planned) once you finish, a dialog offers to update the routine to match,
   save the run as a brand new routine, or just keep it as a one-off.
-- **System** (server icon in the app bar) — backup/restore and notifications:
+- **Timer** (clock icon in the app bar, on every page) — a standalone
+  stopwatch, independent of logging a set: Start/Stop/Reset, nothing gets
+  saved. For timing a rest period, a hold, anything that doesn't need to
+  end up in the log.
+- **System** (linked from "Manage exercises", not the app bar - that slot
+  is the Timer now) — backup/restore and notifications:
   - *Notifications*: a "Trigger reminder check" button manually runs the same
     idle-training check the cron job runs (see "Idle-training reminders"
     below) — useful for testing the Discord webhook without waiting for the
@@ -356,8 +361,9 @@ manually removing the volume deletes logged data.
   before), logging still works: sets you log offline show up immediately
   with a "Syncing" chip and queue in the background, and quick edits to an
   existing exercise/variation (rename, favorite, target, reorder) work the
-  same way. The app bar's server icon shows a badge with how many changes
-  are waiting, and turns into an "Offline" chip while disconnected. Syncing
+  same way. The app bar shows a small chip with how many changes are
+  waiting (tap it to jump to the System page), and an "Offline" chip while
+  disconnected. Syncing
   happens automatically the moment the connection comes back (or manually
   from the System page); a set that fails to sync for a real reason (not
   just "still offline") stays queued there for review instead of silently
