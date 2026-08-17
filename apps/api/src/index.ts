@@ -105,7 +105,11 @@ if (serveStatic) {
   });
 }
 
-const notifySchedule = process.env.NOTIFY_CRON_SCHEDULE ?? '*/5 8-22 * * *';
+// Hourly rather than every few minutes - checkIdleAndNotify's own cooldown
+// (lastNotifiedAt, see notifications/checkIdle.ts) already prevents repeat
+// reminders for the same idle stretch, so a tighter cron just burned cycles
+// without changing user-visible behavior.
+const notifySchedule = process.env.NOTIFY_CRON_SCHEDULE ?? '0 8-22 * * *';
 // Docker containers default to UTC regardless of the host's timezone, so
 // pin this explicitly rather than relying on the process's system tz.
 const notifyTimezone = process.env.NOTIFY_TIMEZONE ?? 'UTC';

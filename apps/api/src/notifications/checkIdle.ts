@@ -14,9 +14,20 @@ export type CheckIdleResult = {
 
 // In-memory: fine for this single-process app, and intentionally resets on
 // restart (a fresh idle window is a reasonable "clean slate" after a
-// redeploy). Prevents a frequent cron (e.g. every 5 minutes) from re-sending
-// the same reminder repeatedly once the idle threshold has been crossed.
+// redeploy). Prevents a frequent cron from re-sending the same reminder
+// repeatedly once the idle threshold has been crossed: normally that
+// cooldown only lifts once a new set is logged, but that alone would mean
+// going quiet for days (or forever) after just one reminder if you never
+// log again - lifting it once a new calendar day starts too means you get
+// at most one reminder per day of actual inactivity, not zero.
 let lastNotifiedAt: Date | null = null;
+
+function calendarDateKey(date: Date): string {
+  const timeZone = process.env.NOTIFY_TIMEZONE ?? 'UTC';
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(
+    date,
+  );
+}
 
 export async function checkIdleAndNotify(options: { force?: boolean } = {}): Promise<CheckIdleResult> {
   if (!isDiscordConfigured()) {
@@ -36,7 +47,9 @@ export async function checkIdleAndNotify(options: { force?: boolean } = {}): Pro
     return { notified: false, reason: 'A set was already logged recently' };
   }
 
-  if (!options.force && lastNotifiedAt && idleSince && lastNotifiedAt >= idleSince) {
+  const alreadyNotifiedSinceLastSet = lastNotifiedAt && idleSince && lastNotifiedAt >= idleSince;
+  const isNewDaySinceLastNotified = lastNotifiedAt && calendarDateKey(lastNotifiedAt) !== calendarDateKey(new Date());
+  if (!options.force && alreadyNotifiedSinceLastSet && !isNewDaySinceLastNotified) {
     return { notified: false, reason: 'Already sent a reminder since the last logged set' };
   }
 
